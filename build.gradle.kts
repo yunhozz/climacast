@@ -10,21 +10,21 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.6"
 }
 
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+	}
+}
+
 allprojects {
 	group = "com.climacast"
 	version = "0.0.1-SNAPSHOT"
-
-	java {
-		toolchain {
-			languageVersion = JavaLanguageVersion.of(21)
-		}
-	}
-
-	kotlin {
-		compilerOptions {
-			freeCompilerArgs.addAll("-Xjsr305=strict")
-		}
-	}
 
 	repositories {
 		mavenCentral()
@@ -32,6 +32,7 @@ allprojects {
 }
 
 subprojects {
+	apply(plugin = "java")
 	apply(plugin = "kotlin")
 	apply(plugin = "kotlin-spring")
 	apply(plugin = "kotlin-allopen")
@@ -58,10 +59,12 @@ subprojects {
 		implementation("org.springframework.boot:spring-boot-starter")
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+		implementation("org.springframework.boot:spring-boot-starter-actuator")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
+		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	}
 
@@ -94,3 +97,6 @@ subprojects {
 		annotation("org.springframework.data.elasticsearch.annotations.Document")
 	}
 }
+
+project(":common")
+project(":eureka-server")
