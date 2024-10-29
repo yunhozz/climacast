@@ -59,6 +59,7 @@ subprojects {
 		implementation("org.springframework.boot:spring-boot-starter")
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+		implementation("org.springframework.boot:spring-boot-starter-actuator")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -97,4 +98,6 @@ subprojects {
 	}
 }
 
+project(":common")
 project(":config-server")
+project(":eureka-server")
