@@ -1,6 +1,6 @@
 rootProject.name = "climacast"
 include(
     ":common",
-    ":config-server"
+    ":config-server",
     ":eureka-server"
 )
