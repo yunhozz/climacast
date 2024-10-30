@@ -1,8 +1,9 @@
-name: PR Test
+name: Feature to Develop PR Test
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - "develop"
 
 jobs:
   test:
@@ -31,16 +32,16 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Test with Gradle
-        run: ./gradlew --info test -Dspring.profiles.active=local
+        run: ./gradlew --info test -x :config-server:test
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
         if: ${{ always() }}
         with:
-          files: build/test-results/**/*.xml
+          files: '**/build/test-results/test/*.xml'
 
       - name: Upload Test Results as Artifacts
-        if: failure() # 테스트 실패 시 결과 아티팩트로 저장
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
