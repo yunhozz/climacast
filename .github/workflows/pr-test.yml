@@ -31,7 +31,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Test with Gradle
-        run: ./gradlew --info test
+        run: ./gradlew --info test -Dspring.profiles.active=local
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
