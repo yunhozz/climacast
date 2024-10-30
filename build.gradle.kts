@@ -101,3 +101,4 @@ subprojects {
 project(":common")
 project(":config-server")
 project(":eureka-server")
+project(":api-gateway")
