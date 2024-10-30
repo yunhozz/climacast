@@ -3,5 +3,6 @@ include(
     ":common",
     ":config-server",
     ":eureka-server",
-    ":api-gateway"
+    ":api-gateway",
+    ":batch-server"
 )
