@@ -62,9 +62,12 @@ subprojects {
 		implementation("org.springframework.boot:spring-boot-starter-actuator")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
+		implementation("org.apache.kafka:kafka-streams")
+		implementation("org.springframework.kafka:spring-kafka")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+		testImplementation("org.springframework.kafka:spring-kafka-test")
 		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	}
 
