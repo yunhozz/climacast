@@ -12,6 +12,9 @@ spring:
     username: ${db.mysql.username}
     password: ${db.mysql.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  batch:
+    jdbc:
+      initialize-schema: never
 
 eureka:
   client:
