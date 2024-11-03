@@ -11,6 +11,9 @@ data class WeatherResponseDTO(
     val hourly: HourlyDTO,
     val daily: DailyDTO?
 ) {
+    lateinit var parentRegion: String
+    lateinit var childRegion: String
+
     data class HourlyDTO(
         val time: List<String>,
         val temperature_2m: List<Double>

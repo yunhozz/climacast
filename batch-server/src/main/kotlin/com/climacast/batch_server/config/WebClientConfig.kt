@@ -1,5 +1,3 @@
-@file:Suppress("PackageDirectoryMismatch")
-
 package com.climacast.batch_server.config
 
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -30,17 +28,8 @@ class WebClientConfig {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    @Value("\${open-api.open-weather.base-url}")
-    private lateinit var openWeatherBaseUrl: String
-
     @Value("\${open-api.open-meteo.base-url}")
     private lateinit var openMeteoBaseUrl: String
-
-    @Bean
-    fun openWeatherWebClient(webClient: WebClient): WebClient =
-        webClient.mutate()
-            .baseUrl(openWeatherBaseUrl)
-            .build()
 
     @Bean
     fun openMeteoWebClient(webClient: WebClient): WebClient =
