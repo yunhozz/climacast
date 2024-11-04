@@ -2,22 +2,15 @@ package com.climacast.batch_server.config.manager.impl
 
 import com.climacast.batch_server.config.manager.OpenApiManager
 import com.climacast.batch_server.dto.WeatherResponseDTO
-import com.climacast.batch_server.model.document.Weather
-import com.climacast.batch_server.model.document.WeatherData
-import com.climacast.batch_server.model.repository.WeatherDocumentRepository
-import com.climacast.common.utils.logger
+import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
-import reactor.core.scheduler.Schedulers
-import java.util.UUID
 
 @Component
 class OpenApiManagerImpl(
-    private val openMeteoWebClient: WebClient,
-    private val weatherDocumentRepository: WeatherDocumentRepository
+    private val openMeteoWebClient: WebClient
 ): OpenApiManager {
 
     private val log = logger()
@@ -37,9 +30,9 @@ class OpenApiManagerImpl(
                             .queryParam("latitude", latitude)
                             .queryParam("longitude", longitude)
                             .queryParam("hourly", "temperature_2m")
+                            .queryParam("past_days", 1)
+                            .queryParam("forecast_days", 0)
                             .queryParam("timezone", "Asia/Tokyo")
-                            .queryParam("past_days", "1")
-                            .queryParam("forecast_days", "0")
                             .build()
                     }
                     .retrieve()
@@ -52,30 +45,4 @@ class OpenApiManagerImpl(
             }
             .collectList()
             .block()
-
-    override fun saveWeathers(responses: List<WeatherResponseDTO>) {
-        Flux.fromIterable(responses)
-            .flatMap { response ->
-                val hourly = response.hourly
-                val weathers = hourly.time.zip(hourly.temperature_2m) { time, temperature ->
-                    Weather(
-                        UUID.randomUUID().toString(),
-                        response.parentRegion,
-                        response.childRegion,
-                        response.latitude,
-                        response.longitude,
-                        time,
-                        WeatherData(temperature)
-                    )
-                }
-                Flux.fromIterable(weathers)
-            }
-            .collectList()
-            .flatMap { weathers ->
-                Mono.fromCallable {
-                    weatherDocumentRepository.saveAll(weathers)
-                }.subscribeOn(Schedulers.boundedElastic())
-            }
-            .subscribe()
-    }
 }
