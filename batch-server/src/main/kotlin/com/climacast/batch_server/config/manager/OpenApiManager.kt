@@ -5,5 +5,5 @@ import com.climacast.batch_server.dto.WeatherResponseDTO
 
 interface OpenApiManager {
     fun callForecastWeatherOpenApi(cityInfoList: List<String>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>?
-    fun callHistoricalWeatherOpenApi(cityInfoList: List<String>): MutableList<WeatherResponseDTO>?
+    fun callHistoricalWeatherOpenApi(cityInfoList: List<String>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>?
 }

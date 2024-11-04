@@ -3,10 +3,7 @@ package com.climacast.batch_server.dto
 data class WeatherResponseDTO(
     val latitude: Double,
     val longitude: Double,
-    val generationtime_ms: Double,
-    val utc_offset_seconds: Int,
     val timezone: String,
-    val timezone_abbreviation: String,
     val elevation: Double,
     val hourly: HourlyDTO,
     val daily: DailyDTO?
@@ -16,10 +13,24 @@ data class WeatherResponseDTO(
 
     data class HourlyDTO(
         val time: List<String>,
-        val temperature_2m: List<Double>
+        val weather_code: List<Int>?,
+        val temperature_2m: List<Double>?,
+        val temperature_80m: List<Double>?,
+        val temperature_120m: List<Double>?,
+        val temperature_180m: List<Double>?,
+        val wind_speed_10m: List<Double>?,
+        val wind_speed_80m: List<Double>?,
+        val wind_speed_120m: List<Double>?,
+        val wind_speed_180m: List<Double>?,
+        val relative_humidity_2m: List<Int>?
     )
 
     data class DailyDTO(
-        val time: List<String>
+        val time: List<String>,
+        val weather_code: List<Int>?,
+        val temperature_2m_max: List<Double>?,
+        val temperature_2m_min: List<Double>?,
+        val wind_speed_10m_max: List<Double>?,
+        val wind_gusts_10m_max: List<Double>?
     )
 }
