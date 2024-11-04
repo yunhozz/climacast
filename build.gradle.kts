@@ -64,6 +64,7 @@ subprojects {
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
 		implementation("org.apache.kafka:kafka-streams")
 		implementation("org.springframework.kafka:spring-kafka")
+		implementation("org.springframework.boot:spring-boot-starter-aop")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -101,7 +102,7 @@ subprojects {
 	}
 }
 
-project(":common")
+project(":global")
 project(":config-server")
 project(":eureka-server")
 project(":api-gateway")
