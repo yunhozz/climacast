@@ -1,5 +1,5 @@
 dependencies {
-	implementation(project(":common"))
+	implementation(project(":global"))
 	implementation("org.springframework.boot:spring-boot-starter-batch")
 	implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
 	implementation("org.springframework.cloud:spring-cloud-starter-config")

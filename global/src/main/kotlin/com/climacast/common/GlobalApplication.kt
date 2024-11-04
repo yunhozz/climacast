@@ -1,11 +1,11 @@
-package com.climacast.common
+package com.climacast.global
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class CommonApplication
+class GlobalApplication
 
 fun main(args: Array<String>) {
-	runApplication<CommonApplication>(*args)
+	runApplication<GlobalApplication>(*args)
 }

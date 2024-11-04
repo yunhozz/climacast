@@ -1,5 +1,5 @@
 dependencies {
-	implementation(project(":common"))
+	implementation(project(":global"))
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.springframework.cloud:spring-cloud-starter-config")

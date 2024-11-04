@@ -1,4 +1,4 @@
-package com.climacast.common.dto
+package com.climacast.global.dto
 
 sealed interface KafkaMessage
 

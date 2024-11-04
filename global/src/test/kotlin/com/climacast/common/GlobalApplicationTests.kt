@@ -1,10 +1,10 @@
-package com.climacast.common
+package com.climacast.global
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
-class CommonApplicationTests {
+class GlobalApplicationTests {
 
 	@Test
 	fun contextLoads() {

@@ -1,7 +1,7 @@
-package com.climacast.common.config
+package com.climacast.global.config
 
-import com.climacast.common.dto.KafkaMessage
-import com.climacast.common.utils.logger
+import com.climacast.global.dto.KafkaMessage
+import com.climacast.global.utils.logger
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.TopicPartition
