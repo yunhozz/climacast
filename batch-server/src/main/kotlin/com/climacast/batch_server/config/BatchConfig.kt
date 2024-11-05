@@ -24,10 +24,13 @@ import org.springframework.transaction.PlatformTransactionManager
 import java.nio.file.Files
 
 @Configuration
-@EnableBatchProcessing
+@EnableBatchProcessing(
+    dataSourceRef = "batchDataSource",
+    transactionManagerRef = "batchTransactionManager",
+)
 class BatchConfig(
     private val batchJobRepository: JobRepository,
-    private val transactionManager: PlatformTransactionManager,
+    private val batchTransactionManager: PlatformTransactionManager,
     @Qualifier(AsyncConfig.TASK_EXECUTOR)
     private val taskExecutor: TaskExecutor,
     private val openApiManager: OpenApiManager,
@@ -47,7 +50,7 @@ class BatchConfig(
     @Bean
     fun saveWeatherHistoryOneDayAgoStep(): Step =
         StepBuilder("saveWeatherHistoryOneDayAgo", batchJobRepository)
-            .chunk<List<WeatherResponseDTO>, List<WeatherResponseDTO>>(1, transactionManager)
+            .chunk<List<WeatherResponseDTO>, List<WeatherResponseDTO>>(1, batchTransactionManager)
             .reader(callHistoricalWeatherOpenApi())
             .writer(saveWeathers())
             .taskExecutor(taskExecutor)

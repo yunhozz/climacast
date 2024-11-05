@@ -18,19 +18,19 @@ import javax.sql.DataSource
 class BatchDatabaseConfig {
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource.batch.hikari")
-    fun dataSource() = HikariDataSource()
+    fun batchDataSource() = HikariDataSource()
 
     @Bean
     fun batchJobRepository(batchTransactionManager: PlatformTransactionManager): JobRepository =
         JobRepositoryFactoryBean().apply {
-            setDataSource(dataSource())
+            setDataSource(batchDataSource())
             transactionManager = batchTransactionManager
             afterPropertiesSet()
         }.`object`
 
     @Bean
-    fun transactionManager(): PlatformTransactionManager =
-        DataSourceTransactionManager(dataSource())
+    fun batchTransactionManager(): PlatformTransactionManager =
+        DataSourceTransactionManager(batchDataSource())
 }
 
 @Configuration
