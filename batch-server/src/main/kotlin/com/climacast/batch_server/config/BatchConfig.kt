@@ -26,10 +26,10 @@ import java.nio.file.Files
 @Configuration
 @EnableBatchProcessing
 class BatchConfig(
+    private val batchJobRepository: JobRepository,
+    private val transactionManager: PlatformTransactionManager,
     @Qualifier(AsyncConfig.TASK_EXECUTOR)
     private val taskExecutor: TaskExecutor,
-    private val jobRepository: JobRepository,
-    private val transactionManager: PlatformTransactionManager,
     private val openApiManager: OpenApiManager,
     private val weatherSaveManager: WeatherSaveManager
 ) {
@@ -40,13 +40,13 @@ class BatchConfig(
 
     @Bean
     fun saveWeatherJob(): Job =
-        JobBuilder("saveWeathers", jobRepository)
+        JobBuilder("saveWeathers", batchJobRepository)
             .start(saveWeatherHistoryOneDayAgoStep())
             .build()
 
     @Bean
     fun saveWeatherHistoryOneDayAgoStep(): Step =
-        StepBuilder("saveWeatherHistoryOneDayAgo", jobRepository)
+        StepBuilder("saveWeatherHistoryOneDayAgo", batchJobRepository)
             .chunk<List<WeatherResponseDTO>, List<WeatherResponseDTO>>(1, transactionManager)
             .reader(callHistoricalWeatherOpenApi())
             .writer(saveWeathers())
