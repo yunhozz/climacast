@@ -21,16 +21,19 @@ class BatchDatabaseConfig {
     fun batchDataSource() = HikariDataSource()
 
     @Bean
-    fun batchJobRepository(batchTransactionManager: PlatformTransactionManager): JobRepository =
+    fun batchJobRepository(
+        batchDataSource: HikariDataSource,
+        batchTransactionManager: PlatformTransactionManager
+    ): JobRepository =
         JobRepositoryFactoryBean().apply {
-            setDataSource(batchDataSource())
+            setDataSource(batchDataSource)
             transactionManager = batchTransactionManager
             afterPropertiesSet()
         }.`object`
 
     @Bean
-    fun batchTransactionManager(): PlatformTransactionManager =
-        DataSourceTransactionManager(batchDataSource())
+    fun batchTransactionManager(batchDataSource: HikariDataSource): PlatformTransactionManager =
+        DataSourceTransactionManager(batchDataSource)
 }
 
 @Configuration
@@ -48,7 +51,7 @@ class JpaDatabaseConfig {
     fun routingDataSource(
         weatherSourceDatasource: DataSource,
         weatherReplicaDataSource: DataSource
-    ) = object : AbstractRoutingDataSource() {
+    ) = object: AbstractRoutingDataSource() {
         override fun determineCurrentLookupKey(): DataSourceConfigConstants {
             val isReadOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly()
             return if (isReadOnly) {
@@ -64,8 +67,7 @@ class JpaDatabaseConfig {
     }
 
     @Bean
-    fun lazyDataSource(routingDataSource: DataSource): LazyConnectionDataSourceProxy =
-        LazyConnectionDataSourceProxy(routingDataSource)
+    fun lazyDataSource(routingDataSource: DataSource) = LazyConnectionDataSourceProxy(routingDataSource)
 
     enum class DataSourceConfigConstants {
         SOURCE_DATASOURCE,
