@@ -17,6 +17,7 @@ object DailyConstants {
     const val WEATHER_CODE = "weather_code"
     const val TEMPERATURE_2M_MAX = "temperature_2m_max"
     const val TEMPERATURE_2M_MIN = "temperature_2m_min"
-    const val WIND_SPEED_10M_MAX = "wind_speed_10m_max"
-    const val WIND_GUESTS_10M_MIN = "wind_gusts_10m_max"
+    const val SUNRISE = "sunrise"
+    const val SUNSET = "sunset"
+    const val PRECIPITATION_SUM = "precipitation_sum"
 }

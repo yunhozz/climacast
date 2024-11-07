@@ -1,6 +1,6 @@
 package com.climacast.batch_server.common.enums
 
-enum class WeatherVariable(
+enum class WeatherStatus(
     val codes: List<Int>,
     val description: String
 ) {
