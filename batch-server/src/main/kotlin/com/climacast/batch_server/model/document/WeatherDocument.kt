@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.Document
 
 @Document(indexName = "weather", storeIdInSource = false)
-data class Weather(
+data class WeatherDocument(
     @Id
     val id: String,
     val parentRegion: String,
