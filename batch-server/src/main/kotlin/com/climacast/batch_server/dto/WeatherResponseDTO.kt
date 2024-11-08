@@ -3,13 +3,13 @@ package com.climacast.batch_server.dto
 data class WeatherResponseDTO(
     val latitude: Double,
     val longitude: Double,
+    var parentRegion: String?,
+    var childRegion: String?,
     val timezone: String,
     val elevation: Double,
-    val hourly: HourlyDTO,
+    val hourly: HourlyDTO?,
     val daily: DailyDTO?
 ) {
-    lateinit var parentRegion: String
-    lateinit var childRegion: String
 
     data class HourlyDTO(
         val time: List<String>,
