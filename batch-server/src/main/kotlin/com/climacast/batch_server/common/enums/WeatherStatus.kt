@@ -15,5 +15,11 @@ enum class WeatherStatus(
     SNOW_GRAINS(listOf(77), "Snow grains"),
     RAIN_SHOWER(listOf(80, 81, 82), "Rain showers: Slight, moderate, and violent"),
     SNOW_SHOWER(listOf(85, 86), "Snow showers slight and heavy"),
-    THUNDER_STORM(listOf(95, 96, 99), "Thunderstorm")
+    THUNDERSTORM(listOf(95, 96, 99), "Thunderstorm")
+    ;
+
+    companion object {
+        fun of(code: Int): WeatherStatus = entries.firstOrNull { it.codes.contains(code) }
+            ?: throw IllegalArgumentException("Unknown weather status: $code")
+    }
 }

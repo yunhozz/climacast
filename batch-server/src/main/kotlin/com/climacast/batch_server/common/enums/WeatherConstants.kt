@@ -11,6 +11,19 @@ object HourlyConstants {
     const val WIND_SPEED_120M = "wind_speed_120m"
     const val WIND_SPEED_180M = "wind_speed_180m"
     const val HUMIDITY = "relative_humidity_2m"
+
+    val ENTIRE = listOf(
+        WEATHER_CODE,
+        TEMPERATURE_2M,
+        TEMPERATURE_80M,
+        TEMPERATURE_120M,
+        TEMPERATURE_180M,
+        WIND_SPEED_10M,
+        WIND_SPEED_80M,
+        WIND_SPEED_120M,
+        WIND_SPEED_180M,
+        HUMIDITY
+    )
 }
 
 object DailyConstants {
@@ -20,4 +33,13 @@ object DailyConstants {
     const val SUNRISE = "sunrise"
     const val SUNSET = "sunset"
     const val PRECIPITATION_SUM = "precipitation_sum"
+
+    val ENTIRE = listOf(
+        WEATHER_CODE,
+        TEMPERATURE_2M_MAX,
+        TEMPERATURE_2M_MIN,
+        SUNRISE,
+        SUNSET,
+        PRECIPITATION_SUM
+    )
 }
