@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.netty.channel.ChannelOption
+import io.netty.handler.ssl.SslContextBuilder
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import io.netty.handler.timeout.ReadTimeoutHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import org.springframework.beans.factory.annotation.Value
@@ -19,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 import reactor.netty.resources.ConnectionProvider
 import java.time.Duration
+import javax.net.ssl.SSLException
 
 @Configuration
 class WebClientConfig {
@@ -26,6 +29,13 @@ class WebClientConfig {
     companion object {
         val mapper: ObjectMapper = jacksonObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        const val HTTP_CONNECT_TIMEOUT_MILLIS = 30000
+        const val HTTP_READ_TIMEOUT_SECONDS = 30
+        const val HTTP_WRITE_TIMEOUT_SECONDS = 30
+        const val HTTP_MAX_CONNECTIONS = 100
+        const val HTTP_PENDING_ACQUIRE_TIMEOUT_SECONDS = 30L
+        const val HTTP_MAX_IDLE_MINUTES = 1L
+        const val SSL_HANDSHAKE_TIMEOUT_MILLIS = 30000L
     }
 
     @Value("\${open-api.open-meteo.base-url}")
@@ -40,10 +50,22 @@ class WebClientConfig {
     @Bean
     fun webClient(): WebClient {
         val httpClient = HttpClient.create(connectionProvider())
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, HTTP_CONNECT_TIMEOUT_MILLIS)
+            .secure {
+                try {
+                    it.sslContext(
+                        SslContextBuilder.forClient()
+                            // SSL 인증서 확인을 비활성화 => 즉, 클라이언트는 유효하지 않거나 신뢰할 수 없는 인증서라도 모든 SSL 인증서를 수락
+                            .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                            .build()
+                    ).handshakeTimeoutMillis(SSL_HANDSHAKE_TIMEOUT_MILLIS)
+                } catch (e: SSLException) {
+                    throw RuntimeException(e)
+                }
+            }
             .doOnConnected {
-                it.addHandlerLast(ReadTimeoutHandler(30))
-                    .addHandlerLast(WriteTimeoutHandler(30))
+                it.addHandlerLast(ReadTimeoutHandler(HTTP_READ_TIMEOUT_SECONDS))
+                    .addHandlerLast(WriteTimeoutHandler(HTTP_WRITE_TIMEOUT_SECONDS))
             }
 
         return WebClient.builder()
@@ -56,10 +78,10 @@ class WebClientConfig {
     @Bean
     fun connectionProvider(): ConnectionProvider =
         ConnectionProvider.builder("")
-            .maxConnections(100)
-            .pendingAcquireTimeout(Duration.ofSeconds(30))
+            .maxConnections(HTTP_MAX_CONNECTIONS)
+            .pendingAcquireTimeout(Duration.ofSeconds(HTTP_PENDING_ACQUIRE_TIMEOUT_SECONDS))
             .pendingAcquireMaxCount(-1)
-            .maxIdleTime(Duration.ofMinutes(1))
+            .maxIdleTime(Duration.ofMinutes(HTTP_MAX_IDLE_MINUTES))
             .build()
 
     @Bean
