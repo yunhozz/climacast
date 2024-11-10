@@ -11,13 +11,11 @@ spring:
     jdbc:
       initialize-schema: never
   jpa:
-    hibernate:
-      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     open-in-view: false
   datasource:
     batch:

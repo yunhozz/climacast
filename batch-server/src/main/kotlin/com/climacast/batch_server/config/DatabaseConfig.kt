@@ -15,7 +15,6 @@ import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
-import org.springframework.orm.jpa.vendor.HibernateJpaDialect
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionSynchronizationManager
@@ -47,6 +46,9 @@ class BatchDatabaseConfig {
 class JpaDatabaseConfig {
     companion object {
         const val ENTITY_PACKAGE = "com.climacast.batch_server.model.entity"
+        const val HIBERNATE_DDL_AUTO = "create"
+        const val HIBERNATE_SHOW_SQL = "true"
+        const val HIBERNATE_FORMAT_SQL = "true"
     }
 
     @Bean
@@ -78,9 +80,14 @@ class JpaDatabaseConfig {
     fun entityManagerFactory(): EntityManagerFactory =
         LocalContainerEntityManagerFactoryBean().apply {
             dataSource = routingDataSource()
-            persistenceUnitName = "weather"
             jpaVendorAdapter = HibernateJpaVendorAdapter()
-            jpaDialect = HibernateJpaDialect()
+            jpaPropertyMap.putAll(
+                mapOf(
+                    "hibernate.hbm2ddl.auto" to HIBERNATE_DDL_AUTO,
+                    "hibernate.show_sql" to HIBERNATE_SHOW_SQL,
+                    "hibernate.format_sql" to HIBERNATE_FORMAT_SQL
+                )
+            )
             setPackagesToScan(ENTITY_PACKAGE)
             afterPropertiesSet()
         }.`object`!!
