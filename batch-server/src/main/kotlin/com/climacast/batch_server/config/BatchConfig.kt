@@ -1,6 +1,7 @@
 package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.enums.DailyConstants
+import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.config.manager.OpenApiManager
 import com.climacast.batch_server.config.manager.WeatherSaveManager
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
@@ -65,6 +66,8 @@ class BatchConfig(
         JobBuilder("saveWeatherForecast", batchJobRepository)
             .incrementer(RunIdIncrementer())
             .start(readCsvStep())
+            .next(callForecastWeatherOpenApiStep())
+            .next(saveWeathersOnMysqlStep())
             .build()
 
     @Bean
@@ -103,7 +106,15 @@ class BatchConfig(
         StepBuilder("callHistoricalWeatherOpenApi", batchJobRepository)
             .chunk<WeatherResponseDTO, WeatherResponseDTO>(CHUNK_SIZE, batchTransactionManager)
             .reader(historicalWeatherOpenApiCallReader())
-            .writer(historicalWeatherOpenApiResponseWriter())
+            .writer(weatherOpenApiResponseWriter())
+            .build()
+
+    @Bean
+    fun callForecastWeatherOpenApiStep(): Step =
+        StepBuilder("callForecastWeatherOpenApi", batchJobRepository)
+            .chunk<WeatherResponseDTO, WeatherResponseDTO>(CHUNK_SIZE, batchTransactionManager)
+            .reader(forecastWeatherOpenApiCallReader())
+            .writer(weatherOpenApiResponseWriter())
             .build()
 
     @Bean
@@ -122,7 +133,22 @@ class BatchConfig(
     }
 
     @Bean
-    fun historicalWeatherOpenApiResponseWriter() = ItemWriter<WeatherResponseDTO> { chunk ->
+    fun forecastWeatherOpenApiCallReader() = object: ItemReader<WeatherResponseDTO> {
+        private var iterator: Iterator<WeatherResponseDTO>? = null
+
+        override fun read(): WeatherResponseDTO? {
+            if (iterator == null) {
+                val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
+                val responses = openApiManager.callForecastWeatherOpenApi(regions.toList(), dto)
+                iterator = responses!!.iterator()
+            }
+
+            return if (iterator!!.hasNext()) iterator!!.next() else null
+        }
+    }
+
+    @Bean
+    fun weatherOpenApiResponseWriter() = ItemWriter<WeatherResponseDTO> { chunk ->
         weatherResponseList.addAll(chunk)
     }
 

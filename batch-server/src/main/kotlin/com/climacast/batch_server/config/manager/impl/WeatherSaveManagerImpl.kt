@@ -72,8 +72,6 @@ class WeatherSaveManagerImpl(
         val daily = weather.daily
 
         daily!!.time.forEachIndexed { index, time ->
-            println("weather.parentRegion = ${weather.parentRegion}")
-            println("weather.childRegion = ${weather.childRegion}")
             val weatherCode = daily.weather_code!![index]
             val dailyWeather = DailyWeather(
                 weather.parentRegion!!,

@@ -20,13 +20,14 @@ class WeatherService(
 
     @Scheduled(cron = "0 0 0 * * *")
     fun saveWeatherHistoryEveryDay() {
-        val jobExecution = jobLauncher.run(batchConfig.saveWeatherJob(), createJobParameters())
+        val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), createJobParameters())
         log.info(createLogMessage(jobExecution))
     }
 
     @Scheduled(cron = "0 0 * * * *")
     fun saveWeatherForecastEveryHour() {
-        TODO("Not yet implemented")
+        val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), createJobParameters())
+        log.info(createLogMessage(jobExecution))
     }
 
     private fun createJobParameters(): JobParameters {
