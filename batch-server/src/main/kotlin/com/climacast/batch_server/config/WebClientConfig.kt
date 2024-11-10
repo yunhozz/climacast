@@ -32,24 +32,24 @@ class WebClientConfig {
     private lateinit var openMeteoBaseUrl: String
 
     @Bean
-    fun openMeteoWebClient(webClient: WebClient): WebClient =
-        webClient.mutate()
+    fun openMeteoWebClient(): WebClient =
+        webClient().mutate()
             .baseUrl(openMeteoBaseUrl)
             .build()
 
     @Bean
-    fun webClient(connectionProvider: ConnectionProvider, exchangeStrategies: ExchangeStrategies): WebClient {
-        val httpClient = HttpClient.create(connectionProvider)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+    fun webClient(): WebClient {
+        val httpClient = HttpClient.create(connectionProvider())
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 30000)
             .doOnConnected {
-                it.addHandlerLast(ReadTimeoutHandler(5))
-                    .addHandlerLast(WriteTimeoutHandler(5))
+                it.addHandlerLast(ReadTimeoutHandler(30))
+                    .addHandlerLast(WriteTimeoutHandler(30))
             }
 
         return WebClient.builder()
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-            .exchangeStrategies(exchangeStrategies)
+            .exchangeStrategies(exchangeStrategies())
             .build()
     }
 
@@ -57,7 +57,7 @@ class WebClientConfig {
     fun connectionProvider(): ConnectionProvider =
         ConnectionProvider.builder("")
             .maxConnections(100)
-            .pendingAcquireTimeout(Duration.ofSeconds(5))
+            .pendingAcquireTimeout(Duration.ofSeconds(30))
             .pendingAcquireMaxCount(-1)
             .maxIdleTime(Duration.ofMinutes(1))
             .build()

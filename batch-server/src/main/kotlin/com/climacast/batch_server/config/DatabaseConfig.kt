@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.repository.support.JobRepositoryFactoryBean
-import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.batch.BatchDataSource
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,6 +15,7 @@ import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
 import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
+import org.springframework.orm.jpa.vendor.HibernateJpaDialect
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionSynchronizationManager
@@ -22,6 +23,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Configuration
 class BatchDatabaseConfig {
     @Bean
+    @BatchDataSource
     @ConfigurationProperties(prefix = "spring.datasource.batch.hikari")
     fun batchDataSource() = HikariDataSource()
 
@@ -40,12 +42,11 @@ class BatchDatabaseConfig {
 @Configuration
 @EnableJpaRepositories(
     basePackages = ["com.climacast.batch_server.model.repository"],
-    entityManagerFactoryRef = "entityManagerFactory",
-    transactionManagerRef = "jpaTransactionManager"
+    entityManagerFactoryRef = "entityManagerFactory"
 )
 class JpaDatabaseConfig {
     companion object {
-        const val ENTITY_PACKAGE = "com/climacast/batch_server/model/entity"
+        const val ENTITY_PACKAGE = "com.climacast.batch_server.model.entity"
     }
 
     @Bean
@@ -74,17 +75,19 @@ class JpaDatabaseConfig {
     }
 
     @Bean
-    fun entityManagerFactory() = LocalContainerEntityManagerFactoryBean().apply {
-        dataSource = routingDataSource()
-        jpaVendorAdapter = HibernateJpaVendorAdapter()
-        setPackagesToScan(ENTITY_PACKAGE)
-    }
+    fun entityManagerFactory(): EntityManagerFactory =
+        LocalContainerEntityManagerFactoryBean().apply {
+            dataSource = routingDataSource()
+            persistenceUnitName = "weather"
+            jpaVendorAdapter = HibernateJpaVendorAdapter()
+            jpaDialect = HibernateJpaDialect()
+            setPackagesToScan(ENTITY_PACKAGE)
+            afterPropertiesSet()
+        }.`object`!!
 
     @Bean("transactionManager")
     @Primary
-    fun jpaTransactionManager(
-        @Qualifier("entityManagerFactory") entityManagerFactory: EntityManagerFactory
-    ) = JpaTransactionManager(entityManagerFactory)
+    fun jpaTransactionManager() = JpaTransactionManager(entityManagerFactory())
 
     @Bean
     fun lazyDataSource() = LazyConnectionDataSourceProxy(routingDataSource())

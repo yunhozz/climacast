@@ -33,7 +33,7 @@ data class Region(
 @Configuration
 @EnableBatchProcessing(
     dataSourceRef = "batchDataSource",
-    transactionManagerRef = "batchTransactionManager",
+    transactionManagerRef = "batchTransactionManager"
 )
 class BatchConfig(
     private val batchJobRepository: JobRepository,
