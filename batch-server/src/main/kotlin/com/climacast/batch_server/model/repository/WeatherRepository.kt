@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface WeatherRepository<T: Weather>: JpaRepository<T, Long>
 
-interface HourlyWeatherRepository: WeatherRepository<HourlyWeather>
+interface HourlyWeatherRepository: WeatherRepository<HourlyWeather>, WeatherJdbcRepository
 
 interface DailyWeatherRepository: WeatherRepository<DailyWeather>
