@@ -5,8 +5,8 @@ import com.climacast.batch_server.model.entity.HourlyWeather
 import com.climacast.batch_server.model.entity.Weather
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface WeatherRepository<T: Weather>: JpaRepository<T, Long>
+interface WeatherRepository<T: Weather>: JpaRepository<T, Long>, WeatherJdbcRepository
 
-interface HourlyWeatherRepository: WeatherRepository<HourlyWeather>, WeatherJdbcRepository
+interface HourlyWeatherRepository: WeatherRepository<HourlyWeather>
 
 interface DailyWeatherRepository: WeatherRepository<DailyWeather>

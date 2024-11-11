@@ -49,8 +49,8 @@ class BatchConfig(
         const val CHUNK_SIZE = 35
     }
 
-    private val regions = arrayListOf<Region>()
-    private val weatherResponseList = arrayListOf<WeatherResponseDTO>()
+    private val regions = linkedSetOf<Region>()
+    private val weatherResponseList = linkedSetOf<WeatherResponseDTO>()
 
     @Bean
     fun saveWeatherHistoryJob(): Job =
@@ -124,7 +124,7 @@ class BatchConfig(
         override fun read(): WeatherResponseDTO? {
             if (iterator == null) {
                 val dto = OpenApiQueryRequestDTO(dailyValues = DailyConstants.ENTIRE)
-                val responses = openApiManager.callHistoricalWeatherOpenApi(regions.toList(), dto)
+                val responses = openApiManager.callHistoricalWeatherOpenApi(regions, dto)
                 iterator = responses!!.iterator()
             }
 
@@ -139,7 +139,7 @@ class BatchConfig(
         override fun read(): WeatherResponseDTO? {
             if (iterator == null) {
                 val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
-                val responses = openApiManager.callForecastWeatherOpenApi(regions.toList(), dto)
+                val responses = openApiManager.callForecastWeatherOpenApi(regions, dto)
                 iterator = responses!!.iterator()
             }
 

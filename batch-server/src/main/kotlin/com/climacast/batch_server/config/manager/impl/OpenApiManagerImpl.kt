@@ -21,7 +21,7 @@ class OpenApiManagerImpl(
     private lateinit var weatherForecastEndPoint: String
 
     // 매 시간마다 실행
-    override fun callForecastWeatherOpenApi(regions: List<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
+    override fun callForecastWeatherOpenApi(regions: Set<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
         val (hourlyValues, _, _, forecastDays) = dto
         val hourly = hourlyValues!!.joinToString(",")
 
@@ -54,7 +54,7 @@ class OpenApiManagerImpl(
     }
 
     // 매일 0시에 실행
-    override fun callHistoricalWeatherOpenApi(regions: List<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
+    override fun callHistoricalWeatherOpenApi(regions: Set<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
         val (_, dailyValues, pastDays, _) = dto
         val daily = dailyValues!!.joinToString(",")
 

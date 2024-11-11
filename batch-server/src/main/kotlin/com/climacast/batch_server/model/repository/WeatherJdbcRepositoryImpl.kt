@@ -35,7 +35,7 @@ class WeatherJdbcRepositoryImpl(
         const val BATCH_SIZE = 100
     }
 
-    override fun upsertHourlyWeatherForecasts(hourlyWeathers: List<HourlyWeatherUpsertRequestDTO>) {
+    override fun upsertHourlyWeatherForecasts(hourlyWeathers: Set<HourlyWeatherUpsertRequestDTO>) {
         jdbcTemplate.batchUpdate(HOURLY_WEATHER_UPSERT_QUERY, hourlyWeathers, BATCH_SIZE) { ps, weather ->
             ps.setString(1, weather.parentRegion)
             ps.setString(2, weather.childRegion)

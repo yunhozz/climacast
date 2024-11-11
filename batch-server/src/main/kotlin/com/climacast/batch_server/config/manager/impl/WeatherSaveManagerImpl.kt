@@ -33,7 +33,7 @@ class WeatherSaveManagerImpl(
     }
 
     private fun saveHourlyWeatherOnMysql(weather: WeatherResponseDTO) {
-        val hourlyWeatherUpsertDTOs = arrayListOf<HourlyWeatherUpsertRequestDTO>()
+        val hourlyWeatherUpsertDTOs = linkedSetOf<HourlyWeatherUpsertRequestDTO>()
         val hourly = weather.hourly
 
         hourly!!.time.forEachIndexed { index, time ->
@@ -63,7 +63,7 @@ class WeatherSaveManagerImpl(
     }
 
     private fun saveDailyWeatherOnMysql(weather: WeatherResponseDTO) {
-        val dailyWeathers = arrayListOf<DailyWeather>()
+        val dailyWeathers = linkedSetOf<DailyWeather>()
         val daily = weather.daily
 
         daily!!.time.forEachIndexed { index, time ->
