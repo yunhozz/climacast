@@ -1,9 +1,9 @@
 package com.climacast.batch_server.model.entity
 
 import com.climacast.batch_server.common.enums.WeatherStatus
-import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Embeddable
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import java.time.LocalDateTime
 
@@ -15,13 +15,13 @@ class HourlyWeather(
     latitude: Double,
     longitude: Double,
     status: WeatherStatus,
-    val time: LocalDateTime,
+    time: LocalDateTime,
+    @Embedded
     val data: HourlyWeatherData
-): Weather(parentRegion, childRegion, latitude, longitude, status)
+): Weather(parentRegion, childRegion, latitude, longitude, status, time)
 
 @Embeddable
 data class HourlyWeatherData(
-    @Column(name = "weather_code")
     val weatherCode: Int,
     val temperature2m: Double,
     val temperature80m: Double,
