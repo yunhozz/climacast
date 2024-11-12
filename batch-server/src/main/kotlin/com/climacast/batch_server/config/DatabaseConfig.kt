@@ -46,7 +46,7 @@ class BatchDatabaseConfig {
 class JpaDatabaseConfig {
     companion object {
         const val ENTITY_PACKAGE = "com.climacast.batch_server.model.entity"
-        const val HIBERNATE_DDL_AUTO = "create"
+        const val HIBERNATE_DDL_AUTO = "update"
         const val HIBERNATE_SHOW_SQL = "true"
         const val HIBERNATE_FORMAT_SQL = "true"
     }
@@ -81,13 +81,11 @@ class JpaDatabaseConfig {
         LocalContainerEntityManagerFactoryBean().apply {
             dataSource = routingDataSource()
             jpaVendorAdapter = HibernateJpaVendorAdapter()
-            jpaPropertyMap.putAll(
-                mapOf(
-                    "hibernate.hbm2ddl.auto" to HIBERNATE_DDL_AUTO,
-                    "hibernate.show_sql" to HIBERNATE_SHOW_SQL,
-                    "hibernate.format_sql" to HIBERNATE_FORMAT_SQL
-                )
-            )
+            jpaPropertyMap.putAll(mapOf(
+                "hibernate.hbm2ddl.auto" to HIBERNATE_DDL_AUTO,
+                "hibernate.show_sql" to HIBERNATE_SHOW_SQL,
+                "hibernate.format_sql" to HIBERNATE_FORMAT_SQL
+            ))
             setPackagesToScan(ENTITY_PACKAGE)
             afterPropertiesSet()
         }.`object`!!
