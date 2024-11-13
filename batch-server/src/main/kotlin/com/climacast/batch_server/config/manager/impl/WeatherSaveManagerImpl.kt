@@ -11,6 +11,7 @@ import com.climacast.batch_server.model.repository.HourlyWeatherRepository
 import com.climacast.batch_server.model.repository.WeatherDocumentRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -74,7 +75,7 @@ class WeatherSaveManagerImpl(
                 weather.latitude,
                 weather.longitude,
                 WeatherStatus.of(weatherCode),
-                LocalDateTime.parse(time),
+                LocalDate.parse(time).atStartOfDay(),
                 DailyWeatherData(
                     weatherCode,
                     daily.temperature_2m_max!![index],
