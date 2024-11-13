@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
+import org.springframework.data.domain.Persistable
 import java.time.LocalDateTime
 
 @Entity
@@ -20,9 +21,15 @@ abstract class Weather(
     @Enumerated(EnumType.STRING)
     val status: WeatherStatus,
     time: LocalDateTime
-) {
+): BaseEntity(), Persistable<WeatherId> {
     @EmbeddedId
-    val id: WeatherId = WeatherId(childRegion, time)
+    val weatherId = WeatherId(childRegion, time)
+
+    override fun getId(): WeatherId? = this.weatherId
+
+    override fun isNew(): Boolean {
+        return super.createdAt == null
+    }
 }
 
 @Embeddable
