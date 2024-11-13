@@ -24,71 +24,62 @@ class WeatherSaveManagerImpl(
 
     @Transactional
     override fun saveOnMysql(weathers: List<WeatherResponseDTO>) {
+        val hourlyWeatherUpsertDTOs = linkedSetOf<HourlyWeatherUpsertRequestDTO>()
+        val dailyWeathers = linkedSetOf<DailyWeather>()
+
         weathers.forEach { weather ->
-            if (weather.hourly != null) {
-                saveHourlyWeatherOnMysql(weather)
-            } else {
-                saveDailyWeatherOnMysql(weather)
+            weather.hourly?.let {
+                it.time.forEachIndexed { index, time ->
+                    val weatherCode = it.weather_code!![index]
+                    val hourlyWeatherUpsertDTO = HourlyWeatherUpsertRequestDTO(
+                        weather.parentRegion!!,
+                        weather.childRegion!!,
+                        weather.latitude,
+                        weather.longitude,
+                        WeatherStatus.of(weatherCode).name,
+                        LocalDateTime.parse(time),
+                        weatherCode,
+                        it.temperature_2m!![index],
+                        it.temperature_80m!![index],
+                        it.temperature_120m!![index],
+                        it.temperature_180m!![index],
+                        it.wind_speed_10m!![index],
+                        it.wind_speed_80m!![index],
+                        it.wind_speed_120m!![index],
+                        it.wind_speed_180m!![index],
+                        it.relative_humidity_2m!![index]
+                    )
+                    hourlyWeatherUpsertDTOs.add(hourlyWeatherUpsertDTO)
+                }
+            } ?:
+            weather.daily?.let {
+                it.time.forEachIndexed { index, time ->
+                    val weatherCode = it.weather_code!![index]
+                    val dailyWeather = DailyWeather(
+                        weather.parentRegion!!,
+                        weather.childRegion!!,
+                        weather.latitude,
+                        weather.longitude,
+                        WeatherStatus.of(weatherCode),
+                        LocalDate.parse(time).atStartOfDay(),
+                        DailyWeatherData(
+                            weatherCode,
+                            it.temperature_2m_max!![index],
+                            it.temperature_2m_min!![index],
+                            LocalDateTime.parse(it.sunrise!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                            LocalDateTime.parse(it.sunset!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                            it.precipitation_sum!![index]
+                        )
+                    )
+                    dailyWeathers.add(dailyWeather)
+                }
             }
         }
-    }
 
-    private fun saveHourlyWeatherOnMysql(weather: WeatherResponseDTO) {
-        val hourlyWeatherUpsertDTOs = linkedSetOf<HourlyWeatherUpsertRequestDTO>()
-        val hourly = weather.hourly
-
-        hourly!!.time.forEachIndexed { index, time ->
-            val weatherCode = hourly.weather_code!![index]
-            val hourlyWeatherUpsertDTO = HourlyWeatherUpsertRequestDTO(
-                weather.parentRegion!!,
-                weather.childRegion!!,
-                weather.latitude,
-                weather.longitude,
-                WeatherStatus.of(weatherCode).name,
-                LocalDateTime.parse(time),
-                weatherCode,
-                hourly.temperature_2m!![index],
-                hourly.temperature_80m!![index],
-                hourly.temperature_120m!![index],
-                hourly.temperature_180m!![index],
-                hourly.wind_speed_10m!![index],
-                hourly.wind_speed_80m!![index],
-                hourly.wind_speed_120m!![index],
-                hourly.wind_speed_180m!![index],
-                hourly.relative_humidity_2m!![index]
-            )
-            hourlyWeatherUpsertDTOs.add(hourlyWeatherUpsertDTO)
+        when {
+            hourlyWeatherUpsertDTOs.isNotEmpty() -> hourlyWeatherRepository.upsertHourlyWeatherForecasts(hourlyWeatherUpsertDTOs)
+            dailyWeathers.isNotEmpty() -> dailyWeatherRepository.saveAll(dailyWeathers)
         }
-
-        hourlyWeatherRepository.upsertHourlyWeatherForecasts(hourlyWeatherUpsertDTOs)
-    }
-
-    private fun saveDailyWeatherOnMysql(weather: WeatherResponseDTO) {
-        val dailyWeathers = linkedSetOf<DailyWeather>()
-        val daily = weather.daily
-
-        daily!!.time.forEachIndexed { index, time ->
-            val weatherCode = daily.weather_code!![index]
-            val dailyWeather = DailyWeather(
-                weather.parentRegion!!,
-                weather.childRegion!!,
-                weather.latitude,
-                weather.longitude,
-                WeatherStatus.of(weatherCode),
-                LocalDate.parse(time).atStartOfDay(),
-                DailyWeatherData(
-                    weatherCode,
-                    daily.temperature_2m_max!![index],
-                    daily.temperature_2m_min!![index],
-                    LocalDateTime.parse(daily.sunrise!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                    LocalDateTime.parse(daily.sunset!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                    daily.precipitation_sum!![index]
-                )
-            )
-            dailyWeathers.add(dailyWeather)
-        }
-
-        dailyWeatherRepository.saveAll(dailyWeathers)
     }
 
     override fun saveOnElasticsearch(weathers: List<WeatherResponseDTO>) {

@@ -32,7 +32,7 @@ class WeatherJdbcRepositoryImpl(
                 windSpeed180m = VALUES(windSpeed180m),
                 humidity2m = VALUES(humidity2m)
             """
-        const val BATCH_SIZE = 100
+        const val BATCH_SIZE = 2520 // Hourly weathers size per day
     }
 
     override fun upsertHourlyWeatherForecasts(hourlyWeathers: Set<HourlyWeatherUpsertRequestDTO>) {
