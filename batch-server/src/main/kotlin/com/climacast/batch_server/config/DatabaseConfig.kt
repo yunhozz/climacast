@@ -84,7 +84,8 @@ class JpaDatabaseConfig {
             jpaPropertyMap.putAll(mapOf(
                 "hibernate.hbm2ddl.auto" to HIBERNATE_DDL_AUTO,
                 "hibernate.show_sql" to HIBERNATE_SHOW_SQL,
-                "hibernate.format_sql" to HIBERNATE_FORMAT_SQL
+                "hibernate.format_sql" to HIBERNATE_FORMAT_SQL,
+                "hibernate.dialect" to "org.hibernate.dialect.MySQLDialect"
             ))
             setPackagesToScan(ENTITY_PACKAGE)
             afterPropertiesSet()
