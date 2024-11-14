@@ -52,11 +52,11 @@ class JpaDatabaseConfig {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "spring.datasource.weather.hikari.source")
+    @ConfigurationProperties(prefix = "spring.datasource.weather-source.hikari")
     fun jpaSourceDatasource() = HikariDataSource()
 
     @Bean
-    @ConfigurationProperties(prefix = "spring.datasource.weather.hikari.replica")
+    @ConfigurationProperties(prefix = "spring.datasource.weather-replica.hikari")
     fun jpaReplicaDataSource() = HikariDataSource()
 
     @Bean
