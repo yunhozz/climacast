@@ -1,4 +1,17 @@
 services:
+  local:
+    container_name: mysql-local
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_HOST=${MYSQL_USER}
+    ports:
+      - 3306:3306
+    volumes:
+      - local-data:/var/lib/mysql
+    restart: always
+    networks:
+      - mysql-network
   source:
     container_name: mysql-source
     image: mysql:latest
@@ -36,6 +49,7 @@ networks:
   mysql-network:
 
 volumes:
+  local-data:
   source-data:
   source-logs:
   replica-data:
