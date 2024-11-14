@@ -5,11 +5,7 @@ import com.climacast.global.utils.logger
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobParameter
 import org.springframework.batch.core.JobParameters
-import org.springframework.batch.core.JobParametersInvalidException
 import org.springframework.batch.core.launch.JobLauncher
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException
-import org.springframework.batch.core.repository.JobRestartException
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -24,36 +20,14 @@ class WeatherService(
 
     @Scheduled(cron = "0 1 0 * * *")
     fun saveWeatherHistoryEveryDay() {
-        try {
-            val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), createJobParameters())
-            log.info(createLogMessage(jobExecution))
-        } catch (e: Exception) {
-            when (e) {
-                is JobExecutionAlreadyRunningException,
-                is JobInstanceAlreadyCompleteException,
-                is JobParametersInvalidException,
-                is JobRestartException
-                    -> log.error(e.message)
-                else -> throw e
-            }
-        }
+        val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), createJobParameters())
+        log.info(createLogMessage(jobExecution))
     }
 
     @Scheduled(cron = "0 0 * * * *")
     fun saveWeatherForecastEveryHour() {
-        try {
-            val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), createJobParameters())
-            log.info(createLogMessage(jobExecution))
-        } catch (e: Exception) {
-            when (e) {
-                is JobExecutionAlreadyRunningException,
-                is JobInstanceAlreadyCompleteException,
-                is JobParametersInvalidException,
-                is JobRestartException
-                    -> log.error(e.message)
-                else -> throw e
-            }
-        }
+        val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), createJobParameters())
+        log.info(createLogMessage(jobExecution))
     }
 
     private fun createJobParameters(): JobParameters {
