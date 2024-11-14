@@ -34,7 +34,7 @@ jobs:
       - name: Load YAML content from secret and process
         run: |
           touch ./application.yml
-          echo "${{ secrets.APPLICATION }}" > ./application.yml
+          echo "${{ secrets.APPLICATION }}" | base64 --decode > ./application.yml
           cat ./application.yml
 
       - name: Test with Gradle
