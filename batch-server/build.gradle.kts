@@ -1,7 +1,6 @@
 dependencies {
 	implementation(project(":global"))
 	implementation("org.springframework.boot:spring-boot-starter-batch")
-	implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 	implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")

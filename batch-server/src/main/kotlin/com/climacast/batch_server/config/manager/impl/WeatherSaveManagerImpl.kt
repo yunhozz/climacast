@@ -8,7 +8,6 @@ import com.climacast.batch_server.model.entity.DailyWeather
 import com.climacast.batch_server.model.entity.DailyWeatherData
 import com.climacast.batch_server.model.repository.DailyWeatherRepository
 import com.climacast.batch_server.model.repository.HourlyWeatherRepository
-import com.climacast.batch_server.model.repository.WeatherDocumentRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -18,8 +17,7 @@ import java.time.format.DateTimeFormatter
 @Component
 class WeatherSaveManagerImpl(
     private val dailyWeatherRepository: DailyWeatherRepository,
-    private val hourlyWeatherRepository: HourlyWeatherRepository,
-    private val weatherDocumentRepository: WeatherDocumentRepository
+    private val hourlyWeatherRepository: HourlyWeatherRepository
 ): WeatherSaveManager {
 
     @Transactional
