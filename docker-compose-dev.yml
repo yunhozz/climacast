@@ -1,0 +1,71 @@
+services:
+  config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    image: climacast/config-server:latest
+    ports:
+      - 8888:8888
+    environment:
+      - spring.cloud.config.server.git.host-key=${CONFIG_SERVER_HOST_KEY}
+      - spring.cloud.config.server.git.private-key=${CONFIG_SERVER_PRIVATE_KEY}
+    restart: always
+    networks:
+      - climacast-network
+
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    image: climacast/eureka-server:latest
+    ports:
+      - 8761:8761
+    environment:
+      - spring.cloud.config.name=eureka-server
+      - spring.cloud.config.profile=dev
+      - spring.config.import=configserver:http://config-server:8888/
+    depends_on:
+      - config-server
+    restart: always
+    networks:
+      - climacast-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: climacast/api-gateway:latest
+    ports:
+      - 8000:8000
+    environment:
+      - spring.cloud.config.name=api-gateway
+      - spring.cloud.config.profile=dev
+      - spring.config.import=configserver:http://config-server:8888/
+    depends_on:
+      - config-server
+      - eureka-server
+    restart: always
+    networks:
+      - climacast-network
+
+  batch-server:
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:latest
+    ports:
+      - 8999:8999
+    environment:
+      - spring.cloud.config.name=batch-server
+      - spring.cloud.config.profile=dev
+      - spring.config.import=configserver:http://config-server:8888/
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+    restart: always
+    networks:
+      - climacast-network
+
+networks:
+  climacast-network:
