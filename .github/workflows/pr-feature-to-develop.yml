@@ -38,6 +38,17 @@ jobs:
           echo "${{ secrets.APPLICATION }}" > ./global/src/main/resources/application.properties
           cat ./global/src/main/resources/application.properties
 
+      - name: Load Environments from secret and process
+        run: |
+          touch ./.env
+          echo "${{ secrets.ENV }}" > ./.env
+          cat ./.env
+
+      - name: Set up Docker Compose
+        run: |
+          docker-compose -f docker-compose-db.yml --env-file .env up -d
+          sleep 30
+
       - name: Test with Gradle
         run: ./gradlew --info test -x :config-server:test
 
