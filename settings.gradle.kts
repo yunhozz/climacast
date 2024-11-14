@@ -1,7 +1,8 @@
 rootProject.name = "climacast"
 include(
-    ":common",
+    ":global",
     ":config-server",
     ":eureka-server",
-    ":api-gateway"
+    ":api-gateway",
+    ":batch-server"
 )

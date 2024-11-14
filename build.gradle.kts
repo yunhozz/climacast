@@ -62,15 +62,20 @@ subprojects {
 		implementation("org.springframework.boot:spring-boot-starter-actuator")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
+		implementation("org.apache.kafka:kafka-streams")
+		implementation("org.springframework.kafka:spring-kafka")
+		implementation("org.springframework.boot:spring-boot-starter-aop")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+		testImplementation("org.springframework.kafka:spring-kafka-test")
 		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	}
 
 	configurations.forEach {
 		it.exclude(group = "org.springframework.boot", module = "spring-boot-starter-logging")
 		it.exclude(group = "org.apache.logging.log4j", module = "log4j-to-slf4j")
+		it.exclude(group = "ch.qos.logback", module = "logback-classic")
 	}
 
 	tasks.withType<KotlinCompile> {
@@ -98,7 +103,8 @@ subprojects {
 	}
 }
 
-project(":common")
+project(":global")
 project(":config-server")
 project(":eureka-server")
 project(":api-gateway")
+project(":batch-server")
