@@ -31,7 +31,7 @@ class KafkaConfig {
 
     private val log = logger()
 
-    @Value("\${spring.kafka.bootstrap-servers}")
+    @Value("\${kafka.bootstrap-servers}")
     private lateinit var kafkaBootstrapServers: List<String>
 
     @Bean
