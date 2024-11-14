@@ -33,6 +33,7 @@ jobs:
 
       - name: Load Properties from secret and process
         run: |
+          mkdir -p ./global/src/main/resources
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION }}" > ./global/src/main/resources/application.properties
           cat ./global/src/main/resources/application.properties
