@@ -31,6 +31,12 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      - name: Load YAML content from secret and process
+        run: |
+          touch ./application.yml
+          echo "${{ secrets.APPLICATION }}" > ./application.yml
+          cat ./application.yml
+
       - name: Test with Gradle
         run: ./gradlew --info test -x :config-server:test
 
