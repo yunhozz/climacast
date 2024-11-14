@@ -10,7 +10,7 @@ services:
     volumes:
       - source-data:/var/lib/mysql
       - source-logs:/var/lib/mysql-files
-      - .mysql/my-source.cnf:/etc/mysql/my.cnf
+      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
     restart: always
     networks:
       - mysql-network
@@ -25,7 +25,7 @@ services:
     volumes:
       - replica-data:/var/lib/mysql
       - replica-logs:/var/lib/mysql-files
-      - .mysql/my-replica.cnf:/etc/mysql/my.cnf
+      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
     depends_on:
       - source
     restart: always
