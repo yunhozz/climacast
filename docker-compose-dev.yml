@@ -23,7 +23,7 @@ services:
     ports:
       - 8761:8761
     environment:
-      - SPRING_PROFILES=dev
+      - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
     restart: always
@@ -39,7 +39,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      - SPRING_PROFILES=dev
+      - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
       - eureka-server
@@ -56,7 +56,7 @@ services:
     ports:
       - 8999:8999
     environment:
-      - SPRING_PROFILES=dev
+      - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
       - eureka-server
