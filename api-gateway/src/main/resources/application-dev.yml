@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      name: api-gateway
+      profile: dev
+  config:
+    import: configserver:http://config-server:8888/
