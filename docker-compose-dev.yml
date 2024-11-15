@@ -1,5 +1,6 @@
 services:
   config-server:
+    container_name: config-server
     build:
       context: .
       dockerfile: config-server/Dockerfile
@@ -14,6 +15,7 @@ services:
       - climacast-network
 
   eureka-server:
+    container_name: eureka-server
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
@@ -21,9 +23,7 @@ services:
     ports:
       - 8761:8761
     environment:
-      - spring.cloud.config.name=eureka-server
-      - spring.cloud.config.profile=dev
-      - spring.config.import=configserver:http://config-server:8888/
+      - SPRING_PROFILES=dev
     depends_on:
       - config-server
     restart: always
@@ -31,6 +31,7 @@ services:
       - climacast-network
 
   api-gateway:
+    container_name: api-gateway
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -38,9 +39,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      - spring.cloud.config.name=api-gateway
-      - spring.cloud.config.profile=dev
-      - spring.config.import=configserver:http://config-server:8888/
+      - SPRING_PROFILES=dev
     depends_on:
       - config-server
       - eureka-server
@@ -49,6 +48,7 @@ services:
       - climacast-network
 
   batch-server:
+    container_name: batch-server
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -56,16 +56,69 @@ services:
     ports:
       - 8999:8999
     environment:
-      - spring.cloud.config.name=batch-server
-      - spring.cloud.config.profile=dev
-      - spring.config.import=configserver:http://config-server:8888/
+      - SPRING_PROFILES=dev
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
+      - mysql-batch
+      - mysql-source
+      - mysql-replica
     restart: always
+    networks:
+      - climacast-network
+
+  mysql-batch:
+    container_name: mysql-batch
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - 3306:3306
+    volumes:
+      - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  mysql-source:
+    container_name: mysql-source
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - 3307:3306
+    volumes:
+      - source-data:/var/lib/mysql
+      - source-logs:/var/lib/mysql-files
+      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
+    networks:
+      - climacast-network
+
+  mysql-replica:
+    container_name: mysql-replica
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - 3308:3306
+    volumes:
+      - replica-data:/var/lib/mysql
+      - replica-logs:/var/lib/mysql-files
+      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
+    depends_on:
+      - mysql-source
     networks:
       - climacast-network
 
 networks:
   climacast-network:
+
+volumes:
+  batch-data:
+  source-data:
+  source-logs:
+  replica-data:
+  replica-logs:
