@@ -1,38 +1,25 @@
 services:
-  local:
-    container_name: mysql-local
-    image: mysql:latest
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
-    ports:
-      - 3306:3306
-    volumes:
-      - local-data:/var/lib/mysql
-    restart: always
-    networks:
-      - mysql-network
-  source:
+  mysql-source:
     container_name: mysql-source
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Seoul
     ports:
       - 3307:3306
     volumes:
       - source-data:/var/lib/mysql
       - source-logs:/var/lib/mysql-files
       - ./mysql/my-source.cnf:/etc/mysql/my.cnf
-    restart: always
     networks:
       - mysql-network
-  replica:
+
+  mysql-replica:
     container_name: mysql-replica
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Seoul
     ports:
       - 3308:3306
     volumes:
@@ -40,8 +27,20 @@ services:
       - replica-logs:/var/lib/mysql-files
       - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
     depends_on:
-      - source
-    restart: always
+      - mysql-source
+    networks:
+      - mysql-network
+
+  mysql-batch:
+    container_name: mysql-batch
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Seoul
+    ports:
+      - 3309:3306
+    volumes:
+      - batch-data:/var/lib/mysql
     networks:
       - mysql-network
 
@@ -49,8 +48,8 @@ networks:
   mysql-network:
 
 volumes:
-  local-data:
   source-data:
   source-logs:
   replica-data:
   replica-logs:
+  batch-data:

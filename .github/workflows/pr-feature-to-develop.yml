@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p ./global/src/main/resources
           touch ./global/src/main/resources/application.properties
-          echo "${{ secrets.APPLICATION }}" > ./global/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_LOCAL }}" > ./global/src/main/resources/application.properties
           cat ./global/src/main/resources/application.properties
 
       - name: Load Environments from secret and process
@@ -48,8 +48,8 @@ jobs:
         run: |
           sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
-          docker compose -f docker-compose-dev.yml --env-file .env up -d
-          docker compose -f docker-compose-dev.yml ps
+          docker compose -f docker-compose-db.yml --env-file .env up -d
+          docker compose -f docker-compose-db.yml ps
           sleep 30
 
       - name: Test with Gradle
