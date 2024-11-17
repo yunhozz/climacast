@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      name: eureka-server
+      profile: dev
+  config:
+    import: configserver:http://config-server:8888/

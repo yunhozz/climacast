@@ -13,7 +13,7 @@ class WeatherJdbcRepositoryImpl(
 
     companion object {
         const val HOURLY_WEATHER_UPSERT_QUERY = """
-            INSERT INTO `climacast-weather`.Weather (
+            INSERT INTO climacast_weather.Weather (
                 parentRegion, childRegion, latitude, longitude, status, time, DTYPE, 
                 weatherCode, temperature2m, temperature80m, temperature120m, temperature180m,
                 windSpeed10m, windSpeed80m, windSpeed120m, windSpeed180m, humidity2m,

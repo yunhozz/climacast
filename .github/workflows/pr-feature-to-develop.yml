@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p ./global/src/main/resources
           touch ./global/src/main/resources/application.properties
-          echo "${{ secrets.APPLICATION }}" > ./global/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_LOCAL }}" > ./global/src/main/resources/application.properties
           cat ./global/src/main/resources/application.properties
 
       - name: Load Environments from secret and process
