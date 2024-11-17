@@ -61,23 +61,10 @@ services:
       - config-server
       - eureka-server
       - api-gateway
-      - mysql-batch
       - mysql-source
       - mysql-replica
-    restart: always
-    networks:
-      - climacast-network
-
-  mysql-batch:
-    container_name: mysql-batch
-    image: mysql:latest
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
-    ports:
-      - 3306:3306
-    volumes:
-      - batch-data:/var/lib/mysql
+      - mysql-batch
+    restart: on-failure
     networks:
       - climacast-network
 
@@ -86,7 +73,7 @@ services:
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Seoul
     ports:
       - 3307:3306
     volumes:
@@ -101,7 +88,7 @@ services:
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Seoul
     ports:
       - 3308:3306
     volumes:
@@ -113,12 +100,25 @@ services:
     networks:
       - climacast-network
 
+  mysql-batch:
+    container_name: mysql-batch
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Seoul
+    ports:
+      - 3309:3306
+    volumes:
+      - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
 networks:
   climacast-network:
 
 volumes:
-  batch-data:
   source-data:
   source-logs:
   replica-data:
   replica-logs:
+  batch-data:
