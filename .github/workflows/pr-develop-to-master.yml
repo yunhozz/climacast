@@ -31,6 +31,12 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      - name: Load Properties from secret and process
+        run: |
+          touch ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.APPLICATION_KEY_YML }}" > ./config-server/src/main/resources/application-key.yml
+          cat ./config-server/src/main/resources/application-key.yml
+
       - name: Load Environments from secret and process
         run: |
           echo "${{ secrets.ENV }}" > .env
