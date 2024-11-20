@@ -1,0 +1,121 @@
+services:
+  config-server:
+    container_name: config-server
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    image: climacast/config-server:latest
+    ports:
+      - 8888:8888
+    restart: always
+    networks:
+      - climacast-network
+
+  eureka-server:
+    container_name: eureka-server
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    image: climacast/eureka-server:latest
+    ports:
+      - 8761:8761
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+    restart: always
+    networks:
+      - climacast-network
+
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: climacast/api-gateway:latest
+    ports:
+      - 8000:8000
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+    restart: always
+    networks:
+      - climacast-network
+
+  batch-server:
+    container_name: batch-server
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:latest
+    ports:
+      - 8999:8999
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  mysql-source:
+    container_name: mysql-source
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Seoul
+    ports:
+      - 3307:3306
+    volumes:
+      - source-data:/var/lib/mysql
+      - source-logs:/var/lib/mysql-files
+      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
+    networks:
+      - climacast-network
+
+  mysql-replica:
+    container_name: mysql-replica
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Seoul
+    ports:
+      - 3308:3306
+    volumes:
+      - replica-data:/var/lib/mysql
+      - replica-logs:/var/lib/mysql-files
+      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
+    depends_on:
+      - mysql-source
+    networks:
+      - climacast-network
+
+  mysql-batch:
+    container_name: mysql-batch
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Asia/Seoul
+    ports:
+      - 3309:3306
+    volumes:
+      - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
+networks:
+  climacast-network:
+
+volumes:
+  source-data:
+  source-logs:
+  replica-data:
+  replica-logs:
+  batch-data:

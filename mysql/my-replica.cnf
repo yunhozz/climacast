@@ -1,0 +1,6 @@
+[mysqld]
+server_id=2
+log_bin=mysql-bin
+relay_log=/var/lib/mysql/mysql-relay-bin
+log_slave_updates='ON'
+read_only='ON'
