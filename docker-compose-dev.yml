@@ -7,9 +7,6 @@ services:
     image: climacast/config-server:latest
     ports:
       - 8888:8888
-    environment:
-      - spring.cloud.config.server.git.host-key=${CONFIG_SERVER_HOST_KEY}
-      - spring.cloud.config.server.git.private-key=${CONFIG_SERVER_PRIVATE_KEY}
     restart: always
     networks:
       - climacast-network
