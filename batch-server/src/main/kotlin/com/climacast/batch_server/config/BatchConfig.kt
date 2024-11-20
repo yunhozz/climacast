@@ -44,7 +44,7 @@ class BatchConfig(
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
-        const val CHUNK_SIZE = 35
+        const val CHUNK_SIZE = 126
     }
 
     private val regions = CopyOnWriteArraySet<Region>()
