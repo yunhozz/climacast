@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 abstract class Weather(
-    val parentRegion: String,
+    parentRegion: String,
     childRegion: String,
     val latitude: Double,
     val longitude: Double,
@@ -23,7 +23,7 @@ abstract class Weather(
     time: LocalDateTime
 ): BaseEntity(), Persistable<WeatherId> {
     @EmbeddedId
-    val weatherId = WeatherId(childRegion, time)
+    val weatherId = WeatherId(parentRegion, childRegion, time)
 
     override fun getId(): WeatherId? = this.weatherId
 
@@ -34,6 +34,7 @@ abstract class Weather(
 
 @Embeddable
 data class WeatherId(
+    val parentRegion: String,
     val childRegion: String,
     val time: LocalDateTime
 )
