@@ -31,15 +31,14 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Load Properties from secret and process
+      - name: Load Properties and Environments from secrets and process
         run: |
           mkdir -p ./global/src/main/resources
+          
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
           cat ./global/src/main/resources/application.properties
-
-      - name: Load Environments from secret and process
-        run: |
+          
           echo "${{ secrets.ENV }}" > .env
           cat .env
 
