@@ -46,16 +46,16 @@ class WeatherJdbcRepositoryImpl(
             ps.setDouble(4, weather.longitude)
             ps.setString(5, weather.status)
             ps.setTimestamp(6, Timestamp.valueOf(weather.time))
-            ps.setInt(7, weather.weatherCode)
-            ps.setDouble(8, weather.temperature2m)
-            ps.setDouble(9, weather.temperature80m)
-            ps.setDouble(10, weather.temperature120m)
-            ps.setDouble(11, weather.temperature180m)
-            ps.setDouble(12, weather.windSpeed10m)
-            ps.setDouble(13, weather.windSpeed80m)
-            ps.setDouble(14, weather.windSpeed120m)
-            ps.setDouble(15, weather.windSpeed180m)
-            ps.setInt(16, weather.humidity2m)
+            weather.weatherCode?.let { ps.setInt(7, it) }
+            weather.temperature2m?.let { ps.setDouble(8, it) }
+            weather.temperature80m?.let { ps.setDouble(9, it) }
+            weather.temperature120m?.let { ps.setDouble(10, it) }
+            weather.temperature180m?.let { ps.setDouble(11, it) }
+            weather.windSpeed10m?.let { ps.setDouble(12, it) }
+            weather.windSpeed80m?.let { ps.setDouble(13, it) }
+            weather.windSpeed120m?.let { ps.setDouble(14, it) }
+            weather.windSpeed180m?.let { ps.setDouble(15, it) }
+            weather.humidity2m?.let { ps.setInt(16, it) }
             ps.setTimestamp(17, Timestamp.valueOf(LocalDateTime.now()))
             ps.setTimestamp(18, Timestamp.valueOf(LocalDateTime.now()))
         }

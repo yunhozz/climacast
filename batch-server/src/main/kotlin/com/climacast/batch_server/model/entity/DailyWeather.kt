@@ -22,10 +22,10 @@ class DailyWeather(
 
 @Embeddable
 data class DailyWeatherData(
-    val weatherCode: Int,
-    val maxTemperature2m: Double,
-    val minTemperature2m: Double,
-    val sunrise: LocalDateTime,
-    val sunset: LocalDateTime,
-    val precipitationSum: Double
+    val weatherCode: Int?,
+    val maxTemperature2m: Double?,
+    val minTemperature2m: Double?,
+    val sunrise: LocalDateTime?,
+    val sunset: LocalDateTime?,
+    val precipitationSum: Double?
 )

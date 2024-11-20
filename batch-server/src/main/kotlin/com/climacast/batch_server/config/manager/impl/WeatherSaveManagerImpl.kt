@@ -37,15 +37,15 @@ class WeatherSaveManagerImpl(
                         WeatherStatus.of(weatherCode).name,
                         LocalDateTime.parse(time),
                         weatherCode,
-                        it.temperature_2m!![index],
-                        it.temperature_80m!![index],
-                        it.temperature_120m!![index],
-                        it.temperature_180m!![index],
-                        it.wind_speed_10m!![index],
-                        it.wind_speed_80m!![index],
-                        it.wind_speed_120m!![index],
-                        it.wind_speed_180m!![index],
-                        it.relative_humidity_2m!![index]
+                        it.temperature_2m?.getOrNull(index),
+                        it.temperature_80m?.getOrNull(index),
+                        it.temperature_120m?.getOrNull(index),
+                        it.temperature_180m?.getOrNull(index),
+                        it.wind_speed_10m?.getOrNull(index),
+                        it.wind_speed_80m?.getOrNull(index),
+                        it.wind_speed_120m?.getOrNull(index),
+                        it.wind_speed_180m?.getOrNull(index),
+                        it.relative_humidity_2m?.getOrNull(index)
                     )
                     hourlyWeatherUpsertDTOs.add(hourlyWeatherUpsertDTO)
                 }
@@ -62,11 +62,11 @@ class WeatherSaveManagerImpl(
                         LocalDate.parse(time).atStartOfDay(),
                         DailyWeatherData(
                             weatherCode,
-                            it.temperature_2m_max!![index],
-                            it.temperature_2m_min!![index],
-                            LocalDateTime.parse(it.sunrise!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                            LocalDateTime.parse(it.sunset!![index], DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                            it.precipitation_sum!![index]
+                            it.temperature_2m_max?.getOrNull(index),
+                            it.temperature_2m_min?.getOrNull(index),
+                            parseLocalDateTime(it.sunrise, index),
+                            parseLocalDateTime(it.sunset, index),
+                            it.precipitation_sum?.getOrNull(index)
                         )
                     )
                     dailyWeathers.add(dailyWeather)
@@ -78,6 +78,17 @@ class WeatherSaveManagerImpl(
             hourlyWeatherUpsertDTOs.isNotEmpty() -> hourlyWeatherRepository.upsertHourlyWeatherForecasts(hourlyWeatherUpsertDTOs)
             dailyWeathers.isNotEmpty() -> dailyWeatherRepository.saveAll(dailyWeathers)
         }
+    }
+
+    companion object {
+        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+
+        fun parseLocalDateTime(list: List<String>?, idx: Int): LocalDateTime? =
+            list?.let { l ->
+                l.getOrNull(idx)?.let {
+                    LocalDateTime.parse(it, DATETIME_FORMATTER)
+                }
+            }
     }
 
     override fun saveOnElasticsearch(weathers: List<WeatherResponseDTO>) {
