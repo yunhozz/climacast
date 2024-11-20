@@ -1,5 +1,6 @@
 package com.climacast.batch_server.service
 
+import com.climacast.batch_server.common.annotation.DistributedLock
 import com.climacast.batch_server.config.BatchConfig
 import com.climacast.global.utils.logger
 import org.springframework.batch.core.JobExecution
@@ -15,39 +16,37 @@ class WeatherService(
     private val batchConfig: BatchConfig,
     private val jobLauncher: JobLauncher
 ) {
-
     private val log = logger()
 
-    @Scheduled(cron = "0 1 0 * * *")
+    @Scheduled(cron = "0 3 0 * * *")
+    @DistributedLock(key = "save-weather-history", leaseTime = 5, waitTime = 0)
     fun saveWeatherHistoryEveryDay() {
         val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), createJobParameters())
         log.info(createLogMessage(jobExecution))
     }
 
     @Scheduled(cron = "0 0 * * * *")
+    @DistributedLock(key = "save-weather-forecast", leaseTime = 30, waitTime = 0)
     fun saveWeatherForecastEveryHour() {
         val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), createJobParameters())
         log.info(createLogMessage(jobExecution))
     }
 
-    private fun createJobParameters(): JobParameters {
-        val parameters = mapOf(
-            "uuid" to JobParameter(UUID.randomUUID().toString(), String::class.java),
-            "time" to JobParameter(System.currentTimeMillis(), Long::class.java)
-        )
-        return JobParameters(parameters)
-    }
+    private fun createJobParameters() = JobParameters(mapOf(
+        "uuid" to JobParameter(UUID.randomUUID().toString(), String::class.java),
+        "time" to JobParameter(System.currentTimeMillis(), Long::class.java)
+    ))
 
     companion object {
         private fun createLogMessage(jobExecution: JobExecution) = StringBuilder().apply {
             append("Job Execution: ").append(jobExecution.status).append("\n")
-            append("Job getJobId: ").append(jobExecution.jobId).append("\n")
-            append("Job getJobName: ").append(jobExecution.jobInstance.jobName).append("\n")
-            append("Job getExitStatus: ").append(jobExecution.exitStatus).append("\n")
-            append("Job getJobInstance: ").append(jobExecution.jobInstance).append("\n")
-            append("Job getStepExecutions: ").append(jobExecution.stepExecutions).append("\n")
-            append("Job getLastUpdated: ").append(jobExecution.lastUpdated).append("\n")
-            append("Job getFailureExceptions: ").append(jobExecution.failureExceptions).append("\n")
+            append("Job Id: ").append(jobExecution.jobId).append("\n")
+            append("Job Name: ").append(jobExecution.jobInstance.jobName).append("\n")
+            append("Job Exit Status: ").append(jobExecution.exitStatus).append("\n")
+            append("Job Instance: ").append(jobExecution.jobInstance).append("\n")
+            append("Job Step Executions: ").append(jobExecution.stepExecutions).append("\n")
+            append("Job Last Updated: ").append(jobExecution.lastUpdated).append("\n")
+            append("Job Failure Exceptions: ").append(jobExecution.failureExceptions).append("\n")
         }.toString()
     }
 }
