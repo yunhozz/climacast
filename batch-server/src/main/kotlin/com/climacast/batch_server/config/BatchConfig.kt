@@ -21,6 +21,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.file.FlatFileItemReader
 import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
@@ -44,7 +45,6 @@ class BatchConfig(
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
-        const val CHUNK_SIZE = 126
     }
 
     private val regions = CopyOnWriteArraySet<Region>()
@@ -54,9 +54,9 @@ class BatchConfig(
     fun saveWeatherHistoryJob(): Job =
         JobBuilder("saveWeatherHistory", batchJobRepository)
             .incrementer(RunIdIncrementer())
-            .start(readCsvStep())
-            .next(callHistoricalWeatherOpenApiStep())
-            .next(saveWeathersOnMysqlStep())
+            .start(readCsvStep(""))
+            .next(callHistoricalWeatherOpenApiStep(""))
+            .next(saveWeathersOnMysqlStep(""))
             .listener(jobCompletionListener())
             .build()
 
@@ -64,44 +64,44 @@ class BatchConfig(
     fun saveWeatherForecastJob(): Job =
         JobBuilder("saveWeatherForecast", batchJobRepository)
             .incrementer(RunIdIncrementer())
-            .start(readCsvStep())
-            .next(callForecastWeatherOpenApiStep())
-            .next(saveWeathersOnMysqlStep())
+            .start(readCsvStep(""))
+            .next(callForecastWeatherOpenApiStep(""))
+            .next(saveWeathersOnMysqlStep(""))
             .listener(jobCompletionListener())
             .build()
 
     @Bean
     @JobScope
-    fun readCsvStep(): Step =
+    fun readCsvStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder("readCsv", batchJobRepository)
-            .chunk<Region, Region>(CHUNK_SIZE, batchTransactionManager)
+            .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
             .writer(regionInfoWriter())
             .build()
 
     @Bean
     @JobScope
-    fun callHistoricalWeatherOpenApiStep(): Step =
+    fun callHistoricalWeatherOpenApiStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder("callHistoricalWeatherOpenApi", batchJobRepository)
-            .chunk<WeatherResponseDTO, WeatherResponseDTO>(CHUNK_SIZE, batchTransactionManager)
+            .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), batchTransactionManager)
             .reader(historicalWeatherOpenApiCallReader())
             .writer(weatherOpenApiResponseWriter())
             .build()
 
     @Bean
     @JobScope
-    fun callForecastWeatherOpenApiStep(): Step =
+    fun callForecastWeatherOpenApiStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder("callForecastWeatherOpenApi", batchJobRepository)
-            .chunk<WeatherResponseDTO, WeatherResponseDTO>(CHUNK_SIZE, batchTransactionManager)
+            .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), batchTransactionManager)
             .reader(forecastWeatherOpenApiCallReader())
             .writer(weatherOpenApiResponseWriter())
             .build()
 
     @Bean
     @JobScope
-    fun saveWeathersOnMysqlStep(): Step =
+    fun saveWeathersOnMysqlStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder("saveWeathersOnMysql", batchJobRepository)
-            .chunk<WeatherResponseDTO, WeatherResponseDTO>(CHUNK_SIZE, appTransactionManager)
+            .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), appTransactionManager)
             .reader(apiResponseReader())
             .writer(weatherDataWriter())
             .build()

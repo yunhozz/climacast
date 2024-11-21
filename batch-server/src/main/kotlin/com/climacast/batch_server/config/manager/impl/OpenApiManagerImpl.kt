@@ -61,7 +61,7 @@ class OpenApiManagerImpl(
         val hourly = hourlyValues?.joinToString(",")
         val daily = dailyValues?.joinToString(",")
 
-        return Flux.fromIterable(listOf(regions.first()))
+        return Flux.fromIterable(regions)
             .flatMap { region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
                 openMeteoWebClient.get()
