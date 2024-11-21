@@ -18,7 +18,7 @@ class HourlyWeather(
     time: LocalDateTime,
     @Embedded
     val data: HourlyWeatherData
-): Weather(parentRegion, childRegion, latitude, longitude, status, time)
+): Weather(parentRegion, childRegion, latitude, longitude, status, time.toString())
 
 @Embeddable
 data class HourlyWeatherData(

@@ -9,7 +9,6 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
 import org.springframework.data.domain.Persistable
-import java.time.LocalDateTime
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -20,7 +19,7 @@ abstract class Weather(
     val longitude: Double,
     @Enumerated(EnumType.STRING)
     val status: WeatherStatus,
-    time: LocalDateTime
+    time: String
 ): BaseEntity(), Persistable<WeatherId> {
     @EmbeddedId
     val weatherId = WeatherId(parentRegion, childRegion, time)
@@ -36,5 +35,5 @@ abstract class Weather(
 data class WeatherId(
     val parentRegion: String,
     val childRegion: String,
-    val time: LocalDateTime
+    val time: String
 )

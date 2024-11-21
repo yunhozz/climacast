@@ -147,7 +147,10 @@ class BatchConfig(
 
         override fun read(): WeatherResponseDTO? {
             if (iterator == null) {
-                val dto = OpenApiQueryRequestDTO(dailyValues = DailyConstants.ENTIRE)
+                val dto = OpenApiQueryRequestDTO(
+                    dailyValues = DailyConstants.ENTIRE,
+                    hourlyValues = HourlyConstants.ENTIRE
+                )
                 val responses = openApiManager.callHistoricalWeatherOpenApi(regions, dto)
                 iterator = responses!!.iterator()
             }
