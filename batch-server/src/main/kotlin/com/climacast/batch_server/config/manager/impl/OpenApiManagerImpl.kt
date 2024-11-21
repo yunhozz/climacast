@@ -1,5 +1,6 @@
 package com.climacast.batch_server.config.manager.impl
 
+import com.climacast.batch_server.common.enums.WeatherType
 import com.climacast.batch_server.config.Region
 import com.climacast.batch_server.config.manager.OpenApiManager
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
@@ -23,7 +24,7 @@ class OpenApiManagerImpl(
     // 매 시간마다 실행
     override fun callForecastWeatherOpenApi(regions: Set<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
         val (hourlyValues, _, _, forecastDays) = dto
-        val hourly = hourlyValues!!.joinToString(",")
+        val hourly = hourlyValues?.joinToString(",")
 
         return Flux.fromIterable(regions)
             .flatMap { region ->
@@ -45,6 +46,7 @@ class OpenApiManagerImpl(
                         it.apply {
                             this.parentRegion = parentRegion
                             this.childRegion = childRegion
+                            this.weatherType = WeatherType.FORECAST
                         }
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
@@ -55,10 +57,11 @@ class OpenApiManagerImpl(
 
     // 매일 0시에 실행
     override fun callHistoricalWeatherOpenApi(regions: Set<Region>, dto: OpenApiQueryRequestDTO): MutableList<WeatherResponseDTO>? {
-        val (_, dailyValues, pastDays, _) = dto
-        val daily = dailyValues!!.joinToString(",")
+        val (hourlyValues, dailyValues, pastDays, _) = dto
+        val hourly = hourlyValues?.joinToString(",")
+        val daily = dailyValues?.joinToString(",")
 
-        return Flux.fromIterable(regions)
+        return Flux.fromIterable(listOf(regions.first()))
             .flatMap { region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
                 openMeteoWebClient.get()
@@ -66,6 +69,7 @@ class OpenApiManagerImpl(
                         uriBuilder.path(weatherForecastEndPoint)
                             .queryParam("latitude", latitude)
                             .queryParam("longitude", longitude)
+                            .queryParam("hourly", hourly)
                             .queryParam("daily", daily)
                             .queryParam("past_days", pastDays)
                             .queryParam("forecast_days", 0)
@@ -78,6 +82,7 @@ class OpenApiManagerImpl(
                         it.apply {
                             this.parentRegion = parentRegion
                             this.childRegion = childRegion
+                            this.weatherType = WeatherType.HISTORY
                         }
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
