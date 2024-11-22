@@ -137,7 +137,7 @@ class WeatherSaveManagerImpl(
     }
 
     companion object {
-        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
         fun parseLocalDateTime(list: List<String>?): LocalDateTime? =
             list?.let { l ->
