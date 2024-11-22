@@ -30,8 +30,8 @@ class OpenApiManagerImpl(
             .flatMap { region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
                 openMeteoWebClient.get()
-                    .uri { uriBuilder ->
-                        uriBuilder.path(weatherForecastEndPoint)
+                    .uri {
+                        it.path(weatherForecastEndPoint)
                             .queryParam("latitude", latitude)
                             .queryParam("longitude", longitude)
                             .queryParam("hourly", hourly)
@@ -61,15 +61,40 @@ class OpenApiManagerImpl(
         val hourly = hourlyValues?.joinToString(",")
         val daily = dailyValues?.joinToString(",")
 
-        return Flux.fromIterable(regions)
+        val hourlyWeathers = Flux.fromIterable(regions)
             .flatMap { region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
                 openMeteoWebClient.get()
-                    .uri { uriBuilder ->
-                        uriBuilder.path(weatherForecastEndPoint)
+                    .uri {
+                        it.path(weatherForecastEndPoint)
                             .queryParam("latitude", latitude)
                             .queryParam("longitude", longitude)
                             .queryParam("hourly", hourly)
+                            .queryParam("past_days", pastDays)
+                            .queryParam("forecast_days", 0)
+                            .queryParam("timezone", "Asia/Tokyo")
+                            .build()
+                    }
+                    .retrieve()
+                    .bodyToMono(WeatherResponseDTO::class.java)
+                    .map {
+                        it.apply {
+                            this.parentRegion = parentRegion
+                            this.childRegion = childRegion
+                            this.weatherType = WeatherType.HISTORY
+                        }
+                    }
+                    .doOnError { ex -> log.error(ex.localizedMessage) }
+            }
+
+        val dailyWeathers = Flux.fromIterable(regions)
+            .flatMap { region ->
+                val (parentRegion, childRegion, latitude, longitude) = region
+                openMeteoWebClient.get()
+                    .uri {
+                        it.path(weatherForecastEndPoint)
+                            .queryParam("latitude", latitude)
+                            .queryParam("longitude", longitude)
                             .queryParam("daily", daily)
                             .queryParam("past_days", pastDays)
                             .queryParam("forecast_days", 0)
@@ -87,6 +112,8 @@ class OpenApiManagerImpl(
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
             }
+
+        return Flux.merge(hourlyWeathers, dailyWeathers)
             .collectList()
             .block()
     }
