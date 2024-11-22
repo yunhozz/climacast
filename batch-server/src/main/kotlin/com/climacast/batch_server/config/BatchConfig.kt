@@ -96,6 +96,7 @@ class BatchConfig(
             .writer(weatherOpenApiResponseWriter())
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
+            .retry(Exception::class.java)
             .noRetry(HttpClientErrorException::class.java)
             .build()
 
@@ -108,6 +109,7 @@ class BatchConfig(
             .writer(weatherOpenApiResponseWriter())
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
+            .retry(Exception::class.java)
             .noRetry(HttpClientErrorException::class.java)
             .build()
 
@@ -120,6 +122,7 @@ class BatchConfig(
             .writer(weatherDataWriter())
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
+            .retry(Exception::class.java)
             .build()
 
     @Bean
