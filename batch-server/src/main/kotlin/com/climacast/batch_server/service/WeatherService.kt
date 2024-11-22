@@ -19,23 +19,23 @@ class WeatherService(
 ) {
     private val log = logger()
 
-    @Scheduled(cron = "0 3 0 * * *")
-    @DistributedLock(key = "save-weather-history", leaseTime = 5, waitTime = 0)
-    fun saveWeatherHistoryEveryDay() {
-        val jobParameters = createDefaultJobParameters()
-            .addString("chunkSize", WEATHER_HISTORY_CHUNK_SIZE)
-            .toJobParameters()
-        val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), jobParameters)
-        log.info(createLogMessage(jobExecution))
-    }
-
     @Scheduled(cron = "0 0 * * * *")
-    @DistributedLock(key = "save-weather-forecast", leaseTime = 30, waitTime = 0)
+    @DistributedLock(key = "save-weather-forecast", leaseTime = 60, waitTime = 0)
     fun saveWeatherForecastEveryHour() {
         val jobParameters = createDefaultJobParameters()
             .addString("chunkSize", WEATHER_FORECAST_CHUNK_SIZE)
             .toJobParameters()
         val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), jobParameters)
+        log.info(createLogMessage(jobExecution))
+    }
+
+    @Scheduled(cron = "0 3 0 * * *")
+    @DistributedLock(key = "save-weather-history", leaseTime = 30, waitTime = 0)
+    fun saveWeatherHistoryEveryDay() {
+        val jobParameters = createDefaultJobParameters()
+            .addString("chunkSize", WEATHER_HISTORY_CHUNK_SIZE)
+            .toJobParameters()
+        val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), jobParameters)
         log.info(createLogMessage(jobExecution))
     }
 

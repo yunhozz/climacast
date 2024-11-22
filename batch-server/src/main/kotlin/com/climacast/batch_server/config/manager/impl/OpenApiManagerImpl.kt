@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Flux
+import java.time.Duration
 
 @Component
 class OpenApiManagerImpl(
@@ -51,6 +52,7 @@ class OpenApiManagerImpl(
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
             }
+            .delayElements(Duration.ofMillis(10))
             .collectList()
             .block()
     }
@@ -61,10 +63,11 @@ class OpenApiManagerImpl(
         val hourly = hourlyValues?.joinToString(",")
         val daily = dailyValues?.joinToString(",")
 
-        val hourlyWeathers = Flux.fromIterable(regions)
+        return Flux.fromIterable(regions)
             .flatMap { region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
-                openMeteoWebClient.get()
+
+                val hourlyWeathersRequest = openMeteoWebClient.get()
                     .uri {
                         it.path(weatherForecastEndPoint)
                             .queryParam("latitude", latitude)
@@ -85,12 +88,8 @@ class OpenApiManagerImpl(
                         }
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
-            }
 
-        val dailyWeathers = Flux.fromIterable(regions)
-            .flatMap { region ->
-                val (parentRegion, childRegion, latitude, longitude) = region
-                openMeteoWebClient.get()
+                val dailyWeathersRequest = openMeteoWebClient.get()
                     .uri {
                         it.path(weatherForecastEndPoint)
                             .queryParam("latitude", latitude)
@@ -111,9 +110,10 @@ class OpenApiManagerImpl(
                         }
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage) }
-            }
 
-        return Flux.merge(hourlyWeathers, dailyWeathers)
+                Flux.merge(hourlyWeathersRequest, dailyWeathersRequest)
+            }
+            .delayElements(Duration.ofMillis(10))
             .collectList()
             .block()
     }
