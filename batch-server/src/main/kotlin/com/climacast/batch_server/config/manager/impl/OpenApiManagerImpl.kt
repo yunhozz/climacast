@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Flux
-import java.time.Duration
 
 @Component
 class OpenApiManagerImpl(
@@ -50,9 +49,8 @@ class OpenApiManagerImpl(
                             this.weatherType = WeatherType.FORECAST
                         }
                     }
-                    .doOnError { ex -> log.error(ex.localizedMessage) }
+                    .doOnError { log.error(it.localizedMessage, it) }
             }
-            .delayElements(Duration.ofMillis(10))
             .collectList()
             .block()
     }
@@ -64,7 +62,7 @@ class OpenApiManagerImpl(
         val daily = dailyValues?.joinToString(",")
 
         return Flux.fromIterable(regions)
-            .flatMap { region ->
+            .flatMap({ region ->
                 val (parentRegion, childRegion, latitude, longitude) = region
 
                 val hourlyWeathersRequest = openMeteoWebClient.get()
@@ -87,7 +85,7 @@ class OpenApiManagerImpl(
                             this.weatherType = WeatherType.HISTORY
                         }
                     }
-                    .doOnError { ex -> log.error(ex.localizedMessage) }
+                    .doOnError { log.error(it.localizedMessage, it) }
 
                 val dailyWeathersRequest = openMeteoWebClient.get()
                     .uri {
@@ -109,11 +107,10 @@ class OpenApiManagerImpl(
                             this.weatherType = WeatherType.HISTORY
                         }
                     }
-                    .doOnError { ex -> log.error(ex.localizedMessage) }
+                    .doOnError { log.error(it.localizedMessage, it) }
 
                 Flux.merge(hourlyWeathersRequest, dailyWeathersRequest)
-            }
-            .delayElements(Duration.ofMillis(10))
+            }, 30)
             .collectList()
             .block()
     }
