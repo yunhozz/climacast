@@ -18,7 +18,7 @@ services:
       dockerfile: eureka-server/Dockerfile
     image: climacast/eureka-server:latest
     ports:
-      - 8761:8761
+      - 18761:8761
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
@@ -34,7 +34,7 @@ services:
       dockerfile: api-gateway/Dockerfile
     image: climacast/api-gateway:latest
     ports:
-      - 8000:8000
+      - 18000:8000
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
@@ -44,14 +44,14 @@ services:
     networks:
       - climacast-network
 
-  batch-server:
-    container_name: batch-server
+  batch-server-1:
+    container_name: batch-server-1
     build:
       context: .
       dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:latest
     ports:
-      - 8999:8999
+      - 18999:8999
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
@@ -62,6 +62,59 @@ services:
       - mysql-replica
       - mysql-batch
     restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-2:
+    container_name: batch-server-2
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:latest
+    ports:
+      - 28999:8999
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-3:
+    container_name: batch-server-3
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:latest
+    ports:
+      - 38999:8999
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 80:80
+    volumes:
+      - /etc/docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /var/log/nginx/error.log:/var/log/nignx/error.log
     networks:
       - climacast-network
 
@@ -107,6 +160,15 @@ services:
       - 3309:3306
     volumes:
       - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 16379:6379
+    restart: always
     networks:
       - climacast-network
 
