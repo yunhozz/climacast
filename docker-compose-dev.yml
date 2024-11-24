@@ -1,6 +1,5 @@
 services:
   config-server:
-    container_name: config-server
     build:
       context: .
       dockerfile: config-server/Dockerfile
@@ -12,7 +11,6 @@ services:
       - climacast-network
 
   eureka-server:
-    container_name: eureka-server
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
@@ -23,12 +21,11 @@ services:
       - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
-    restart: always
+    restart: on-failure
     networks:
       - climacast-network
 
   api-gateway:
-    container_name: api-gateway
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -40,12 +37,11 @@ services:
     depends_on:
       - config-server
       - eureka-server
-    restart: always
+    restart: on-failure
     networks:
       - climacast-network
 
   batch-server-1:
-    container_name: batch-server-1
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -66,7 +62,6 @@ services:
       - climacast-network
 
   batch-server-2:
-    container_name: batch-server-2
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -87,7 +82,6 @@ services:
       - climacast-network
 
   batch-server-3:
-    container_name: batch-server-3
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -107,19 +101,7 @@ services:
     networks:
       - climacast-network
 
-  nginx:
-    container_name: nginx
-    image: nginx:latest
-    ports:
-      - 80:80
-    volumes:
-      - /etc/docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - /var/log/nginx/error.log:/var/log/nignx/error.log
-    networks:
-      - climacast-network
-
   mysql-source:
-    container_name: mysql-source
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -134,7 +116,6 @@ services:
       - climacast-network
 
   mysql-replica:
-    container_name: mysql-replica
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -151,7 +132,6 @@ services:
       - climacast-network
 
   mysql-batch:
-    container_name: mysql-batch
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -163,8 +143,18 @@ services:
     networks:
       - climacast-network
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:80
+    volumes:
+      - /etc/docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /var/log/nginx/error.log:/var/log/nignx/error.log
+    restart: always
+    networks:
+      - climacast-network
+
   redis:
-    container_name: redis
     image: redis:latest
     ports:
       - 16379:6379
