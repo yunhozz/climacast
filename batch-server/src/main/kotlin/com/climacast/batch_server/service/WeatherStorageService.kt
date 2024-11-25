@@ -1,7 +1,6 @@
-package com.climacast.batch_server.config.manager.impl
+package com.climacast.batch_server.service
 
 import com.climacast.batch_server.common.enums.WeatherStatus
-import com.climacast.batch_server.common.enums.WeatherType
 import com.climacast.batch_server.config.manager.WeatherSaveManager
 import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
 import com.climacast.batch_server.dto.WeatherResponseDTO
@@ -11,30 +10,22 @@ import com.climacast.batch_server.model.entity.HourlyWeather
 import com.climacast.batch_server.model.entity.HourlyWeatherData
 import com.climacast.batch_server.model.repository.DailyWeatherRepository
 import com.climacast.batch_server.model.repository.HourlyWeatherRepository
-import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Component
-class WeatherSaveManagerImpl(
+@Service
+class WeatherStorageService(
     private val dailyWeatherRepository: DailyWeatherRepository,
     private val hourlyWeatherRepository: HourlyWeatherRepository
 ): WeatherSaveManager {
 
     @Transactional
-    override fun saveOnMysql(weathers: List<WeatherResponseDTO>) {
-        weathers.forEach { weather ->
-            when (weather.weatherType!!) {
-                WeatherType.FORECAST -> saveWeatherForecastDataInJDBC(weather)
-                WeatherType.HISTORY -> saveWeatherHistoryDataInJPA(weather)
-            }
-        }
-    }
-
-    private fun saveWeatherForecastDataInJDBC(weather: WeatherResponseDTO) {
+    override fun saveWeatherForecastDataInJDBC(weather: WeatherResponseDTO) {
         val hourlyWeatherUpsertDTOs = linkedSetOf<HourlyWeatherUpsertRequestDTO>()
+
         weather.hourly?.let {
             it.time.forEachIndexed { index, time ->
                 val weatherCode = it.weather_code!![index]
@@ -63,9 +54,11 @@ class WeatherSaveManagerImpl(
         hourlyWeatherRepository.upsertHourlyWeatherForecasts(hourlyWeatherUpsertDTOs)
     }
 
-    private fun saveWeatherHistoryDataInJPA(weather: WeatherResponseDTO) {
+    @Transactional
+    override fun saveWeatherHistoryDataInJPA(weather: WeatherResponseDTO) {
         val dailyWeathers = linkedSetOf<DailyWeather>()
         val hourlyWeathers = linkedSetOf<HourlyWeather>()
+
         weather.daily?.let {
             it.time.first { time ->
                 val weatherCode = it.weather_code!!.first()
@@ -145,9 +138,5 @@ class WeatherSaveManagerImpl(
                     LocalDateTime.parse(it, DATETIME_FORMATTER)
                 }
             }
-    }
-
-    override fun saveOnElasticsearch(weathers: List<WeatherResponseDTO>) {
-        TODO("Not yet implemented")
     }
 }

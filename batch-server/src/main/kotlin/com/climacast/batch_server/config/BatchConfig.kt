@@ -2,6 +2,7 @@ package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
+import com.climacast.batch_server.common.enums.WeatherType
 import com.climacast.batch_server.config.manager.OpenApiManager
 import com.climacast.batch_server.config.manager.WeatherSaveManager
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
@@ -217,6 +218,11 @@ class BatchConfig(
     @Bean
     @StepScope
     fun weatherDataWriter(): ItemWriter<WeatherResponseDTO> = ItemWriter { chunk ->
-        weatherSaveManager.saveOnMysql(chunk.items)
+        chunk.items.forEach { weather ->
+            when (weather.weatherType!!) {
+                WeatherType.FORECAST -> weatherSaveManager.saveWeatherForecastDataInJDBC(weather)
+                WeatherType.HISTORY -> weatherSaveManager.saveWeatherHistoryDataInJPA(weather)
+            }
+        }
     }
 }
