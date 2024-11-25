@@ -3,7 +3,7 @@ package com.climacast.batch_server.config
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.config.manager.OpenApiManager
-import com.climacast.batch_server.config.manager.WeatherDataProcessor
+import com.climacast.batch_server.config.manager.WeatherDataManager
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.batch.core.Job
@@ -42,7 +42,7 @@ class BatchConfig(
     private val batchTransactionManager: PlatformTransactionManager,
     private val appTransactionManager: PlatformTransactionManager,
     private val openApiManager: OpenApiManager,
-    private val weatherDataProcessor: WeatherDataProcessor
+    private val weatherDataManager: WeatherDataManager
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
@@ -217,6 +217,6 @@ class BatchConfig(
     @Bean
     @StepScope
     fun weatherDataWriter(): ItemWriter<WeatherResponseDTO> = ItemWriter { chunk ->
-        weatherDataProcessor.process(chunk.items)
+        weatherDataManager.process(chunk.items)
     }
 }

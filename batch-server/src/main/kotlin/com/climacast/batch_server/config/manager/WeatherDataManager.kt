@@ -5,7 +5,7 @@ import com.climacast.batch_server.dto.WeatherResponseDTO
 import com.climacast.batch_server.model.entity.DailyWeather
 import com.climacast.batch_server.model.entity.HourlyWeather
 
-interface WeatherDataProcessor {
+interface WeatherDataManager {
     fun process(weatherResponseDTOs: List<WeatherResponseDTO>) {
         weatherResponseDTOs.forEach { dto ->
             val weatherData = convertToPojo(dto)
