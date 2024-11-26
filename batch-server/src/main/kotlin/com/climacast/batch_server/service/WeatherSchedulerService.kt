@@ -29,7 +29,7 @@ class WeatherSchedulerService(
         log.info(createLogMessage(jobExecution))
     }
 
-    @Scheduled(cron = "0 3 0 * * *")
+    @Scheduled(cron = "0 3 0 * * *", zone = "Asia/Seoul")
     @DistributedLock(key = "save-weather-history", leaseTime = 30, waitTime = 0)
     fun saveWeatherHistoryEveryDay() {
         val jobParameters = createDefaultJobParameters()
