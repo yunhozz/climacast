@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.manager
+package com.climacast.batch_server.config.manager.api
 
 import com.climacast.batch_server.config.Region
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO

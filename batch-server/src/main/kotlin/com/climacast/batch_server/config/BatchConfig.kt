@@ -2,8 +2,8 @@ package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
-import com.climacast.batch_server.config.manager.OpenApiManager
 import com.climacast.batch_server.config.manager.WeatherDataManager
+import com.climacast.batch_server.config.manager.api.OpenApiManager
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.batch.core.Job
