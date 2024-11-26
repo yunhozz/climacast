@@ -146,10 +146,10 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - 80:80
+      - 8080:80
     volumes:
-      - /etc/docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - /var/log/nginx/error.log:/var/log/nignx/error.log
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
     restart: always
     networks:
       - climacast-network
