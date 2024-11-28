@@ -20,7 +20,7 @@ class WeatherSchedulerService(
     private val log = logger()
 
     @Scheduled(cron = "0 0 * * * *")
-    @DistributedLock(key = "save-weather-forecast", leaseTime = 60, waitTime = 0)
+    @DistributedLock(key = SAVE_WEATHER_FORECAST_LOCK_KEY, leaseTime = 60, waitTime = 0)
     fun saveWeatherForecastEveryHour() {
         val jobParameters = createDefaultJobParameters()
             .addString("chunkSize", WEATHER_FORECAST_CHUNK_SIZE)
@@ -30,7 +30,7 @@ class WeatherSchedulerService(
     }
 
     @Scheduled(cron = "0 3 0 * * *", zone = "Asia/Seoul")
-    @DistributedLock(key = "save-weather-history", leaseTime = 30, waitTime = 0)
+    @DistributedLock(key = SAVE_WEATHER_HISTORY_LOCK_KEY, leaseTime = 30, waitTime = 0)
     fun saveWeatherHistoryEveryDay() {
         val jobParameters = createDefaultJobParameters()
             .addString("chunkSize", WEATHER_HISTORY_CHUNK_SIZE)
@@ -48,6 +48,8 @@ class WeatherSchedulerService(
         )
 
     companion object {
+        const val SAVE_WEATHER_FORECAST_LOCK_KEY = "save-weather-forecast"
+        const val SAVE_WEATHER_HISTORY_LOCK_KEY = "save-weather-history"
         const val WEATHER_FORECAST_CHUNK_SIZE = "126"
         const val WEATHER_HISTORY_CHUNK_SIZE = "30"
 
