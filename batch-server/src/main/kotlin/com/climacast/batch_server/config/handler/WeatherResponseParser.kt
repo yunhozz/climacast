@@ -1,6 +1,6 @@
 package com.climacast.batch_server.config.handler
 
-import com.climacast.batch_server.config.Region
+import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import reactor.core.publisher.Mono
 

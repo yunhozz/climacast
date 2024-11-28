@@ -5,6 +5,7 @@ import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.config.handler.OpenApiHandler
 import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
+import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobExecution
@@ -27,13 +28,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
 import java.util.concurrent.CopyOnWriteArraySet
-
-data class Region(
-    val parent: String,
-    val child: String,
-    val latitude: Double,
-    val longitude: Double
-)
 
 @Configuration
 class BatchConfig(
@@ -61,8 +55,7 @@ class BatchConfig(
     fun saveWeatherHistoryJob(): Job =
         JobBuilder(SAVE_WEATHER_HISTORY_JOB, batchJobRepository)
             .incrementer(RunIdIncrementer())
-            .start(readRegionDataStep(""))
-            .next(callHistoricalWeatherOpenApiStep(""))
+            .start(callHistoricalWeatherOpenApiStep(""))
             .next(saveWeatherDataStep(""))
             .listener(jobCompletionListener())
             .build()
@@ -71,28 +64,18 @@ class BatchConfig(
     fun saveWeatherForecastJob(): Job =
         JobBuilder(SAVE_WEATHER_FORECAST_JOB, batchJobRepository)
             .incrementer(RunIdIncrementer())
-            .start(readRegionDataStep(""))
-            .next(callForecastWeatherOpenApiStep(""))
+            .start(callForecastWeatherOpenApiStep(""))
             .next(saveWeatherDataStep(""))
             .listener(jobCompletionListener())
             .build()
 
     @Bean
     @JobScope
-    fun readRegionDataStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
-        StepBuilder(READ_REGION_DATA_STEP, batchJobRepository)
-            .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
-            .reader(regionInfoReader())
-            .writer(regionInfoWriter())
-            .build()
-
-    @Bean
-    @JobScope
     fun callHistoricalWeatherOpenApiStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder(CALL_HISTORICAL_WEATHER_OPEN_API_STEP, batchJobRepository)
-            .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), batchTransactionManager)
-            .reader(historicalWeatherOpenApiCallReader())
-            .writer(weatherOpenApiResponseWriter())
+            .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
+            .reader(regionInfoReader())
+            .writer(historicalWeatherOpenApiCallWriter())
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
             .retry(Exception::class.java)
@@ -102,9 +85,9 @@ class BatchConfig(
     @JobScope
     fun callForecastWeatherOpenApiStep(@Value("#{jobParameters[chunkSize]}") chunkSize: String): Step =
         StepBuilder(CALL_FORECAST_WEATHER_OPEN_API_STEP, batchJobRepository)
-            .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), batchTransactionManager)
-            .reader(forecastWeatherOpenApiCallReader())
-            .writer(weatherOpenApiResponseWriter())
+            .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
+            .reader(regionInfoReader())
+            .writer(forecastWeatherOpenApiCallWriter())
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
             .retry(Exception::class.java)
@@ -152,51 +135,25 @@ class BatchConfig(
 
     @Bean
     @StepScope
-    fun regionInfoWriter() = ItemWriter<Region> { chunk ->
-        regions.addAll(chunk)
+    fun historicalWeatherOpenApiCallWriter() = ItemWriter<Region> { chunk ->
+        val dto = OpenApiQueryRequestDTO(
+            dailyValues = DailyConstants.ENTIRE,
+            hourlyValues = HourlyConstants.ENTIRE
+        )
+        openApiHandler.init(chunk, dto)
+
+        val responses = openApiHandler.callHistoricalWeatherOpenApi()
+        weatherResponseList.addAll(responses)
     }
 
     @Bean
     @StepScope
-    fun historicalWeatherOpenApiCallReader() = object: ItemReader<WeatherResponseDTO> {
-        private var iterator: Iterator<WeatherResponseDTO>? = null
+    fun forecastWeatherOpenApiCallWriter() = ItemWriter<Region> { chunk ->
+        val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
+        openApiHandler.init(chunk, dto)
 
-        override fun read(): WeatherResponseDTO? {
-            if (iterator == null) {
-                val dto = OpenApiQueryRequestDTO(
-                    dailyValues = DailyConstants.ENTIRE,
-                    hourlyValues = HourlyConstants.ENTIRE
-                )
-                openApiHandler.init(regions, dto)
-                val responses = openApiHandler.callHistoricalWeatherOpenApi()
-                iterator = responses.iterator()
-            }
-
-            return if (iterator!!.hasNext()) iterator!!.next() else null
-        }
-    }
-
-    @Bean
-    @StepScope
-    fun forecastWeatherOpenApiCallReader() = object: ItemReader<WeatherResponseDTO> {
-        private var iterator: Iterator<WeatherResponseDTO>? = null
-
-        override fun read(): WeatherResponseDTO? {
-            if (iterator == null) {
-                val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
-                openApiHandler.init(regions, dto)
-                val responses = openApiHandler.callForecastWeatherOpenApi()
-                iterator = responses.iterator()
-            }
-
-            return if (iterator!!.hasNext()) iterator!!.next() else null
-        }
-    }
-
-    @Bean
-    @StepScope
-    fun weatherOpenApiResponseWriter() = ItemWriter<WeatherResponseDTO> { chunk ->
-        weatherResponseList.addAll(chunk)
+        val responses = openApiHandler.callForecastWeatherOpenApi()
+        weatherResponseList.addAll(responses)
     }
 
     @Bean

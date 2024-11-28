@@ -1,8 +1,8 @@
 package com.climacast.batch_server.config.handler.impl
 
-import com.climacast.batch_server.config.Region
 import com.climacast.batch_server.config.handler.WeatherQueryRequest
 import com.climacast.batch_server.config.handler.WeatherResponseParser
+import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value
