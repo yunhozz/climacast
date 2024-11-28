@@ -6,6 +6,7 @@ import com.climacast.batch_server.config.handler.WeatherQueryRequest
 import com.climacast.batch_server.config.handler.WeatherResponseParser
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 
 @Component
 class OpenApiHandlerImpl(
@@ -30,14 +31,18 @@ class OpenApiHandlerImpl(
         val hourly = hourlyValues?.joinToString(",")
         val query = WeatherQueryRequest(pastDays, forecastDays = 0, weatherType = WeatherType.HISTORY)
 
-        val hourlyWeathers = callWeatherOpenApi { region ->
-            weatherResponseParser.sendHourlyWeatherRequest(region, query, hourly)
-        } ?: throw IllegalArgumentException("There are no historical weather data")
-
-        val dailyWeathers = callWeatherOpenApi { region ->
-            weatherResponseParser.sendDailyWeatherRequest(region, query, daily)
-        } ?: throw IllegalArgumentException("There are no historical weather data")
-
-        return dailyWeathers + hourlyWeathers
+        return Mono.zip(
+            Mono.fromCallable {
+                callWeatherOpenApi { region ->
+                    weatherResponseParser.sendHourlyWeatherRequest(region, query, hourly)
+                }
+            },
+            Mono.fromCallable {
+                callWeatherOpenApi { region ->
+                    weatherResponseParser.sendDailyWeatherRequest(region, query, daily)
+                }
+            })
+            .map { tuple -> tuple.t1!! + tuple.t2!! }
+            .block() ?: throw IllegalArgumentException("There are no historical weather data")
     }
 }
