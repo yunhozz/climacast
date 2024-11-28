@@ -2,8 +2,8 @@ package com.climacast.batch_server.service
 
 import com.climacast.batch_server.common.enums.WeatherStatus
 import com.climacast.batch_server.common.enums.WeatherType
-import com.climacast.batch_server.config.manager.ConvertedWeatherData
-import com.climacast.batch_server.config.manager.WeatherDataManager
+import com.climacast.batch_server.config.handler.ConvertedWeatherData
+import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import com.climacast.batch_server.model.entity.DailyWeather
@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter
 class WeatherDataService(
     private val dailyWeatherRepository: DailyWeatherRepository,
     private val hourlyWeatherRepository: HourlyWeatherRepository
-): WeatherDataManager {
+): WeatherDataHandler {
 
     override fun convertToPojo(dto: WeatherResponseDTO): ConvertedWeatherData =
         when (dto.weatherType!!) {

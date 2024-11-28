@@ -2,8 +2,8 @@ package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
-import com.climacast.batch_server.config.manager.WeatherDataManager
-import com.climacast.batch_server.config.manager.api.OpenApiManager
+import com.climacast.batch_server.config.handler.OpenApiHandler
+import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.batch.core.Job
@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.web.client.HttpClientErrorException
 import java.util.concurrent.CopyOnWriteArraySet
 
 data class Region(
@@ -41,8 +40,8 @@ class BatchConfig(
     private val batchJobRepository: JobRepository,
     private val batchTransactionManager: PlatformTransactionManager,
     private val appTransactionManager: PlatformTransactionManager,
-    private val openApiManager: OpenApiManager,
-    private val weatherDataManager: WeatherDataManager
+    private val openApiHandler: OpenApiHandler,
+    private val weatherDataHandler: WeatherDataHandler
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
@@ -97,7 +96,6 @@ class BatchConfig(
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
             .retry(Exception::class.java)
-            .noRetry(HttpClientErrorException::class.java)
             .build()
 
     @Bean
@@ -110,7 +108,6 @@ class BatchConfig(
             .faultTolerant()
             .retryLimit(STEP_RETRY_COUNT)
             .retry(Exception::class.java)
-            .noRetry(HttpClientErrorException::class.java)
             .build()
 
     @Bean
@@ -170,8 +167,9 @@ class BatchConfig(
                     dailyValues = DailyConstants.ENTIRE,
                     hourlyValues = HourlyConstants.ENTIRE
                 )
-                val responses = openApiManager.callHistoricalWeatherOpenApi(regions, dto)
-                iterator = responses!!.iterator()
+                openApiHandler.init(regions, dto)
+                val responses = openApiHandler.callHistoricalWeatherOpenApi()
+                iterator = responses.iterator()
             }
 
             return if (iterator!!.hasNext()) iterator!!.next() else null
@@ -186,8 +184,9 @@ class BatchConfig(
         override fun read(): WeatherResponseDTO? {
             if (iterator == null) {
                 val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
-                val responses = openApiManager.callForecastWeatherOpenApi(regions, dto)
-                iterator = responses!!.iterator()
+                openApiHandler.init(regions, dto)
+                val responses = openApiHandler.callForecastWeatherOpenApi()
+                iterator = responses.iterator()
             }
 
             return if (iterator!!.hasNext()) iterator!!.next() else null
@@ -217,6 +216,6 @@ class BatchConfig(
     @Bean
     @StepScope
     fun weatherDataWriter(): ItemWriter<WeatherResponseDTO> = ItemWriter { chunk ->
-        weatherDataManager.process(chunk.items)
+        weatherDataHandler.process(chunk.items)
     }
 }

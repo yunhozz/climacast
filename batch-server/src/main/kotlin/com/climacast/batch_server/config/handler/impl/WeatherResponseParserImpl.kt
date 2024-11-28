@@ -1,7 +1,8 @@
-package com.climacast.batch_server.config.manager.api.parser
+package com.climacast.batch_server.config.handler.impl
 
 import com.climacast.batch_server.config.Region
-import com.climacast.batch_server.config.manager.api.WeatherQueryRequest
+import com.climacast.batch_server.config.handler.WeatherQueryRequest
+import com.climacast.batch_server.config.handler.WeatherResponseParser
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value
@@ -19,48 +20,27 @@ class WeatherResponseParserImpl(
     @Value("\${open-api.open-meteo.end-point.weather-forecast}")
     private lateinit var weatherRequestEndPoint: String
 
+    private val log = logger()
+
     companion object {
-        val log = logger()
         private const val TIMEZONE = "Asia/Tokyo"
-
-        private fun createWeatherRequestUri(
-            builder: UriBuilder,
-            endPoint: String,
-            latitude: Double,
-            longitude: Double,
-            daily: String?,
-            hourly: String?,
-            query: WeatherQueryRequest
-        ): URI {
-            val uri = builder.path(endPoint)
-                .queryParam("latitude", latitude)
-                .queryParam("longitude", longitude)
-                .queryParam("past_days", query.pastDays)
-                .queryParam("forecast_days", query.forecastDays)
-                .queryParam("timezone", TIMEZONE)
-
-            daily?.let { uri.queryParam("daily", it) }
-                ?: hourly?.let { uri.queryParam("hourly", it) }
-
-            return uri.build()
-        }
     }
 
     override fun sendHourlyWeatherRequest(region: Region, query: WeatherQueryRequest, hourly: String?): Mono<WeatherResponseDTO> =
-        retrieveWeatherResponse(region, query, null, hourly)
+        retrieveWeatherResponse(region, query, hourly = hourly)
 
     override fun sendDailyWeatherRequest(region: Region, query: WeatherQueryRequest, daily: String?): Mono<WeatherResponseDTO> =
-        retrieveWeatherResponse(region, query, daily, null)
+        retrieveWeatherResponse(region, query, daily = daily)
 
     private fun retrieveWeatherResponse(
         region: Region,
         query: WeatherQueryRequest,
-        daily: String?,
-        hourly: String?,
+        daily: String? = null,
+        hourly: String? = null
     ): Mono<WeatherResponseDTO> {
         val (parentRegion, childRegion, latitude, longitude) = region
         return openMeteoWebClient.get()
-            .uri { createWeatherRequestUri(it, weatherRequestEndPoint, latitude, longitude, daily, hourly, query) }
+            .uri { createWeatherRequestUri(it, latitude, longitude, query, daily, hourly) }
             .retrieve()
             .bodyToMono(WeatherResponseDTO::class.java)
             .map {
@@ -72,4 +52,24 @@ class WeatherResponseParserImpl(
             }
             .doOnError { log.error("Failed to fetch weather data : ${it.localizedMessage}", it) }
     }
+
+    private fun createWeatherRequestUri(
+        builder: UriBuilder,
+        latitude: Double,
+        longitude: Double,
+        query: WeatherQueryRequest,
+        daily: String?,
+        hourly: String?
+    ): URI =
+        builder.path(weatherRequestEndPoint)
+            .queryParam("latitude", latitude)
+            .queryParam("longitude", longitude)
+            .queryParam("past_days", query.pastDays)
+            .queryParam("forecast_days", query.forecastDays)
+            .queryParam("timezone", TIMEZONE)
+            .apply {
+                daily?.let { queryParam("daily", it) }
+                hourly?.let { queryParam("hourly", it) }
+            }
+            .build()
 }
