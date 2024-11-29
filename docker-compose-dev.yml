@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: config-server/Dockerfile
-    image: climacast/config-server:latest
+    image: climacast/config-server:${GIT_COMMIT_HASH}
     ports:
       - 8888:8888
     restart: always
@@ -14,7 +14,7 @@ services:
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
-    image: climacast/eureka-server:latest
+    image: climacast/eureka-server:${GIT_COMMIT_HASH}
     ports:
       - 18761:8761
     environment:
@@ -29,7 +29,7 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    image: climacast/api-gateway:latest
+    image: climacast/api-gateway:${GIT_COMMIT_HASH}
     ports:
       - 18000:8000
     environment:
@@ -45,7 +45,7 @@ services:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:latest
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
     ports:
       - 18999:8999
     environment:
@@ -65,7 +65,7 @@ services:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:latest
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
     ports:
       - 28999:8999
     environment:
@@ -85,7 +85,7 @@ services:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:latest
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
     ports:
       - 38999:8999
     environment:
