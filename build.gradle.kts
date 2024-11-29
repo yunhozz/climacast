@@ -60,6 +60,7 @@ subprojects {
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 		implementation("org.springframework.boot:spring-boot-starter-actuator")
+		implementation("io.micrometer:micrometer-registry-prometheus")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
 		implementation("org.apache.kafka:kafka-streams")

@@ -1,10 +1,9 @@
 services:
   config-server:
-    container_name: config-server
     build:
       context: .
       dockerfile: config-server/Dockerfile
-    image: climacast/config-server:latest
+    image: climacast/config-server:${GIT_COMMIT_HASH}
     ports:
       - 8888:8888
     restart: always
@@ -12,46 +11,83 @@ services:
       - climacast-network
 
   eureka-server:
-    container_name: eureka-server
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
-    image: climacast/eureka-server:latest
+    image: climacast/eureka-server:${GIT_COMMIT_HASH}
     ports:
-      - 8761:8761
+      - 18761:8761
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
-    restart: always
+    restart: on-failure
     networks:
       - climacast-network
 
   api-gateway:
-    container_name: api-gateway
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    image: climacast/api-gateway:latest
+    image: climacast/api-gateway:${GIT_COMMIT_HASH}
     ports:
-      - 8000:8000
+      - 18000:8000
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
       - config-server
       - eureka-server
-    restart: always
+    restart: on-failure
     networks:
       - climacast-network
 
-  batch-server:
-    container_name: batch-server
+  batch-server-1:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:latest
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
     ports:
-      - 8999:8999
+      - 18999:8999
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-2:
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    ports:
+      - 28999:8999
+    environment:
+      - APPLICATION_PROFILE=dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-3:
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    ports:
+      - 38999:8999
     environment:
       - APPLICATION_PROFILE=dev
     depends_on:
@@ -66,7 +102,6 @@ services:
       - climacast-network
 
   mysql-source:
-    container_name: mysql-source
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -81,7 +116,6 @@ services:
       - climacast-network
 
   mysql-replica:
-    container_name: mysql-replica
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -98,7 +132,6 @@ services:
       - climacast-network
 
   mysql-batch:
-    container_name: mysql-batch
     image: mysql:latest
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
@@ -107,6 +140,43 @@ services:
       - 3309:3306
     volumes:
       - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    restart: always
+    networks:
+      - climacast-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - 16379:6379
+    restart: always
+    networks:
+      - climacast-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 19090:9090
+    volumes:
+      - ./prometheus-dev.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - climacast-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 13000:3000
     networks:
       - climacast-network
 
