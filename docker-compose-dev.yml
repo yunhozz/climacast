@@ -162,6 +162,24 @@ services:
     networks:
       - climacast-network
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 19090:9090
+    volumes:
+      - ./prometheus-dev.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - climacast-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 13000:3000
+    networks:
+      - climacast-network
+
 networks:
   climacast-network:
 
