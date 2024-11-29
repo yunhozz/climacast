@@ -4,7 +4,7 @@ import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import reactor.core.publisher.Mono
 
-interface WeatherResponseParser {
+interface WeatherResponseProcessor {
     fun sendHourlyWeatherRequest(region: Region, query: WeatherQueryRequest, hourly: String?): Mono<WeatherResponseDTO>
     fun sendDailyWeatherRequest(region: Region, query: WeatherQueryRequest, daily: String?): Mono<WeatherResponseDTO>
 }

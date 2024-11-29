@@ -3,15 +3,15 @@ package com.climacast.batch_server.config.handler.impl
 import com.climacast.batch_server.common.enums.WeatherType
 import com.climacast.batch_server.config.handler.OpenApiHandler
 import com.climacast.batch_server.config.handler.WeatherQueryRequest
-import com.climacast.batch_server.config.handler.WeatherResponseParser
+import com.climacast.batch_server.config.handler.WeatherResponseProcessor
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
 class OpenApiHandlerImpl(
-    weatherResponseParser: WeatherResponseParser
-): OpenApiHandler(weatherResponseParser) {
+    weatherResponseProcessor: WeatherResponseProcessor
+): OpenApiHandler(weatherResponseProcessor) {
 
     // 매 시간마다 실행
     override fun callForecastWeatherOpenApi(): List<WeatherResponseDTO> {
@@ -20,7 +20,7 @@ class OpenApiHandlerImpl(
         val query = WeatherQueryRequest(pastDays = 0, forecastDays, weatherType = WeatherType.FORECAST)
 
         return callWeatherOpenApi { region ->
-            weatherResponseParser.sendHourlyWeatherRequest(region, query, hourly)
+            weatherResponseProcessor.sendHourlyWeatherRequest(region, query, hourly)
         } ?: throw IllegalArgumentException("There are no forecast weather data")
     }
 
@@ -34,12 +34,12 @@ class OpenApiHandlerImpl(
         return Mono.zip(
             Mono.fromCallable {
                 callWeatherOpenApi { region ->
-                    weatherResponseParser.sendHourlyWeatherRequest(region, query, hourly)
+                    weatherResponseProcessor.sendHourlyWeatherRequest(region, query, hourly)
                 }
             },
             Mono.fromCallable {
                 callWeatherOpenApi { region ->
-                    weatherResponseParser.sendDailyWeatherRequest(region, query, daily)
+                    weatherResponseProcessor.sendDailyWeatherRequest(region, query, daily)
                 }
             })
             .map { tuple -> tuple.t1!! + tuple.t2!! }

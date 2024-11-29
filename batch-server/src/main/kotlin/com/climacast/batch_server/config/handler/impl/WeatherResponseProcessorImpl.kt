@@ -1,7 +1,7 @@
 package com.climacast.batch_server.config.handler.impl
 
 import com.climacast.batch_server.config.handler.WeatherQueryRequest
-import com.climacast.batch_server.config.handler.WeatherResponseParser
+import com.climacast.batch_server.config.handler.WeatherResponseProcessor
 import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
@@ -13,9 +13,9 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 @Component
-class WeatherResponseParserImpl(
+class WeatherResponseProcessorImpl(
     private val openMeteoWebClient: WebClient
-): WeatherResponseParser {
+): WeatherResponseProcessor {
 
     @Value("\${open-api.open-meteo.end-point.weather-forecast}")
     private lateinit var weatherRequestEndPoint: String

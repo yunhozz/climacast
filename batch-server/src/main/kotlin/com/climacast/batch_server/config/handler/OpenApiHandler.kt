@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 abstract class OpenApiHandler(
-    protected val weatherResponseParser: WeatherResponseParser
+    protected val weatherResponseProcessor: WeatherResponseProcessor
 ) {
     private lateinit var regions: Set<Region>
     protected lateinit var dto: OpenApiQueryRequestDTO
