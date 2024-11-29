@@ -40,20 +40,35 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker compose -f docker-compose-db.yml --env-file .env up -d
-          docker compose -f docker-compose-db.yml ps
+          docker compose -f docker-compose-local.yml --env-file .env up -d
+          docker compose -f docker-compose-local.yml ps
 
       - name: Wait for services to be ready
         run: |
-          for i in {1..12}; do
-            if docker compose -f docker-compose-db.yml ps | grep "healthy"; then
+          for i in {1..10}; do
+            SERVICES=$(docker compose -f docker-compose-local.yml ps --services)
+            ALL_SERVICES_RUNNING=true
+          
+            for SERVICE in $SERVICES; do
+              SERVICE_STATUS=$(docker compose -f docker-compose-local.yml ps --filter "status=running" --services $SERVICE)
+            
+              if [[ -z "$SERVICE_STATUS" ]]; then
+                echo "$SERVICE is not running yet..."
+                ALL_SERVICES_RUNNING=false
+                break
+              fi
+            done
+      
+            if [[ "$ALL_SERVICES_RUNNING" == true ]]; then
               echo "All services are healthy!"
               break
             fi
-            echo "Waiting for services to be ready..."
-            sleep 5
+          
+            echo "Waiting for all services to be ready..."
+            sleep 3
           done
-          docker compose -f docker-compose-db.yml ps
+          
+          docker compose -f docker-compose-local.yml ps
 
       - name: Test with Gradle
         run: ./gradlew --info test -x :config-server:test

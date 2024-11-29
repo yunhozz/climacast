@@ -5,7 +5,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
       - TZ=Asia/Seoul
     ports:
-      - 3307:3306
+      - 3306:3306
     volumes:
       - source-data:/var/lib/mysql
       - source-logs:/var/lib/mysql-files
@@ -19,7 +19,7 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
       - TZ=Asia/Seoul
     ports:
-      - 3308:3306
+      - 3306:3306
     volumes:
       - replica-data:/var/lib/mysql
       - replica-logs:/var/lib/mysql-files
@@ -35,11 +35,19 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
       - TZ=Asia/Seoul
     ports:
-      - 3309:3306
+      - 3306:3306
     volumes:
       - batch-data:/var/lib/mysql
     networks:
       - mysql-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    restart: always
+    networks:
+      - climacast-network
 
 networks:
   mysql-network:
