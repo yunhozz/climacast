@@ -137,7 +137,20 @@ class BatchConfig(
     @StepScope
     fun historicalWeatherOpenApiCallWriter() = ItemWriter<Region> { chunk ->
         val dto = OpenApiQueryRequestDTO(
-            dailyValues = DailyConstants.ENTIRE,
+            dailyValues = listOf(
+                DailyConstants.WEATHER_CODE,
+                DailyConstants.TEMPERATURE_2M_MAX,
+                DailyConstants.TEMPERATURE_2M_MIN,
+                DailyConstants.TEMPERATURE_APPARENT_MAX,
+                DailyConstants.TEMPERATURE_APPARENT_MIN,
+                DailyConstants.SUNRISE,
+                DailyConstants.SUNSET,
+                DailyConstants.DAYLIGHT_DURATION,
+                DailyConstants.SUNSHINE_DURATION,
+                DailyConstants.RAIN_SUM,
+                DailyConstants.SHOWERS_SUM,
+                DailyConstants.SNOWFALL_SUM
+            ),
             hourlyValues = HourlyConstants.ENTIRE
         )
         openApiHandler.init(chunk, dto)

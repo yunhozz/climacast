@@ -27,8 +27,8 @@ class OpenApiHandlerImpl(
     // 매일 0시에 실행
     override fun callHistoricalWeatherOpenApi(): List<WeatherResponseDTO> {
         val (hourlyValues, dailyValues, pastDays, _) = dto
-        val daily = dailyValues?.joinToString(",")
         val hourly = hourlyValues?.joinToString(",")
+        val daily = dailyValues?.joinToString(",")
         val query = WeatherQueryRequest(pastDays, forecastDays = 0, weatherType = WeatherType.HISTORY)
 
         return Mono.zip(
