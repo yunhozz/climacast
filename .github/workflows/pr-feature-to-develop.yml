@@ -34,13 +34,9 @@ jobs:
       - name: Load Properties and Environments from secrets and process
         run: |
           mkdir -p ./global/src/main/resources
-          
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
-          cat ./global/src/main/resources/application.properties
-          
           echo "${{ secrets.ENV }}" > .env
-          cat .env
 
       - name: Set up Docker Compose
         run: |
