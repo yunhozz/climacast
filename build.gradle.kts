@@ -6,7 +6,7 @@ plugins {
 	kotlin("plugin.jpa") version "2.0.0"
 	kotlin("plugin.spring") version "2.0.0"
 	kotlin("kapt") version "1.8.22"
-	id("org.springframework.boot") version "3.3.5"
+	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -67,6 +67,7 @@ subprojects {
 		implementation("org.springframework.kafka:spring-kafka")
 		implementation("org.springframework.boot:spring-boot-starter-aop")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
+		runtimeOnly("org.springframework.boot:spring-boot-docker-compose")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 		testImplementation("org.springframework.kafka:spring-kafka-test")
@@ -109,3 +110,4 @@ project(":config-server")
 project(":eureka-server")
 project(":api-gateway")
 project(":batch-server")
+project(":subscription-service")
