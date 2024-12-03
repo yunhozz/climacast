@@ -27,8 +27,8 @@ class KafkaMessageHandlerImpl(
     }
 
     override fun sendWeatherResponses(param: WeatherParameters, weatherData: List<WeatherResponseDTO>) {
-        val bytes = objectMapper.writeValueAsString(weatherData).toByteArray().size
-        val chunkSize = weatherData.size / ceil(bytes / KAFKA_MAX_REQUEST_SIZE).toInt()
+        val bytes = objectMapper.writeValueAsString(weatherData).toByteArray()
+        val chunkSize = calculateChunkSize(weatherData.size, bytes)
 
         Flux.fromIterable(weatherData.chunked(chunkSize))
             .flatMap { weathers ->
@@ -58,4 +58,7 @@ class KafkaMessageHandlerImpl(
                     message = KafkaMessage.HistoryWeathersDTO(weathers)
                 )
         }
+
+    private fun calculateChunkSize(dataSize: Int, bytes: ByteArray): Int =
+        dataSize / ceil(bytes.size / KAFKA_MAX_REQUEST_SIZE).toInt()
 }
