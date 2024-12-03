@@ -3,7 +3,7 @@ package com.climacast.batch_server.config.handler.impl
 import com.climacast.batch_server.config.handler.WeatherQueryRequest
 import com.climacast.batch_server.config.handler.WeatherResponseProcessor
 import com.climacast.batch_server.dto.Region
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

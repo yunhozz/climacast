@@ -1,6 +1,6 @@
-package com.climacast.batch_server.dto
+package com.climacast.global.dto
 
-import com.climacast.batch_server.common.enums.WeatherType
+import com.climacast.global.enums.WeatherType
 
 data class WeatherResponseDTO(
     val latitude: Double,
@@ -13,7 +13,6 @@ data class WeatherResponseDTO(
     val daily: DailyDTO?,
     var weatherType: WeatherType?
 ) {
-
     data class HourlyDTO(
         val time: List<String>,
         val weather_code: List<Int>?,

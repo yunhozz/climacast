@@ -2,7 +2,7 @@ package com.climacast.batch_server.config.handler
 
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
 import org.springframework.batch.item.Chunk
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono

@@ -1,4 +1,4 @@
-package com.climacast.batch_server.common.enums
+package com.climacast.global.enums
 
 enum class WeatherType {
     FORECAST, HISTORY

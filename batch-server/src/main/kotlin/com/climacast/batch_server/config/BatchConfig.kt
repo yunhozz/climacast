@@ -8,7 +8,7 @@ import com.climacast.batch_server.config.handler.OpenApiHandler
 import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobExecution
@@ -82,8 +82,6 @@ class BatchConfig(
             .reader(regionInfoReader())
             .writer(historicalWeatherOpenApiCallWriter(""))
             .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean
@@ -94,8 +92,6 @@ class BatchConfig(
             .reader(regionInfoReader())
             .writer(forecastWeatherOpenApiCallWriter(""))
             .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean

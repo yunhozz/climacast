@@ -1,10 +1,10 @@
 package com.climacast.batch_server.config.handler.impl
 
-import com.climacast.batch_server.common.enums.WeatherType
 import com.climacast.batch_server.config.handler.OpenApiHandler
 import com.climacast.batch_server.config.handler.WeatherQueryRequest
 import com.climacast.batch_server.config.handler.WeatherResponseProcessor
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.enums.WeatherType
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
