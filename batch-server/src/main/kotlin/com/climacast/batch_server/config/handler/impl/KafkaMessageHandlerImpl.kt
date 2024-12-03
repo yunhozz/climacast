@@ -7,10 +7,12 @@ import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.utils.logger
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import kotlin.math.ceil
 
 @Component
 class KafkaMessageHandlerImpl(
@@ -18,10 +20,17 @@ class KafkaMessageHandlerImpl(
     private val reactiveKafkaProducerTemplate: ReactiveKafkaProducerTemplate<String, KafkaMessage>
 ): KafkaMessageHandler {
 
-    private val log = logger()
+    companion object {
+        private val log = logger()
+        private val objectMapper = jacksonObjectMapper()
+        const val KAFKA_MAX_REQUEST_SIZE = (1024 * 1024).toDouble() // 1MB
+    }
 
     override fun sendWeatherResponses(param: WeatherParameters, weatherData: List<WeatherResponseDTO>) {
-        Flux.fromIterable(weatherData.chunked(weatherData.size / 3))
+        val bytes = objectMapper.writeValueAsString(weatherData).toByteArray().size
+        val chunkSize = weatherData.size / ceil(bytes / KAFKA_MAX_REQUEST_SIZE).toInt()
+
+        Flux.fromIterable(weatherData.chunked(chunkSize))
             .flatMap { weathers ->
                 val event = createKafkaEvent(param, weathers)
                 reactiveKafkaProducerTemplate.send(event.topic, event.message)
