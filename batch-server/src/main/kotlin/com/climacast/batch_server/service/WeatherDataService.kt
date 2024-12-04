@@ -1,6 +1,5 @@
 package com.climacast.batch_server.service
 
-import com.climacast.batch_server.common.enums.WeatherStatus
 import com.climacast.batch_server.config.handler.ConvertedWeatherData
 import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
@@ -11,6 +10,7 @@ import com.climacast.batch_server.model.entity.HourlyWeatherData
 import com.climacast.batch_server.model.repository.DailyWeatherRepository
 import com.climacast.batch_server.model.repository.HourlyWeatherRepository
 import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.enums.WeatherType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -1,6 +1,6 @@
 package com.climacast.batch_server.model.entity
 
-import com.climacast.batch_server.common.enums.WeatherStatus
+import com.climacast.global.enums.WeatherStatus
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
