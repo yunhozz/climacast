@@ -6,11 +6,11 @@ data class KafkaEvent(
 )
 
 sealed interface KafkaMessage {
-    data class ForecastWeathersDTO(
+    data class ForecastWeathersMessage(
         val data: List<WeatherResponseDTO>
     ): KafkaMessage
 
-    data class HistoryWeathersDTO(
+    data class HistoryWeathersMessage(
         val data: List<WeatherResponseDTO>
     ): KafkaMessage
 }

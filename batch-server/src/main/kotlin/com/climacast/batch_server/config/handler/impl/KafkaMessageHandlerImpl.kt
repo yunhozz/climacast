@@ -50,12 +50,12 @@ class KafkaMessageHandlerImpl(
             WeatherParameters.WEATHER_FORECAST ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_FORECAST_TOPIC,
-                    message = KafkaMessage.ForecastWeathersDTO(weathers)
+                    message = KafkaMessage.ForecastWeathersMessage(weathers)
                 )
             WeatherParameters.WEATHER_HISTORY ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_HISTORY_TOPIC,
-                    message = KafkaMessage.HistoryWeathersDTO(weathers)
+                    message = KafkaMessage.HistoryWeathersMessage(weathers)
                 )
         }
 
