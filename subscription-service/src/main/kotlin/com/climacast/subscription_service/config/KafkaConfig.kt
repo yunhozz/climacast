@@ -1,10 +1,8 @@
 package com.climacast.subscription_service.config
 
 import com.climacast.global.dto.KafkaMessage
-import com.climacast.global.utils.logger
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
@@ -32,7 +30,6 @@ class KafkaConfig(
     private val kafkaProperties: KafkaProperties
 ) {
     companion object {
-        private val log = logger()
         const val AUTO_OFFSET_RESET = "latest"
         const val JSON_DESERIALIZER_TRUST_PACKAGE = "com.climacast.global.*"
     }
@@ -59,16 +56,8 @@ class KafkaConfig(
             containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
             setCommonErrorHandler(
                 DefaultErrorHandler(
-                    DeadLetterPublishingRecoverer(kafkaTemplate()) { record, exception ->
-                        log.error(
-                            "[Kafka Consumer Error] topic='{}', key='{}', value='{}', error message='{}'",
-                            record.topic(),
-                            record.key(),
-                            record.value(),
-                            exception.message
-                        )
-                        TopicPartition(record.topic() + ".dlt", record.partition())
-                    }, FixedBackOff(1000, 3)
+                    DeadLetterPublishingRecoverer(kafkaTemplate()),
+                    FixedBackOff(1000, 3)
                 )
             )
         }
