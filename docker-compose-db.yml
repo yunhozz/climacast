@@ -1,0 +1,30 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 13306:3306
+    networks:
+      - climacast-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 16379:6379
+    networks:
+      - climacast-network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:latest
+    ports:
+      - 19200:9200
+    networks:
+      - climacast-network
+
+networks:
+  climacast-network:
