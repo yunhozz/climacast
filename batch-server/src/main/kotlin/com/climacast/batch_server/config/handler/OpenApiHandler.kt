@@ -7,9 +7,7 @@ import org.springframework.batch.item.Chunk
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-abstract class OpenApiHandler(
-    protected val weatherResponseProcessor: WeatherResponseProcessor
-) {
+abstract class OpenApiHandler {
     private lateinit var regions: Set<Region>
     protected lateinit var dto: OpenApiQueryRequestDTO
 

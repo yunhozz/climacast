@@ -5,13 +5,15 @@ import com.climacast.batch_server.config.handler.WeatherQueryRequest
 import com.climacast.batch_server.config.handler.WeatherResponseProcessor
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherType
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
-class OpenApiHandlerImpl(
-    weatherResponseProcessor: WeatherResponseProcessor
-): OpenApiHandler(weatherResponseProcessor) {
+class OpenApiHandlerImpl: OpenApiHandler() {
+
+    @Autowired
+    private lateinit var weatherResponseProcessor: WeatherResponseProcessor
 
     // 매 시간마다 실행
     override fun callForecastWeatherOpenApi(): List<WeatherResponseDTO> {
