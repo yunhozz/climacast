@@ -1,6 +1,7 @@
 package com.climacast.subscription_service.config
 
 import com.climacast.global.dto.KafkaMessage
+import com.climacast.global.enums.KafkaTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -30,6 +31,7 @@ class KafkaConfig(
     private val kafkaProperties: KafkaProperties
 ) {
     companion object {
+        const val GROUP_ID = "subscription-service-group"
         const val AUTO_OFFSET_RESET = "latest"
         const val JSON_DESERIALIZER_TRUST_PACKAGE = "com.climacast.global.*"
     }
@@ -47,7 +49,13 @@ class KafkaConfig(
 
     @Bean
     fun reactiveKafkaConsumerTemplate(): ReactiveKafkaConsumerTemplate<String, KafkaMessage> =
-        ReactiveKafkaConsumerTemplate(ReceiverOptions.create(kafkaConsumerProperties()))
+        ReactiveKafkaConsumerTemplate(
+            ReceiverOptions.create<String, KafkaMessage>(kafkaConsumerProperties())
+                .subscription(setOf(
+                    KafkaTopic.WEATHER_FORECAST_TOPIC,
+                    KafkaTopic.WEATHER_HISTORY_TOPIC
+                ))
+        )
 
     @Bean
     fun kafkaListenerContainerFactory() =
@@ -72,6 +80,7 @@ class KafkaConfig(
     @Bean
     fun kafkaConsumerProperties(): Map<String, Any> = mapOf(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to kafkaProperties.bootstrapServers,
+        ConsumerConfig.GROUP_ID_CONFIG to GROUP_ID,
         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to JsonDeserializer::class.java,
         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to AUTO_OFFSET_RESET,
