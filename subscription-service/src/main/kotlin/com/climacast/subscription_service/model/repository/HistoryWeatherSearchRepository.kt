@@ -1,6 +1,6 @@
 package com.climacast.subscription_service.model.repository
 
 import com.climacast.subscription_service.model.document.HistoryWeather
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
+import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository
 
-interface HistoryWeatherSearchRepository: ElasticsearchRepository<HistoryWeather, String>
+interface HistoryWeatherSearchRepository: ReactiveElasticsearchRepository<HistoryWeather, String>

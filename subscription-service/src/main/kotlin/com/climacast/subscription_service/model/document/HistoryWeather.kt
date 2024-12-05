@@ -2,11 +2,12 @@ package com.climacast.subscription_service.model.document
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.Document
+import java.util.UUID
 
 @Document(indexName = "history_weather", createIndex = true)
 data class HistoryWeather(
     @Id
-    val id: String,
+    val id: String = UUID.randomUUID().toString(),
     val lat: Double,
     val lon: Double,
     val region: String,
