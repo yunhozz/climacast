@@ -4,8 +4,8 @@ import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.batch_server.config.handler.KafkaMessageHandler
-import com.climacast.batch_server.config.handler.OpenApiHandler
 import com.climacast.batch_server.config.handler.WeatherDataHandler
+import com.climacast.batch_server.config.handler.api.OpenApiHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
@@ -37,7 +37,8 @@ class BatchConfig(
     private val batchJobRepository: JobRepository,
     private val batchTransactionManager: PlatformTransactionManager,
     private val appTransactionManager: PlatformTransactionManager,
-    private val openApiHandler: OpenApiHandler,
+    private val historyWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
+    private val forecastWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
     private val weatherDataHandler: WeatherDataHandler,
     private val kafkaMessageHandler: KafkaMessageHandler
 ) {
@@ -155,8 +156,10 @@ class BatchConfig(
                 ),
                 hourlyValues = HourlyConstants.ENTIRE
             )
-            openApiHandler.init(chunk, dto)
-            val responses = openApiHandler.callHistoricalWeatherOpenApi()
+            val responses = historyWeatherOpenApiHandler
+                .chunk(chunk)
+                .query(dto)
+                .callOpenApi()
 
             kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), responses)
             weatherResponseList.addAll(responses)
@@ -167,8 +170,10 @@ class BatchConfig(
     fun forecastWeatherOpenApiCallWriter(@Value("#{jobParameters[weatherParam]}") weatherParam: String) =
         ItemWriter<Region> { chunk ->
             val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
-            openApiHandler.init(chunk, dto)
-            val responses = openApiHandler.callForecastWeatherOpenApi()
+            val responses = forecastWeatherOpenApiHandler
+                .chunk(chunk)
+                .query(dto)
+                .callOpenApi()
 
             kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), responses)
             weatherResponseList.addAll(responses)

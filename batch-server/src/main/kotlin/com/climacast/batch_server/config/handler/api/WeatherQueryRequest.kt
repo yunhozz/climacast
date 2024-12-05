@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler
+package com.climacast.batch_server.config.handler.api
 
 import com.climacast.global.enums.WeatherType
 
