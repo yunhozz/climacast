@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.config.handler
+package com.climacast.subscription_service.service
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.utils.logger
@@ -9,12 +9,12 @@ import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
 
 @Component
-class DeadLetterHandler {
+class DeadLetterTopicListener {
 
     private val log = logger()
 
     @KafkaListener(topicPattern = ".*\\.DLT", groupId = "dead-letter")
-    fun receiveDeadLetter(
+    fun receive(
         @Payload dlt: KafkaMessage,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
         @Header(KafkaHeaders.RECEIVED_KEY, required = false) key: String?,
