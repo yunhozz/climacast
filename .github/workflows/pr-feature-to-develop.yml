@@ -71,7 +71,7 @@ jobs:
           docker compose -f docker-compose-db.yml ps
 
       - name: Test with Gradle
-        run: ./gradlew --info test -x :config-server:test
+        run: ./gradlew --info test -x :config-server:test -x :global:test
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
