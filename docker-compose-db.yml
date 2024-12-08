@@ -20,7 +20,7 @@ services:
 
   elasticsearch:
     container_name: elasticsearch
-    image: elasticsearch:latest
+    image: elasticsearch:8.16.1
     ports:
       - 19200:9200
     networks:
