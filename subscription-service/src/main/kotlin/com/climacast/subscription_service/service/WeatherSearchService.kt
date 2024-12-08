@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 
 @Service
-class WeatherStorageService(
+class WeatherSearchService(
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository
 ): AbstractWeatherDataProcessor() {
