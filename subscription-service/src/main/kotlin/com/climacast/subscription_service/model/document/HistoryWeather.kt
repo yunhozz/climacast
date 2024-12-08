@@ -43,4 +43,4 @@ data class HistoryWeather(
     val windSpeed120m: List<Double>?,
     val windSpeed180m: List<Double>?,
     val humidity2m: List<Int>?
-)
+): WeatherDocument
