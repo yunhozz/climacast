@@ -1,6 +1,6 @@
-package com.climacast.batch_server.config.handler
+package com.climacast.batch_server.config.handler.api
 
-import com.climacast.batch_server.common.enums.WeatherType
+import com.climacast.global.enums.WeatherType
 
 data class WeatherQueryRequest(
     val pastDays: Int?,

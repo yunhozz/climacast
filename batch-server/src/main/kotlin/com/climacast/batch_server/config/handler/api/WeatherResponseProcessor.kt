@@ -1,9 +1,7 @@
-package com.climacast.batch_server.config.handler.impl
+package com.climacast.batch_server.config.handler.api
 
-import com.climacast.batch_server.config.handler.WeatherQueryRequest
-import com.climacast.batch_server.config.handler.WeatherResponseProcessor
 import com.climacast.batch_server.dto.Region
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -13,41 +11,40 @@ import reactor.core.publisher.Mono
 import java.net.URI
 
 @Component
-class WeatherResponseProcessorImpl(
+class WeatherResponseProcessor(
     private val openMeteoWebClient: WebClient
-): WeatherResponseProcessor {
-
+) {
     @Value("\${open-api.open-meteo.end-point.weather-forecast}")
     private lateinit var weatherRequestEndPoint: String
 
     private val log = logger()
 
     companion object {
-        private const val TIMEZONE = "Asia/Tokyo"
+        const val TIMEZONE = "Asia/Tokyo"
     }
 
-    override fun sendHourlyWeatherRequest(region: Region, query: WeatherQueryRequest, hourly: String?): Mono<WeatherResponseDTO> =
-        retrieveWeatherResponse(region, query, hourly = hourly)
+    fun sendHourlyWeatherRequest(region: Region, request: WeatherQueryRequest, hourly: String?): Mono<WeatherResponseDTO> =
+        retrieveWeatherResponse(region, request, hourly = hourly)
 
-    override fun sendDailyWeatherRequest(region: Region, query: WeatherQueryRequest, daily: String?): Mono<WeatherResponseDTO> =
-        retrieveWeatherResponse(region, query, daily = daily)
+    fun sendDailyWeatherRequest(region: Region, request: WeatherQueryRequest, daily: String?): Mono<WeatherResponseDTO> =
+        retrieveWeatherResponse(region, request, daily = daily)
 
     private fun retrieveWeatherResponse(
         region: Region,
-        query: WeatherQueryRequest,
+        request: WeatherQueryRequest,
         daily: String? = null,
         hourly: String? = null
     ): Mono<WeatherResponseDTO> {
         val (parentRegion, childRegion, latitude, longitude) = region
         return openMeteoWebClient.get()
-            .uri { createWeatherRequestUri(it, latitude, longitude, query, daily, hourly) }
+            .uri { createWeatherRequestUri(it, latitude, longitude, request, daily, hourly) }
             .retrieve()
             .bodyToMono(WeatherResponseDTO::class.java)
             .map {
                 it.apply {
                     this.parentRegion = parentRegion
                     this.childRegion = childRegion
-                    this.weatherType = query.weatherType
+                    this.weatherType = request.weatherType
                 }
             }
             .doOnError { log.error("Failed to fetch weather data : ${it.localizedMessage}", it) }

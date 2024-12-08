@@ -40,17 +40,17 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          docker compose -f docker-compose-local.yml --env-file .env up -d
-          docker compose -f docker-compose-local.yml ps
+          docker compose -f docker-compose-db.yml --env-file .env up -d
+          docker compose -f docker-compose-db.yml ps
 
       - name: Wait for services to be ready
         run: |
           for i in {1..10}; do
-            SERVICES=$(docker compose -f docker-compose-local.yml ps --services)
+            SERVICES=$(docker compose -f docker-compose-db.yml ps --services)
             ALL_SERVICES_RUNNING=true
           
             for SERVICE in $SERVICES; do
-              SERVICE_STATUS=$(docker compose -f docker-compose-local.yml ps --filter "status=running" --services $SERVICE)
+              SERVICE_STATUS=$(docker compose -f docker-compose-db.yml ps --filter "status=running" --services $SERVICE)
             
               if [[ -z "$SERVICE_STATUS" ]]; then
                 echo "$SERVICE is not running yet..."
@@ -68,10 +68,10 @@ jobs:
             sleep 3
           done
           
-          docker compose -f docker-compose-local.yml ps
+          docker compose -f docker-compose-db.yml ps
 
       - name: Test with Gradle
-        run: ./gradlew --info test -x :config-server:test
+        run: ./gradlew --info test -x :config-server:test -x :global:test
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1

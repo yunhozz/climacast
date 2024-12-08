@@ -2,11 +2,14 @@ package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
-import com.climacast.batch_server.config.handler.OpenApiHandler
+import com.climacast.batch_server.common.enums.WeatherParameters
+import com.climacast.batch_server.config.handler.KafkaMessageHandler
 import com.climacast.batch_server.config.handler.WeatherDataHandler
+import com.climacast.batch_server.config.handler.api.OpenApiHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
-import com.climacast.batch_server.dto.WeatherResponseDTO
+import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.utils.logger
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobExecutionListener
@@ -34,18 +37,21 @@ class BatchConfig(
     private val batchJobRepository: JobRepository,
     private val batchTransactionManager: PlatformTransactionManager,
     private val appTransactionManager: PlatformTransactionManager,
-    private val openApiHandler: OpenApiHandler,
-    private val weatherDataHandler: WeatherDataHandler
+    private val historyWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
+    private val forecastWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
+    private val weatherDataHandler: WeatherDataHandler,
+    private val kafkaMessageHandler: KafkaMessageHandler
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
         const val SAVE_WEATHER_HISTORY_JOB = "saveWeatherHistory"
         const val SAVE_WEATHER_FORECAST_JOB = "saveWeatherForecast"
-        const val READ_REGION_DATA_STEP = "readRegionData"
         const val CALL_HISTORICAL_WEATHER_OPEN_API_STEP = "callHistoricalWeatherOpenApi"
         const val CALL_FORECAST_WEATHER_OPEN_API_STEP = "callForecastWeatherOpenApi"
         const val SAVE_WEATHER_DATA_STEP = "saveWeatherData"
         const val STEP_RETRY_COUNT = 3
+
+        private val log = logger()
     }
 
     private val regions = CopyOnWriteArraySet<Region>()
@@ -75,10 +81,8 @@ class BatchConfig(
         StepBuilder(CALL_HISTORICAL_WEATHER_OPEN_API_STEP, batchJobRepository)
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
-            .writer(historicalWeatherOpenApiCallWriter())
+            .writer(historicalWeatherOpenApiCallWriter(""))
             .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean
@@ -87,10 +91,8 @@ class BatchConfig(
         StepBuilder(CALL_FORECAST_WEATHER_OPEN_API_STEP, batchJobRepository)
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
-            .writer(forecastWeatherOpenApiCallWriter())
+            .writer(forecastWeatherOpenApiCallWriter(""))
             .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean
@@ -135,39 +137,47 @@ class BatchConfig(
 
     @Bean
     @StepScope
-    fun historicalWeatherOpenApiCallWriter() = ItemWriter<Region> { chunk ->
-        val dto = OpenApiQueryRequestDTO(
-            dailyValues = listOf(
-                DailyConstants.WEATHER_CODE,
-                DailyConstants.TEMPERATURE_2M_MAX,
-                DailyConstants.TEMPERATURE_2M_MIN,
-                DailyConstants.TEMPERATURE_APPARENT_MAX,
-                DailyConstants.TEMPERATURE_APPARENT_MIN,
-                DailyConstants.SUNRISE,
-                DailyConstants.SUNSET,
-                DailyConstants.DAYLIGHT_DURATION,
-                DailyConstants.SUNSHINE_DURATION,
-                DailyConstants.RAIN_SUM,
-                DailyConstants.SHOWERS_SUM,
-                DailyConstants.SNOWFALL_SUM
-            ),
-            hourlyValues = HourlyConstants.ENTIRE
-        )
-        openApiHandler.init(chunk, dto)
+    fun historicalWeatherOpenApiCallWriter(@Value("#{jobParameters[weatherParam]}") weatherParam: String) =
+        ItemWriter<Region> { chunk ->
+            val dto = OpenApiQueryRequestDTO(
+                dailyValues = listOf(
+                    DailyConstants.WEATHER_CODE,
+                    DailyConstants.TEMPERATURE_2M_MAX,
+                    DailyConstants.TEMPERATURE_2M_MIN,
+                    DailyConstants.TEMPERATURE_APPARENT_MAX,
+                    DailyConstants.TEMPERATURE_APPARENT_MIN,
+                    DailyConstants.SUNRISE,
+                    DailyConstants.SUNSET,
+                    DailyConstants.DAYLIGHT_DURATION,
+                    DailyConstants.SUNSHINE_DURATION,
+                    DailyConstants.RAIN_SUM,
+                    DailyConstants.SHOWERS_SUM,
+                    DailyConstants.SNOWFALL_SUM
+                ),
+                hourlyValues = HourlyConstants.ENTIRE
+            )
+            val responses = historyWeatherOpenApiHandler
+                .chunk(chunk)
+                .query(dto)
+                .callOpenApi()
 
-        val responses = openApiHandler.callHistoricalWeatherOpenApi()
-        weatherResponseList.addAll(responses)
-    }
+            kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), responses)
+            weatherResponseList.addAll(responses)
+        }
 
     @Bean
     @StepScope
-    fun forecastWeatherOpenApiCallWriter() = ItemWriter<Region> { chunk ->
-        val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
-        openApiHandler.init(chunk, dto)
+    fun forecastWeatherOpenApiCallWriter(@Value("#{jobParameters[weatherParam]}") weatherParam: String) =
+        ItemWriter<Region> { chunk ->
+            val dto = OpenApiQueryRequestDTO(hourlyValues = HourlyConstants.ENTIRE)
+            val responses = forecastWeatherOpenApiHandler
+                .chunk(chunk)
+                .query(dto)
+                .callOpenApi()
 
-        val responses = openApiHandler.callForecastWeatherOpenApi()
-        weatherResponseList.addAll(responses)
-    }
+            kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), responses)
+            weatherResponseList.addAll(responses)
+        }
 
     @Bean
     @StepScope

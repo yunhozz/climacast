@@ -1,11 +1,11 @@
-package com.climacast.global
+package com.climacast.subscription_service
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class GlobalApplication
+class SubscriptionServiceApplication
 
 fun main(args: Array<String>) {
-	runApplication<GlobalApplication>(*args)
+	runApplication<SubscriptionServiceApplication>(*args)
 }

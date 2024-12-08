@@ -1,0 +1,34 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3306:3306
+    networks:
+      - climacast-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - climacast-network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.16.1
+    ports:
+      - 9200:9200
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    networks:
+      - climacast-network
+
+networks:
+  climacast-network:
