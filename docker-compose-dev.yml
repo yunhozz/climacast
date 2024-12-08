@@ -1,5 +1,6 @@
 services:
   config-server:
+    container_name: config-server
     build:
       context: .
       dockerfile: config-server/Dockerfile
@@ -11,6 +12,7 @@ services:
       - climacast-network
 
   eureka-server:
+    container_name: eureka-server
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
@@ -18,7 +20,7 @@ services:
     ports:
       - 18761:8761
     environment:
-      - APPLICATION_PROFILE=dev
+      APPLICATION_PROFILE: dev
     depends_on:
       - config-server
     restart: on-failure
@@ -26,6 +28,7 @@ services:
       - climacast-network
 
   api-gateway:
+    container_name: api-gateway
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -33,7 +36,7 @@ services:
     ports:
       - 18000:8000
     environment:
-      - APPLICATION_PROFILE=dev
+      APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
@@ -42,6 +45,7 @@ services:
       - climacast-network
 
   batch-server-1:
+    container_name: batch-server-blue
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -49,7 +53,7 @@ services:
     ports:
       - 18999:8999
     environment:
-      - APPLICATION_PROFILE=dev
+      APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
@@ -62,6 +66,7 @@ services:
       - climacast-network
 
   batch-server-2:
+    container_name: batch-server-green
     build:
       context: .
       dockerfile: batch-server/Dockerfile
@@ -69,7 +74,7 @@ services:
     ports:
       - 28999:8999
     environment:
-      - APPLICATION_PROFILE=dev
+      APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
@@ -81,31 +86,93 @@ services:
     networks:
       - climacast-network
 
-  batch-server-3:
+  subscription-service:
+    container_name: subscription-service
     build:
       context: .
-      dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:${GIT_COMMIT_HASH}
+      dockerfile: subscription-service/Dockerfile
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
     ports:
-      - 38999:8999
+      - 18090:8090
     environment:
-      - APPLICATION_PROFILE=dev
+      APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
-      - mysql-source
-      - mysql-replica
-      - mysql-batch
+      - elasticsearch
     restart: on-failure
+    networks:
+      - climacast-network
+
+  kafka-1:
+    container_name: kafka-1
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9092:9092
+      - 19092:19092
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  kafka-2:
+    container_name: kafka-2
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9093:9093
+      - 19093:19093
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  kafka-3:
+    container_name: kafka-3
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9094:9094
+      - 19094:19094
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  zookeeper:
+    container_name: zookeeper
+    image: zookeeper:latest
+    ports:
+      - 12181:2181
     networks:
       - climacast-network
 
   mysql-source:
+    container_name: mysql-source
     image: mysql:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
     ports:
       - 3307:3306
     volumes:
@@ -116,10 +183,11 @@ services:
       - climacast-network
 
   mysql-replica:
+    container_name: mysql-replica
     image: mysql:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
     ports:
       - 3308:3306
     volumes:
@@ -132,10 +200,11 @@ services:
       - climacast-network
 
   mysql-batch:
+    container_name: mysql-batch
     image: mysql:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
     ports:
       - 3309:3306
     volumes:
@@ -143,7 +212,20 @@ services:
     networks:
       - climacast-network
 
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.16.1
+    ports:
+      - 19200:9200
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    networks:
+      - climacast-network
+
   nginx:
+    container_name: nginx
     image: nginx:latest
     ports:
       - 8080:80
@@ -155,6 +237,7 @@ services:
       - climacast-network
 
   redis:
+    container_name: redis
     image: redis:latest
     ports:
       - 16379:6379
@@ -163,8 +246,8 @@ services:
       - climacast-network
 
   prometheus:
-    image: prom/prometheus
     container_name: prometheus
+    image: prom/prometheus
     ports:
       - 19090:9090
     volumes:
@@ -173,8 +256,8 @@ services:
       - climacast-network
 
   grafana:
-    image: grafana/grafana
     container_name: grafana
+    image: grafana/grafana
     ports:
       - 13000:3000
     networks:
