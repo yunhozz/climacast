@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service
+package com.climacast.subscription_service.service.listener
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.utils.logger
@@ -13,7 +13,7 @@ class DeadLetterTopicListener {
 
     private val log = logger()
 
-    @KafkaListener(topicPattern = ".*\\.DLT", groupId = "dead-letter")
+    @KafkaListener(topicPattern = ".*\\.DLT")
     fun receive(
         @Payload dlt: KafkaMessage,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
