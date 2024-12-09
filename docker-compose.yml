@@ -1,0 +1,293 @@
+services:
+  config-server:
+    container_name: config-server
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    image: climacast/config-server:${GIT_COMMIT_HASH}
+    ports:
+      - 8888:8888
+    restart: always
+    networks:
+      - climacast-network
+
+  eureka-server:
+    container_name: eureka-server
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    image: climacast/eureka-server:${GIT_COMMIT_HASH}
+    ports:
+      - 18761:8761
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: climacast/api-gateway:${GIT_COMMIT_HASH}
+    ports:
+      - 18000:8000
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-blue:
+    container_name: batch-server-blue
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    ports:
+      - 18999:8999
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-green:
+    container_name: batch-server-green
+    build:
+      context: .
+      dockerfile: batch-server/Dockerfile
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    ports:
+      - 28999:8999
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  subscription-service-blue:
+    container_name: subscription-service-blue
+    build:
+      context: .
+      dockerfile: subscription-service/Dockerfile
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    ports:
+      - 18090:8090
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - elasticsearch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  subscription-service-green:
+    container_name: subscription-service-green
+    build:
+      context: .
+      dockerfile: subscription-service/Dockerfile
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    ports:
+      - 28090:8090
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - elasticsearch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  kafka-1:
+    container_name: kafka-1
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9092:9092
+      - 19092:19092
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  kafka-2:
+    container_name: kafka-2
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9093:9093
+      - 19093:19093
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  kafka-3:
+    container_name: kafka-3
+    image: kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    ports:
+      - 9094:9094
+      - 19094:19094
+    depends_on:
+      - zookeeper
+    networks:
+      - climacast-network
+
+  zookeeper:
+    container_name: zookeeper
+    image: zookeeper:latest
+    ports:
+      - 12181:2181
+    networks:
+      - climacast-network
+
+  mysql-source:
+    container_name: mysql-source
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3307:3306
+    volumes:
+      - source-data:/var/lib/mysql
+      - source-logs:/var/lib/mysql-files
+      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
+    networks:
+      - climacast-network
+
+  mysql-replica:
+    container_name: mysql-replica
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3308:3306
+    volumes:
+      - replica-data:/var/lib/mysql
+      - replica-logs:/var/lib/mysql-files
+      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
+    depends_on:
+      - mysql-source
+    networks:
+      - climacast-network
+
+  mysql-batch:
+    container_name: mysql-batch
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3309:3306
+    volumes:
+      - batch-data:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.16.1
+    ports:
+      - 19200:9200
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    networks:
+      - climacast-network
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - 8080:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    restart: always
+    networks:
+      - climacast-network
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 16379:6379
+    restart: always
+    networks:
+      - climacast-network
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 19090:9090
+    volumes:
+      - ./prometheus-dev.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - climacast-network
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - 13000:3000
+    networks:
+      - climacast-network
+
+networks:
+  climacast-network:
+
+volumes:
+  source-data:
+  source-logs:
+  replica-data:
+  replica-logs:
+  batch-data:
