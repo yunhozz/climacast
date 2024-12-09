@@ -2,6 +2,7 @@ package com.climacast.subscription_service.service.listener
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.service.handler.WeatherDataHandler
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class WeatherDataListener(
     private val reactiveKafkaConsumer: ReactiveKafkaConsumerTemplate<String, KafkaMessage>,
-    private val weatherDataProcessor: WeatherDataProcessor
+    private val weatherDataProcessor: WeatherDataHandler
 ) {
     private val log = logger()
 
