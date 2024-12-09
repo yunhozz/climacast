@@ -44,7 +44,7 @@ services:
     networks:
       - climacast-network
 
-  batch-server-1:
+  batch-server-blue:
     container_name: batch-server-blue
     build:
       context: .
@@ -65,7 +65,7 @@ services:
     networks:
       - climacast-network
 
-  batch-server-2:
+  batch-server-green:
     container_name: batch-server-green
     build:
       context: .
@@ -86,14 +86,33 @@ services:
     networks:
       - climacast-network
 
-  subscription-service:
-    container_name: subscription-service
+  subscription-service-blue:
+    container_name: subscription-service-blue
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
     image: climacast/subscription-service:${GIT_COMMIT_HASH}
     ports:
       - 18090:8090
+    environment:
+      APPLICATION_PROFILE: dev
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - elasticsearch
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  subscription-service-green:
+    container_name: subscription-service-green
+    build:
+      context: .
+      dockerfile: subscription-service/Dockerfile
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    ports:
+      - 28090:8090
     environment:
       APPLICATION_PROFILE: dev
     depends_on:
