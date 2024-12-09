@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.listener
+package com.climacast.subscription_service.service.handler
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
@@ -10,7 +10,7 @@ import com.climacast.subscription_service.model.document.WeatherDocument
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-abstract class AbstractWeatherDataProcessor: WeatherDataProcessor {
+abstract class AbstractWeatherDataHandler: WeatherDataHandler {
 
     protected val log = logger()
 
