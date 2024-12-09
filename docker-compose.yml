@@ -126,7 +126,7 @@ services:
 
   kafka-1:
     container_name: kafka-1
-    image: kafka:latest
+    image: bitnami/kafka:latest
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -144,7 +144,7 @@ services:
 
   kafka-2:
     container_name: kafka-2
-    image: kafka:latest
+    image: bitnami/kafka:latest
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -162,7 +162,7 @@ services:
 
   kafka-3:
     container_name: kafka-3
-    image: kafka:latest
+    image: bitnami/kafka:latest
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
