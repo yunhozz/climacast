@@ -46,7 +46,7 @@ jobs:
       - name: Check Docker Containers are Healthy
         run: |
           for i in {1..10}; do
-            SERVICES=$(docker compose -f docker-compose-dev.yml ps --services)
+            SERVICES=$(docker compose -f docker-compose-dev.yml ps --services | grep -E "config-server|eureka-server|api-gateway|batch-server-blue|batch-server-green|subscription-service-blue|subscription-service-green")
             ALL_SERVICES_RUNNING=true
           
             for SERVICE in $SERVICES; do
@@ -54,7 +54,7 @@ jobs:
               
               if [[ "$SERVICE_STATUS" != "\"healthy\"" ]]; then
                 echo "$SERVICE is not ready yet (status: $SERVICE_STATUS)"
-                ALL_SERVICES_RUNNING = false
+                ALL_SERVICES_RUNNING=false
               else
                 echo "$SERVICE is ready (status: $SERVICE_STATUS)"
               fi
