@@ -23,19 +23,32 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Load Properties and Environments from Secrets and Process
+        run: |
+          mkdir -p ./global/src/main/resources
+
+          touch ./global/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
+
+          touch ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
+
+          echo "${{ secrets.ENV }}" > .env
+
       - name: Build and push Docker images to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           GIT_COMMIT_HASH: ${{ github.sha }}
         run: |
-          SERVICES=$(docker compose config --services)
+          SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server-blue" "batch-server-green" "subscription-service-blue" "subscription-service-green")
 
           for SERVICE in $SERVICES; do
             IMAGE_TAG="${SERVICE}-${GIT_COMMIT_HASH}"
             echo "Building image for $SERVICE with tag $IMAGE_TAG"
 
             docker compose build $SERVICE
-            docker tag $SERVICE:latest $ECR_REGISTRY/climacast:$IMAGE_TAG
+            docker image ls
+            docker tag $SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG
             docker push $ECR_REGISTRY/climacast:$IMAGE_TAG
 
             echo "${SERVICE}-image=${ECR_REGISTRY}/climacast:$IMAGE_TAG" >> $GITHUB_ENV
@@ -46,10 +59,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AWS_PEM_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          
-      - name: Copy docker-compose.yml to EC2
+
+      - name: Copy Files to EC2
         run: |
-          scp -i ~/.ssh/id_rsa docker-compose.yml ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa ./docker-compose.yml ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa -r ./nginx ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa ./deploy.sh ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa ./.env ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa ./prometheus-dev.yml ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/
 
       - name: Deploy to EC2
         run: |
@@ -62,5 +79,6 @@ jobs:
           done
 
           cd /home/ubuntu
-          docker compose -f /home/ubuntu/docker-compose.yml up -d
+          chmod +x deploy.sh
+          ./deploy.sh
           EOF
