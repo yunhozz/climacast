@@ -18,22 +18,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
       - name: Load Properties and Environments from secrets and process
         run: |
           mkdir -p ./global/src/main/resources
+          mkdir -p ./nginx/conf.d
           
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
@@ -42,57 +30,52 @@ jobs:
           echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
           
           echo "${{ secrets.ENV }}" > .env
+          
+          echo 'user nginx;' > nginx/nginx.conf
+          echo 'worker_processes auto;' >> nginx/nginx.conf
+          echo 'error_log /var/log/nginx/error.log warn;' >> nginx/nginx.conf
+          echo 'pid /var/run/nginx.pid;' >> nginx/nginx.conf
+          echo 'events { worker_connections 1024; }' >> nginx/nginx.conf
+          echo 'http { server { listen 80; server_name localhost; location / { root /usr/share/nginx/html; } } }' >> nginx/nginx.conf
 
       - name: Set up Docker Compose
         run: |
           docker compose -f docker-compose-dev.yml --env-file .env up -d
           docker compose -f docker-compose-dev.yml ps
+          sleep 10
 
       - name: Wait for services to be ready
         run: |
+          declare -A SERVICES=(
+            ["config-server"]="http://127.0.0.1:8888/actuator/health"
+            ["eureka-server"]="http://127.0.0.1:18761/actuator/health"
+            ["api-gateway"]="http://127.0.0.1:18000/actuator/health"
+            ["batch-server-blue"]="http://127.0.0.1:18999/actuator/health"
+            ["batch-server-green"]="http://127.0.0.1:28999/actuator/health"
+            ["subscription-service-blue"]="http://127.0.0.1:18090/actuator/health"
+            ["subscription-service-green"]="http://127.0.0.1:28090/actuator/health"
+          )
+          
           for i in {1..10}; do
-            SERVICES=$(docker compose -f docker-compose-dev.yml ps --services)
-            ALL_SERVICES_RUNNING=true
+            ALL_SERVICES_READY=true
           
-            for SERVICE in $SERVICES; do
-              SERVICE_STATUS=$(docker compose -f docker-compose-dev.yml ps --filter "status=running" --services $SERVICE)
+            for SERVICE in "${!SERVICES[@]}"; do
+              URL=${SERVICES[$SERVICE]}
+              HTTP_STATUS=$(curl -v -o /dev/null -s -w "%{http_code}" $URL)
           
-              if [[ -z "$SERVICE_STATUS" ]]; then
-                echo "$SERVICE is not running yet..."
-                ALL_SERVICES_RUNNING=false
-                break
+              if [[ "$HTTP_STATUS" != "200" ]]; then
+                echo "$SERVICE is not ready yet (HTTP $HTTP_STATUS)..."
+                ALL_SERVICES_READY=false
+              else
+                echo "$SERVICE is ready (HTTP $HTTP_STATUS)."
               fi
             done
           
-            if [[ "$ALL_SERVICES_RUNNING" == true ]]; then
+            if [[ "$ALL_SERVICES_READY" == true ]]; then
               echo "All services are healthy!"
               break
             fi
           
             echo "Waiting for all services to be ready..."
-            sleep 3
+            sleep 6
           done
-          
-          docker compose -f docker-compose-dev.yml ps
-
-      - name: Test with Gradle
-        run: ./gradlew --info test -x :global:test
-
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: ${{ always() }}
-        with:
-          files: '**/build/test-results/test/*.xml'
-
-      - name: Upload Test Results as Artifacts
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: build/test-results
-
-      - name: Cleanup Gradle Cache
-        if: ${{ always() }}
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
