@@ -7,6 +7,12 @@ services:
     image: climacast/config-server:${GIT_COMMIT_HASH}
     ports:
       - 8888:8888
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: always
     networks:
       - climacast-network
@@ -23,6 +29,12 @@ services:
       APPLICATION_PROFILE: dev
     depends_on:
       - config-server
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -40,6 +52,12 @@ services:
     depends_on:
       - config-server
       - eureka-server
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8000/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -61,6 +79,12 @@ services:
       - mysql-source
       - mysql-replica
       - mysql-batch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -82,6 +106,12 @@ services:
       - mysql-source
       - mysql-replica
       - mysql-batch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -101,6 +131,12 @@ services:
       - eureka-server
       - api-gateway
       - elasticsearch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -120,6 +156,12 @@ services:
       - eureka-server
       - api-gateway
       - elasticsearch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
