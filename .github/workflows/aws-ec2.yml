@@ -48,7 +48,7 @@ jobs:
 
             docker compose build $SERVICE
             docker image ls
-            docker tag $SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG
+            docker tag climacast/$SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG
             docker push $ECR_REGISTRY/climacast:$IMAGE_TAG
 
             echo "${SERVICE}-image=${ECR_REGISTRY}/climacast:$IMAGE_TAG" >> $GITHUB_ENV
