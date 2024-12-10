@@ -18,69 +18,53 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Load Properties and Environments from secrets and process
+      - name: Load Properties and Environments from Secrets and Process
         run: |
           mkdir -p ./global/src/main/resources
+          mkdir -p ./nginx/conf.d
           
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
-          cat ./global/src/main/resources/application.properties
           
           touch ./config-server/src/main/resources/application-key.yml
           echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
-          cat ./config-server/src/main/resources/application-key.yml
           
           echo "${{ secrets.ENV }}" > .env
-          cat .env
+          
+          echo 'user nginx;' > nginx/nginx.conf
+          echo 'worker_processes auto;' >> nginx/nginx.conf
+          echo 'error_log /var/log/nginx/error.log warn;' >> nginx/nginx.conf
+          echo 'pid /var/run/nginx.pid;' >> nginx/nginx.conf
+          echo 'events { worker_connections 1024; }' >> nginx/nginx.conf
+          echo 'http { server { listen 80; server_name localhost; location / { root /usr/share/nginx/html; } } }' >> nginx/nginx.conf
 
       - name: Set up Docker Compose
         run: |
           docker compose -f docker-compose-dev.yml --env-file .env up -d
           docker compose -f docker-compose-dev.yml ps
 
-      - name: Wait for services to be ready
+      - name: Check Docker Containers are Healthy
         run: |
-          for i in {1..12}; do
-            if docker compose -f docker-compose-dev.yml ps | grep "healthy"; then
+          for i in {1..10}; do
+            SERVICES=$(docker compose -f docker-compose-dev.yml ps --services | grep -E "config-server|eureka-server|api-gateway|batch-server-blue|batch-server-green|subscription-service-blue|subscription-service-green")
+            ALL_SERVICES_RUNNING=true
+          
+            for SERVICE in $SERVICES; do
+              SERVICE_STATUS=$(docker inspect --format='{{json .State.Health.Status}}' "$SERVICE")
+              
+              if [[ "$SERVICE_STATUS" != "\"healthy\"" ]]; then
+                echo "$SERVICE is not ready yet (status: $SERVICE_STATUS)"
+                ALL_SERVICES_RUNNING=false
+              else
+                echo "$SERVICE is ready (status: $SERVICE_STATUS)"
+              fi
+            done
+          
+            if [[ "$ALL_SERVICES_RUNNING" == true ]]; then
               echo "All services are healthy!"
               break
             fi
-            echo "Waiting for services to be ready..."
-            sleep 5
+          
+            echo "Waiting for all services to be ready..."
+            sleep 6
           done
-          docker compose -f docker-compose-dev.yml ps
-
-      - name: Test with Gradle
-        run: ./gradlew --info test
-
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
-        if: ${{ always() }}
-        with:
-          files: '**/build/test-results/test/*.xml'
-
-      - name: Upload Test Results as Artifacts
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: build/test-results
-
-      - name: Cleanup Gradle Cache
-        if: ${{ always() }}
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties

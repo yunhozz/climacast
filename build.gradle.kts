@@ -6,7 +6,7 @@ plugins {
 	kotlin("plugin.jpa") version "2.0.0"
 	kotlin("plugin.spring") version "2.0.0"
 	kotlin("kapt") version "1.8.22"
-	id("org.springframework.boot") version "3.3.5"
+	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -60,10 +60,11 @@ subprojects {
 		implementation("org.jetbrains.kotlin:kotlin-reflect")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 		implementation("org.springframework.boot:spring-boot-starter-actuator")
+		implementation("io.micrometer:micrometer-registry-prometheus")
 		implementation("org.danilopianini:khttp:1.3.1")
 		implementation("org.springframework.boot:spring-boot-starter-log4j2")
-		implementation("org.apache.kafka:kafka-streams")
 		implementation("org.springframework.kafka:spring-kafka")
+		implementation("io.projectreactor.kafka:reactor-kafka:1.3.19")
 		implementation("org.springframework.boot:spring-boot-starter-aop")
 		developmentOnly("org.springframework.boot:spring-boot-devtools")
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -108,3 +109,4 @@ project(":config-server")
 project(":eureka-server")
 project(":api-gateway")
 project(":batch-server")
+project(":subscription-service")
