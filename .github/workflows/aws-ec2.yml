@@ -40,15 +40,15 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           GIT_COMMIT_HASH: ${{ github.sha }}
         run: |
-          SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server-blue" "batch-server-green" "subscription-service-blue" "subscription-service-green")
+          SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
 
-          for SERVICE in $SERVICES; do
+          for SERVICE in ${SERVICES[@]}; do
             IMAGE_TAG="${SERVICE}-${GIT_COMMIT_HASH}"
             echo "Building image for $SERVICE with tag $IMAGE_TAG"
 
             docker compose build $SERVICE
             docker image ls
-            docker tag $SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG
+            docker tag climacast/$SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG
             docker push $ECR_REGISTRY/climacast:$IMAGE_TAG
 
             echo "${SERVICE}-image=${ECR_REGISTRY}/climacast:$IMAGE_TAG" >> $GITHUB_ENV
@@ -57,8 +57,8 @@ jobs:
       - name: Setup SSH key for EC2
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.AWS_PEM_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Copy Files to EC2
         run: |
@@ -73,7 +73,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@ec2-3-39-252-185.ap-northeast-2.compute.amazonaws.com << 'EOF'
           aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-          for SERVICE in $(docker compose -f /home/ubuntu/docker-compose.yml config --services); do
+          for SERVICE in $(docker compose config --services); do
             IMAGE_TAG="${SERVICE}-${GIT_COMMIT_HASH}"
             docker pull ${ECR_REGISTRY}/climacast:$IMAGE_TAG
           done
