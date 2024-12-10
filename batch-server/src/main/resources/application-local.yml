@@ -24,7 +24,7 @@ spring:
         format_sql: true
   datasource:
     batch:
-      jdbcUrl: ${mysql.batch}
+      jdbcUrl: ${mysql.batch.local}
       username: ${mysql.username}
       password: ${mysql.password}
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -34,7 +34,7 @@ spring:
     weather:
       source:
         hikari:
-          jdbcUrl: ${mysql.weather.source}
+          jdbcUrl: ${mysql.weather.local}
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -43,7 +43,7 @@ spring:
           minimum-idle: 5
       replica:
         hikari:
-          jdbcUrl: ${mysql.weather.replica}
+          jdbcUrl: ${mysql.weather.local}
           username: ${mysql.username}
           password: ${mysql.password}
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -55,6 +55,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+redis:
+  host: localhost
+  port: 6379
 
 logging:
   level:

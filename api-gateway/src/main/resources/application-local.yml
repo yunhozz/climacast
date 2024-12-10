@@ -17,6 +17,11 @@ spring:
             baseMessage: Spring Cloud Gateway Global Filter
             preLogger: true
             postLogger: true
+      routes:
+        - id: batch-server
+          uri: lb://BATCH-SERVER
+          predicates:
+            - Path=/batch/**
 
 eureka:
   client:

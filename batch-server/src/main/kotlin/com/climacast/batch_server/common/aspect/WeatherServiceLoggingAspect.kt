@@ -16,8 +16,8 @@ class WeatherServiceLoggingAspect {
 
     private val log = logger()
 
-    @Around("execution(* com.climacast.batch_server.service.WeatherService.*(..))")
-    fun around(point: ProceedingJoinPoint): Any? {
+    @Around("execution(* com.climacast.batch_server.service.WeatherSchedulerService.*(..))")
+    fun logScheduler(point: ProceedingJoinPoint): Any? {
         val methodName = point.signature.name
         return try {
             log.info(">>>>> Scheduling Start : $methodName")

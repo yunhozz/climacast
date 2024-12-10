@@ -4,5 +4,6 @@ include(
     ":config-server",
     ":eureka-server",
     ":api-gateway",
-    ":batch-server"
+    ":batch-server",
+    ":subscription-service"
 )

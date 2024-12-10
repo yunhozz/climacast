@@ -1,55 +1,34 @@
 services:
-  mysql-source:
-    container_name: mysql-source
+  mysql:
+    container_name: mysql
     image: mysql:latest
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
     ports:
-      - 3307:3306
-    volumes:
-      - source-data:/var/lib/mysql
-      - source-logs:/var/lib/mysql-files
-      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
+      - 3306:3306
     networks:
-      - mysql-network
+      - climacast-network
 
-  mysql-replica:
-    container_name: mysql-replica
-    image: mysql:latest
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+  redis:
+    container_name: redis
+    image: redis:latest
     ports:
-      - 3308:3306
-    volumes:
-      - replica-data:/var/lib/mysql
-      - replica-logs:/var/lib/mysql-files
-      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
-    depends_on:
-      - mysql-source
+      - 6379:6379
     networks:
-      - mysql-network
+      - climacast-network
 
-  mysql-batch:
-    container_name: mysql-batch
-    image: mysql:latest
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
-      - TZ=Asia/Seoul
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.16.1
     ports:
-      - 3309:3306
-    volumes:
-      - batch-data:/var/lib/mysql
+      - 9200:9200
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
     networks:
-      - mysql-network
+      - climacast-network
 
 networks:
-  mysql-network:
-
-volumes:
-  source-data:
-  source-logs:
-  replica-data:
-  replica-logs:
-  batch-data:
+  climacast-network:
