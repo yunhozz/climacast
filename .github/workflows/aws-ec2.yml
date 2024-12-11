@@ -40,12 +40,13 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           GIT_COMMIT_HASH: ${{ github.sha }}
         run: |
+          echo "GIT_COMMIT_HASH=${GIT_COMMIT_HASH}" >> .env
           SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
 
           for SERVICE in ${SERVICES[@]}; do
             IMAGE_TAG="${SERVICE}-${GIT_COMMIT_HASH}"
             echo "Building image for $SERVICE with tag $IMAGE_TAG"
-
+          
             docker compose build $SERVICE
             docker image ls
             docker tag climacast/$SERVICE:${GIT_COMMIT_HASH} $ECR_REGISTRY/climacast:$IMAGE_TAG

@@ -1,10 +1,10 @@
 services:
   config-server:
-    container_name: config-server
     build:
       context: .
       dockerfile: config-server/Dockerfile
     image: climacast/config-server:${GIT_COMMIT_HASH}
+    container_name: config-server
     ports:
       - 8888:8888
     restart: always
@@ -12,11 +12,11 @@ services:
       - climacast-network
 
   eureka-server:
-    container_name: eureka-server
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
     image: climacast/eureka-server:${GIT_COMMIT_HASH}
+    container_name: eureka-server
     ports:
       - 18761:8761
     environment:
@@ -28,11 +28,11 @@ services:
       - climacast-network
 
   api-gateway:
-    container_name: api-gateway
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
     image: climacast/api-gateway:${GIT_COMMIT_HASH}
+    container_name: api-gateway
     ports:
       - 18000:8000
     environment:
@@ -44,12 +44,15 @@ services:
     networks:
       - climacast-network
 
-  batch-server-blue:
-    container_name: batch-server-blue
+  batch-server:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:${GIT_COMMIT_HASH}
+
+  batch-server-blue:
+    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    container_name: batch-server-blue
     ports:
       - 18999:8999
     environment:
@@ -66,11 +69,8 @@ services:
       - climacast-network
 
   batch-server-green:
-    container_name: batch-server-green
-    build:
-      context: .
-      dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:${GIT_COMMIT_HASH}
+    container_name: batch-server-green
     ports:
       - 28999:8999
     environment:
@@ -86,12 +86,15 @@ services:
     networks:
       - climacast-network
 
-  subscription-service-blue:
-    container_name: subscription-service-blue
+  subscription-service:
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
     image: climacast/subscription-service:${GIT_COMMIT_HASH}
+
+  subscription-service-blue:
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    container_name: subscription-service-blue
     ports:
       - 18090:8090
     environment:
@@ -106,11 +109,8 @@ services:
       - climacast-network
 
   subscription-service-green:
-    container_name: subscription-service-green
-    build:
-      context: .
-      dockerfile: subscription-service/Dockerfile
     image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    container_name: subscription-service-green
     ports:
       - 28090:8090
     environment:
@@ -125,8 +125,8 @@ services:
       - climacast-network
 
   kafka-1:
-    container_name: kafka-1
     image: bitnami/kafka:latest
+    container_name: kafka-1
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -143,8 +143,8 @@ services:
       - climacast-network
 
   kafka-2:
-    container_name: kafka-2
     image: bitnami/kafka:latest
+    container_name: kafka-2
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -161,8 +161,8 @@ services:
       - climacast-network
 
   kafka-3:
-    container_name: kafka-3
     image: bitnami/kafka:latest
+    container_name: kafka-3
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -179,16 +179,16 @@ services:
       - climacast-network
 
   zookeeper:
-    container_name: zookeeper
     image: zookeeper:latest
+    container_name: zookeeper
     ports:
       - 12181:2181
     networks:
       - climacast-network
 
   mysql-source:
-    container_name: mysql-source
     image: mysql:latest
+    container_name: mysql-source
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
@@ -202,8 +202,8 @@ services:
       - climacast-network
 
   mysql-replica:
-    container_name: mysql-replica
     image: mysql:latest
+    container_name: mysql-replica
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
@@ -219,8 +219,8 @@ services:
       - climacast-network
 
   mysql-batch:
-    container_name: mysql-batch
     image: mysql:latest
+    container_name: mysql-batch
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
@@ -232,8 +232,8 @@ services:
       - climacast-network
 
   elasticsearch:
-    container_name: elasticsearch
     image: elasticsearch:8.16.1
+    container_name: elasticsearch
     ports:
       - 19200:9200
     environment:
@@ -244,8 +244,8 @@ services:
       - climacast-network
 
   nginx:
-    container_name: nginx
     image: nginx:latest
+    container_name: nginx
     ports:
       - 8080:80
     volumes:
@@ -256,8 +256,8 @@ services:
       - climacast-network
 
   redis:
-    container_name: redis
     image: redis:latest
+    container_name: redis
     ports:
       - 16379:6379
     restart: always
@@ -265,8 +265,8 @@ services:
       - climacast-network
 
   prometheus:
-    container_name: prometheus
     image: prom/prometheus
+    container_name: prometheus
     ports:
       - 19090:9090
     volumes:
@@ -275,8 +275,8 @@ services:
       - climacast-network
 
   grafana:
-    container_name: grafana
     image: grafana/grafana
+    container_name: grafana
     ports:
       - 13000:3000
     networks:
