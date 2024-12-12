@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: config-server/Dockerfile
-    image: climacast/config-server:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:config-server-${GIT_COMMIT_HASH}
     container_name: config-server
     ports:
       - 8888:8888
@@ -15,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
-    image: climacast/eureka-server:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:eureka-server-${GIT_COMMIT_HASH}
     container_name: eureka-server
     ports:
       - 18761:8761
@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    image: climacast/api-gateway:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:api-gateway-${GIT_COMMIT_HASH}
     container_name: api-gateway
     ports:
       - 18000:8000
@@ -48,10 +48,10 @@ services:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
 
   batch-server-blue:
-    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
     container_name: batch-server-blue
     ports:
       - 18999:8999
@@ -69,7 +69,7 @@ services:
       - climacast-network
 
   batch-server-green:
-    image: climacast/batch-server:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
     container_name: batch-server-green
     ports:
       - 28999:8999
@@ -90,10 +90,10 @@ services:
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
-    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
 
   subscription-service-blue:
-    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
     container_name: subscription-service-blue
     ports:
       - 18090:8090
@@ -109,7 +109,7 @@ services:
       - climacast-network
 
   subscription-service-green:
-    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
     container_name: subscription-service-green
     ports:
       - 28090:8090

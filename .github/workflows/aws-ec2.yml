@@ -42,6 +42,8 @@ jobs:
         run: |
           echo "ECR_REGISTRY=${ECR_REGISTRY}" >> $GITHUB_ENV
           echo "GIT_COMMIT_HASH=${GIT_COMMIT_HASH}" >> $GITHUB_ENV
+          
+          echo "ECR_REGISTRY=${ECR_REGISTRY}" >> .env
           echo "GIT_COMMIT_HASH=${GIT_COMMIT_HASH}" >> .env
           
           SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
@@ -85,6 +87,3 @@ jobs:
               IMAGE_TAG="${SERVICE}-${GIT_COMMIT_HASH}"
               docker pull ${ECR_REGISTRY}/climacast:$IMAGE_TAG
             done
-            
-            chmod +x deploy.sh
-            ./deploy.sh
