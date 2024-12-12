@@ -4,8 +4,8 @@ import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.batch_server.config.handler.KafkaMessageHandler
-import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.config.handler.api.OpenApiHandler
+import com.climacast.batch_server.config.handler.data.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
