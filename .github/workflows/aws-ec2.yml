@@ -67,20 +67,3 @@ jobs:
           port: ${{ secrets.AWS_REMOTE_SSH_PORT }}
           source: ".env"
           target: /home/ubuntu/
-          
-      - name: Deploy with EC2
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.AWS_REMOTE_IP }}
-          username: ${{ secrets.AWS_REMOTE_USER }}
-          key: ${{ secrets.AWS_PEM_KEY }}
-          port: ${{ secrets.AWS_REMOTE_SSH_PORT }}
-          script: |
-            cd /home/ubuntu/
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
-            
-            SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
-            
-            for SERVICE in ${SERVICES[@]}; do
-              docker pull ${ECR_REGISTRY}/climacast:${SERVICE}-${GIT_COMMIT_HASH}
-            done
