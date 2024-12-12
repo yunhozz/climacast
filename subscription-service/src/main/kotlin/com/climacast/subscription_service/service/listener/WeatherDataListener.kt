@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @Component
 class WeatherDataListener(
     private val reactiveKafkaConsumer: ReactiveKafkaConsumerTemplate<String, KafkaMessage>,
-    private val weatherDataProcessor: WeatherDataHandler
+    private val weatherDataHandler: WeatherDataHandler
 ) {
     private val log = logger()
 
@@ -23,7 +23,7 @@ class WeatherDataListener(
             }
             .map { it.value() }
             .flatMap { message ->
-                weatherDataProcessor.saveWeathersByMessageType(message)
+                weatherDataHandler.saveWeathersByMessageType(message)
             }
             .subscribe()
     }
