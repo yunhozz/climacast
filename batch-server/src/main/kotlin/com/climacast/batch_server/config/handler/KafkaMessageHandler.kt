@@ -11,6 +11,8 @@ import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
+import reactor.util.retry.Retry
+import java.time.Duration
 import kotlin.math.ceil
 
 @Component
@@ -22,7 +24,10 @@ class KafkaMessageHandler(
 
     companion object {
         private val objectMapper = jacksonObjectMapper()
-        const val KAFKA_MAX_REQUEST_SIZE = (1024 * 1024).toDouble() // 1MB
+        private const val KAFKA_MAX_REQUEST_SIZE = (1024 * 1024).toDouble() // 1MB
+
+        private fun calculateChunkSize(dataSize: Int, bytes: ByteArray): Int =
+            dataSize / ceil(bytes.size / KAFKA_MAX_REQUEST_SIZE).toInt()
     }
 
     fun sendWeatherResponses(param: WeatherParameters, weatherData: List<WeatherResponseDTO>) {
@@ -33,6 +38,7 @@ class KafkaMessageHandler(
             .flatMap { weathers ->
                 val event = createKafkaEvent(param, weathers)
                 reactiveKafkaProducerTemplate.send(event.topic, event.message)
+                    .retryWhen(Retry.backoff(3, Duration.ofMillis(500)))
                     .doOnSuccess {
                         val metadata = it.recordMetadata()
                         log.info("Kafka send success : ${metadata.topic()} / ${metadata.offset()}")
@@ -57,7 +63,4 @@ class KafkaMessageHandler(
                     message = KafkaMessage.HistoryWeathersMessage(weathers)
                 )
         }
-
-    private fun calculateChunkSize(dataSize: Int, bytes: ByteArray): Int =
-        dataSize / ceil(bytes.size / KAFKA_MAX_REQUEST_SIZE).toInt()
 }
