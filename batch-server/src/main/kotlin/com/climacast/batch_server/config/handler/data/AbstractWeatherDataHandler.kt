@@ -15,12 +15,16 @@ import java.time.LocalDateTime
 abstract class AbstractWeatherDataHandler: WeatherDataHandler {
     override fun process(weatherResponseDTOs: List<WeatherResponseDTO>) {
         weatherResponseDTOs.forEach { dto ->
-            val weatherData = convertToPojo(dto)
-            saveWeatherData(weatherData)
+            when (val weatherData = convertToPojo(dto)) {
+                is ConvertedWeatherData.WeatherForecastData -> saveWeatherForecastData(weatherData)
+                is ConvertedWeatherData.WeatherHistoryData -> saveWeatherHistoryData(weatherData)
+            }
         }
     }
 
-    abstract fun saveWeatherData(weatherData: ConvertedWeatherData)
+    abstract fun saveWeatherForecastData(weatherForecastData: ConvertedWeatherData.WeatherForecastData)
+
+    abstract fun saveWeatherHistoryData(weatherHistoryData: ConvertedWeatherData.WeatherHistoryData)
 
     private fun convertToPojo(dto: WeatherResponseDTO): ConvertedWeatherData =
         when (dto.weatherType!!) {

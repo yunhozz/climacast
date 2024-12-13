@@ -16,15 +16,14 @@ class WeatherDataService(
 ): AbstractWeatherDataHandler() {
 
     @Transactional
-    override fun saveWeatherData(weatherData: ConvertedWeatherData) {
-        when (weatherData) {
-            is ConvertedWeatherData.WeatherForecastData ->
-                hourlyWeatherRepository.upsertHourlyWeatherForecasts(weatherData.hourlyWeatherUpsertDTOs)
-            is ConvertedWeatherData.WeatherHistoryData -> {
-                dailyWeatherRepository.saveAll(weatherData.dailyWeathers)
-                hourlyWeatherRepository.saveAll(weatherData.hourlyWeathers)
-            }
-        }
+    override fun saveWeatherForecastData(weatherForecastData: ConvertedWeatherData.WeatherForecastData) {
+        hourlyWeatherRepository.upsertHourlyWeatherForecasts(weatherForecastData.hourlyWeatherUpsertDTOs)
+    }
+
+    @Transactional
+    override fun saveWeatherHistoryData(weatherHistoryData: ConvertedWeatherData.WeatherHistoryData) {
+        dailyWeatherRepository.saveAll(weatherHistoryData.dailyWeathers)
+        hourlyWeatherRepository.saveAll(weatherHistoryData.hourlyWeathers)
     }
 
     companion object {
