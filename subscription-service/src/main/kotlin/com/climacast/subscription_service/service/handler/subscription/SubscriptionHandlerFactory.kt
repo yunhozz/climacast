@@ -15,6 +15,6 @@ class SubscriptionHandlerFactory
         }
     }
 
-    fun findStrategy(handlerName: SubscriptionHandlerName): SubscriptionHandler = handlers[handlerName]
+    fun findHandler(handlerName: SubscriptionHandlerName): SubscriptionHandler = handlers[handlerName]
         ?: throw IllegalArgumentException("Subscription handler with name $handlerName not found")
 }
