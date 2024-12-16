@@ -5,12 +5,12 @@ import com.climacast.batch_server.model.entity.DailyWeather
 import com.climacast.batch_server.model.entity.DailyWeatherData
 import com.climacast.batch_server.model.entity.HourlyWeather
 import com.climacast.batch_server.model.entity.HourlyWeatherData
-import com.climacast.batch_server.service.WeatherDataService.Companion.parseLocalDateTime
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.enums.WeatherType
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 abstract class AbstractWeatherDataHandler: WeatherDataHandler {
     override fun process(weatherResponseDTOs: List<WeatherResponseDTO>) {
@@ -99,7 +99,6 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                         dailyWeathers.add(dailyWeather)
                     }
                 }
-
                 dto.hourly?.let {
                     it.time.forEachIndexed { index, time ->
                         val weatherCode = it.weather_code!![index]
@@ -126,10 +125,20 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                         hourlyWeathers.add(hourlyWeather)
                     }
                 }
-
                 ConvertedWeatherData.WeatherHistoryData(dailyWeathers, hourlyWeathers)
             }
         }
+
+    companion object {
+        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+
+        fun parseLocalDateTime(list: List<String>?): LocalDateTime? =
+            list?.let { l ->
+                l.firstOrNull()?.let {
+                    LocalDateTime.parse(it, DATETIME_FORMATTER)
+                }
+            }
+    }
 }
 
 sealed class ConvertedWeatherData {
