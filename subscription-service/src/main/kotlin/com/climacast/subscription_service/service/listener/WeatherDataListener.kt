@@ -2,7 +2,7 @@ package com.climacast.subscription_service.service.listener
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.service.handler.WeatherDataHandler
+import com.climacast.subscription_service.service.handler.data.WeatherDataHandler
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
