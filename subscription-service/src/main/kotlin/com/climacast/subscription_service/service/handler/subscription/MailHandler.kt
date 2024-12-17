@@ -2,6 +2,7 @@ package com.climacast.subscription_service.service.handler.subscription
 
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -13,6 +14,7 @@ class MailHandler(
 
     private lateinit var email: String
 
+    @Async
     override fun send() {
         val message = mailSender.createMimeMessage()
 
@@ -23,6 +25,10 @@ class MailHandler(
         }
 
         mailSender.send(message)
+    }
+
+    override fun setSubscriberInfo(info: SubscriberInfo) {
+        email = info.email
     }
 
     override fun getHandlerName() = SubscriptionHandlerName.MAIL

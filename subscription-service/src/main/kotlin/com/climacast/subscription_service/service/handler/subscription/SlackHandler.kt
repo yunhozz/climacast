@@ -9,5 +9,9 @@ class SlackHandler : SubscriptionHandler {
         TODO("Not yet implemented")
     }
 
+    override fun setSubscriberInfo(info: SubscriberInfo) {
+        TODO("Not yet implemented")
+    }
+
     override fun getHandlerName() = SubscriptionHandlerName.SLACK
 }
