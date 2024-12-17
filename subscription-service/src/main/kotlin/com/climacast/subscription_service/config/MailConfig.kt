@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
+import java.util.Properties
 
 @Configuration
 @EnableConfigurationProperties(MailProperties::class)
@@ -20,5 +21,10 @@ class MailConfig(
             username = mailProperties.username
             password = mailProperties.password
             defaultEncoding = "UTF-8"
+            javaMailProperties = Properties().apply {
+                mailProperties.properties.entries.forEach {
+                    setProperty(it.key, it.value)
+                }
+            }
         }
 }
