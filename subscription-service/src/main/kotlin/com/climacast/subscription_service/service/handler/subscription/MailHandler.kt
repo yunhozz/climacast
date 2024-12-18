@@ -14,21 +14,20 @@ class MailHandler(
 
     private lateinit var email: String
 
-    @Async
-    override fun send() {
-        val message = mailSender.createMimeMessage()
+    override fun setSubscriberInfo(info: SubscriberInfo) {
+        email = info.email
+    }
 
+    @Async
+    override fun send(data: Any) {
+        val message = mailSender.createMimeMessage()
         MimeMessageHelper(message).apply {
             setTo(email)
             setSubject("[Climacast] ${createCurrentTime()} Weather Information")
-            setText("This is weather information")
+            setText(data.toString())
         }
 
         mailSender.send(message)
-    }
-
-    override fun setSubscriberInfo(info: SubscriberInfo) {
-        email = info.email
     }
 
     override fun getHandlerName() = SubscriptionHandlerName.MAIL

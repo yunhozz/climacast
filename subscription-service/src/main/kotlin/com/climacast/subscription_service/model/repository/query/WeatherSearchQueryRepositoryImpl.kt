@@ -15,7 +15,7 @@ class WeatherSearchQueryRepositoryImpl(
     private val elasticsearchClient: ElasticsearchClient
 ) : WeatherSearchQueryRepository {
 
-    override fun findWeathersByRegion(query: WeatherQueryDTO): List<WeatherDocument?> {
+    override fun findWeatherByRegion(query: WeatherQueryDTO): WeatherDocument? {
         val weatherType = query.weatherType
         val searchRequest = SearchRequest.Builder()
             .index(createIndex(weatherType))
@@ -28,9 +28,11 @@ class WeatherSearchQueryRepositoryImpl(
             }
             .build()
 
-        return elasticsearchClient.search(searchRequest, determineDocumentClass(weatherType))
-            .hits().hits()
-            .map { it.source() }
+        val searchResponse = elasticsearchClient.search(searchRequest, determineDocumentClass(weatherType))
+
+        return searchResponse.hits().hits()
+            .firstOrNull()
+            ?.source()
     }
 
     private fun createIndex(type: WeatherType): String =
