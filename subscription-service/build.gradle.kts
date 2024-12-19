@@ -1,6 +1,7 @@
 dependencies {
 	implementation(project(":global"))
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.1")
 	implementation("org.springframework.boot:spring-boot-starter-data-elasticsearch")
@@ -10,5 +11,6 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
 	implementation("com.slack.api:slack-api-client:1.44.2")
+	runtimeOnly("com.mysql:mysql-connector-j")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

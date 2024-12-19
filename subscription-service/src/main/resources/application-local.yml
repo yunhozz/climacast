@@ -10,6 +10,35 @@ spring:
   threads:
     virtual:
       enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100
+        show_sql: true
+        format_sql: true
+  datasource:
+    source:
+      hikari:
+        jdbc-url: ${mysql.subscription.local}
+        username: ${mysql.username}
+        password: ${mysql.password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: subscription-source-db-pool
+        maximum-pool-size: 10
+        minimum-idle: 5
+    replica:
+      hikari:
+        jdbc-url: ${mysql.subscription.local}
+        username: ${mysql.username}
+        password: ${mysql.password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: subscription-replica-db-pool
+        maximum-pool-size: 20
+        minimum-idle: 10
   mail:
     host: ${gmail.host}
     port: ${gmail.port}
