@@ -5,7 +5,3 @@ interface SubscriptionHandler {
     fun send(data: Any)
     fun getHandlerName(): SubscriptionHandlerName
 }
-
-data class SubscriberInfo(
-    val email: String
-)
