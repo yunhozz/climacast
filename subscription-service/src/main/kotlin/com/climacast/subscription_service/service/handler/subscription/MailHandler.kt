@@ -1,5 +1,7 @@
 package com.climacast.subscription_service.service.handler.subscription
 
+import jakarta.mail.MessagingException
+import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
@@ -24,12 +26,20 @@ class MailHandler(
     @Async
     override fun send(data: Any) {
         val message = mailSender.createMimeMessage()
-        MimeMessageHelper(message, true, "UTF-8").apply {
-            setTo(email)
-            setSubject("[Climacast] ${createCurrentTime()} Weather Information")
-            setText(createHtmlTemplate(data), true)
+        try {
+            MimeMessageHelper(message, true, "UTF-8").apply {
+                setTo(email)
+                setSubject("[Climacast] ${createCurrentTime()} Weather Information")
+                setText(createHtmlTemplate(data), true)
+            }
+            mailSender.send(message)
+        } catch (e: Exception) {
+            when (e) {
+                is MailException, is MessagingException ->
+                    throw IllegalArgumentException("Fail to send data on EMail: ${e.localizedMessage}", e)
+                else -> throw IllegalArgumentException(e)
+            }
         }
-        mailSender.send(message)
     }
 
     override fun getHandlerName() = SubscriptionHandlerName.MAIL
