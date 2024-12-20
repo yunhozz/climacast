@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.service.handler.subscription
 
+import com.climacast.global.utils.logger
 import jakarta.mail.MessagingException
 import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
@@ -19,8 +20,10 @@ class MailHandler(
 
     private lateinit var email: String
 
+    private val log = logger()
+
     override fun setSubscriberInfo(info: SubscriberInfo) {
-        email = info.email
+        email = info.email!!
     }
 
     @Async
@@ -33,10 +36,11 @@ class MailHandler(
                 setText(createHtmlTemplate(data), true)
             }
             mailSender.send(message)
+            log.info("Success to send data on Email: id=${message.messageID}, sent=${message.sentDate}")
         } catch (e: Exception) {
             when (e) {
                 is MailException, is MessagingException ->
-                    throw IllegalArgumentException("Fail to send data on EMail: ${e.localizedMessage}", e)
+                    throw IllegalArgumentException("Fail to send data on Email: ${e.localizedMessage}", e)
                 else -> throw IllegalArgumentException(e)
             }
         }

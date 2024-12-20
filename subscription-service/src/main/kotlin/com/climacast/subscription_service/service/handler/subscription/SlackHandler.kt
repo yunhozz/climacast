@@ -1,12 +1,13 @@
 package com.climacast.subscription_service.service.handler.subscription
 
+import com.climacast.global.utils.logger
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.slack.api.Slack
 import com.slack.api.model.block.SectionBlock
 import com.slack.api.model.block.composition.MarkdownTextObject
 import com.slack.api.webhook.Payload
+import okio.IOException
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
 @Component
@@ -15,9 +16,10 @@ class SlackHandler : SubscriptionHandler {
     @Value("\${slack.webhook.url}")
     private lateinit var webhookUrl: String
 
+    private val log = logger()
+
     override fun setSubscriberInfo(info: SubscriberInfo) {}
 
-    @Async
     override fun send(data: Any) {
         val slack = Slack.getInstance()
         val payload = Payload.builder()
@@ -28,9 +30,13 @@ class SlackHandler : SubscriptionHandler {
             ))
             .build()
 
-        val response = slack.send(webhookUrl, payload)
-        if (response.code != 200) {
-            throw IllegalArgumentException("Fail to send data on Slack: code=${response.code}, message=${response.message}")
+        try {
+            val response = slack.send(webhookUrl, payload)
+            if (response.code != 200) {
+                log.error("Fail to send data on Slack: code=${response.code}, message=${response.message}")
+            }
+        } catch (e: IOException) {
+            throw IllegalArgumentException(e.localizedMessage, e)
         }
     }
 

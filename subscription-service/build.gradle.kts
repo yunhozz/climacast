@@ -12,6 +12,7 @@ dependencies {
 	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("com.slack.api:slack-api-client:1.44.2")
+	implementation("com.twilio.sdk:twilio:10.6.4")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
