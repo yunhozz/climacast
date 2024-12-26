@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Weather Information</h1>
+<p>Region: <b th:text="${weatherData.region}"></b></p>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Time</th>
+        <th>Weather Status</th>
+        <th>Temperature (2m)</th>
+        <th>Temperature (80m)</th>
+        <th>Temperature (120m)</th>
+        <th>Temperature (180m)</th>
+        <th>Wind Speed (10m)</th>
+        <th>Wind Speed (80m)</th>
+        <th>Wind Speed (120m)</th>
+        <th>Wind Speed (180m)</th>
+        <th>Humidity</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="time, iterStat : ${weatherData.time}">
+        <td th:text="${time}"></td>
+        <td th:text="${weatherData.weatherStatus[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature2m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed10m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.humidity2m[iterStat.index]}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

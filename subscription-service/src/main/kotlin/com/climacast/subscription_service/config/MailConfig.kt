@@ -14,17 +14,16 @@ class MailConfig(
     private val mailProperties: MailProperties
 ) {
     @Bean
-    fun mailSender(): JavaMailSender =
-        JavaMailSenderImpl().apply {
-            host = mailProperties.host
-            port = mailProperties.port
-            username = mailProperties.username
-            password = mailProperties.password
-            defaultEncoding = "UTF-8"
-            javaMailProperties = Properties().apply {
-                mailProperties.properties.entries.forEach {
-                    setProperty(it.key, it.value)
-                }
+    fun mailSender(): JavaMailSender = JavaMailSenderImpl().apply {
+        host = mailProperties.host
+        port = mailProperties.port
+        username = mailProperties.username
+        password = mailProperties.password
+        defaultEncoding = "UTF-8"
+        javaMailProperties = Properties().apply {
+            mailProperties.properties.entries.forEach {
+                setProperty(it.key, it.value)
             }
         }
+    }
 }

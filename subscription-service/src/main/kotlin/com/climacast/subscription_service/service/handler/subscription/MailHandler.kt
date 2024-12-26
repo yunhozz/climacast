@@ -55,7 +55,7 @@ class MailHandler(
     }
 
     companion object {
-        const val WEATHER_MAIL_TEMPLATE = "weather_mail"
+        const val WEATHER_MAIL_TEMPLATE = "weather_template"
         private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         fun createCurrentTime(): String = LocalDateTime.now().format(DATETIME_FORMATTER)
     }
