@@ -1,6 +1,10 @@
-package com.climacast.subscription_service.service.handler.subscription
+package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.service.handler.subscription.ImageConverter
+import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
+import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
+import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
 import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.model.Attachment
