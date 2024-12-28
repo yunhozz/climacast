@@ -7,15 +7,13 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import org.thymeleaf.TemplateEngine
-import org.thymeleaf.context.Context
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Component
 class MailHandler(
     private val mailSender: JavaMailSender,
-    private val templateEngine: TemplateEngine
+    private val imageConverter: ImageConverter
 ) : SubscriptionHandler {
 
     private lateinit var email: String
@@ -28,35 +26,30 @@ class MailHandler(
 
     @Async
     override fun send(data: Any) {
+        val weatherImage = imageConverter.convertHtmlToImage(data)
         val message = mailSender.createMimeMessage()
         try {
             MimeMessageHelper(message, true, "UTF-8").apply {
                 setTo(email)
                 setSubject("[Climacast] ${createCurrentTime()} Weather Information")
-                setText(createHtmlTemplate(data), true)
+                addInline("image", weatherImage)
             }
             mailSender.send(message)
             log.info("Success to send data on Email: id=${message.messageID}, sent=${message.sentDate}")
+
         } catch (e: Exception) {
             when (e) {
                 is MailException, is MessagingException ->
                     throw IllegalArgumentException("Fail to send data on Email: ${e.localizedMessage}", e)
-                else -> throw IllegalArgumentException(e)
+                else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
         }
     }
 
     override fun getHandlerName() = SubscriptionHandlerName.MAIL
 
-    private fun createHtmlTemplate(data: Any): String {
-        val context = Context()
-        context.setVariable("weatherData", data)
-        return templateEngine.process(WEATHER_MAIL_TEMPLATE, context)
-    }
-
     companion object {
-        const val WEATHER_MAIL_TEMPLATE = "weather_template"
-        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        fun createCurrentTime(): String = LocalDateTime.now().format(DATETIME_FORMATTER)
+        fun createCurrentTime(): String = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     }
 }

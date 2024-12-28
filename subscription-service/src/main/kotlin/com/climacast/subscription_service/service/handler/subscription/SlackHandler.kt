@@ -1,17 +1,24 @@
 package com.climacast.subscription_service.service.handler.subscription
 
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.model.document.ForecastWeather
 import com.slack.api.Slack
-import com.slack.api.model.block.SectionBlock
-import com.slack.api.model.block.composition.MarkdownTextObject
+import com.slack.api.methods.SlackApiException
+import com.slack.api.model.Attachment
 import com.slack.api.webhook.Payload
-import okio.IOException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.IOException
 
 @Component
-class SlackHandler : SubscriptionHandler {
+class SlackHandler(
+    private val imageConverter: ImageConverter
+) : SubscriptionHandler {
+
+    @Value("\${slack.oauth.token}")
+    private lateinit var authToken: String
+
+    @Value("\${slack.channel.id}")
+    private lateinit var channelId: String
 
     @Value("\${slack.webhook.url}")
     private lateinit var webhookUrl: String
@@ -22,49 +29,37 @@ class SlackHandler : SubscriptionHandler {
 
     override fun send(data: Any) {
         val slack = Slack.getInstance()
-        val payload = Payload.builder()
-            .blocks(listOf(
-                SectionBlock.builder()
-                    .text(MarkdownTextObject(createMarkdownTemplate(data), false))
-                    .build()
-            ))
-            .build()
+        val weatherImage = imageConverter.convertHtmlToImage(data)
 
         try {
+            val fileResponse = slack.methods(authToken)
+                .filesUploadV2 {
+                    it.file(weatherImage)
+                        .channel(channelId)
+                        .title("Weather Forecast Image")
+                        .filename(weatherImage.nameWithoutExtension)
+                }
+            val payload = Payload.builder()
+                .text("Here is Weather Forecast!")
+                .attachments(listOf(
+                    Attachment.builder()
+                        .imageUrl(fileResponse.file.urlPrivate)
+                        .fallback("Could not retrieve this image.")
+                        .build()
+                )).build()
+
             val response = slack.send(webhookUrl, payload)
-            if (response.code != 200) {
-                log.error("Fail to send data on Slack: code=${response.code}, message=${response.message}")
+            response.takeIf { it.code == 200 }?.let {
+                log.info("Success to send data on Slack")
+            } ?: run { log.error("Fail to send data on Slack: code=${response.code}, message=${response.body}") }
+
+        } catch (e: Exception) {
+            when (e) {
+                is SlackApiException, is IOException -> throw IllegalArgumentException("Fail to send message on Slack", e)
+                else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
-        } catch (e: IOException) {
-            throw IllegalArgumentException(e.localizedMessage, e)
         }
     }
 
     override fun getHandlerName() = SubscriptionHandlerName.SLACK
-
-    companion object {
-        fun createMarkdownTemplate(data: Any): String {
-            val forecastWeather = data as ForecastWeather
-            return StringBuilder().apply {
-                append("## Weather Information\n\n")
-                append("**Region:** ${forecastWeather.region}\n\n")
-                append("| Time | Weather Status | Temperature (2m) | Temperature (80m) | Temperature (120m) | Temperature (180m) | Wind Speed (10m) | Wind Speed (80m) | Wind Speed (120m) | Wind Speed (180m) | Humidity |\n")
-                append("|------|----------------|------------------|-------------------|--------------------|--------------------|------------------|------------------|-------------------|-------------------|----------|\n")
-
-                forecastWeather.time?.forEachIndexed { index, time ->
-                    append("| $time ")
-                    append("| ${forecastWeather.weatherStatus?.get(index)} ")
-                    append("| ${forecastWeather.temperature2m?.get(index)} ")
-                    append("| ${forecastWeather.temperature80m?.get(index)} ")
-                    append("| ${forecastWeather.temperature120m?.get(index)} ")
-                    append("| ${forecastWeather.temperature180m?.get(index)} ")
-                    append("| ${forecastWeather.windSpeed10m?.get(index)} ")
-                    append("| ${forecastWeather.windSpeed80m?.get(index)} ")
-                    append("| ${forecastWeather.windSpeed120m?.get(index)} ")
-                    append("| ${forecastWeather.windSpeed180m?.get(index)} ")
-                    append("| ${forecastWeather.humidity2m?.get(index)} |\n")
-                }
-            }.toString()
-        }
-    }
 }
