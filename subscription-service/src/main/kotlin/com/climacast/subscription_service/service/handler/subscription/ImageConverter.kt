@@ -20,7 +20,7 @@ class ImageConverter(
 ) {
     companion object {
         const val WEATHER_TEMPLATE = "weather_template"
-        const val WEATHER_IMAGE_LOCAL_DIR = "/Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/weather_image.jpeg"
+        const val WEATHER_IMAGE_LOCAL_DIR = "/Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/"
     }
 
     fun convertHtmlToImage(data: Any): File {
@@ -28,16 +28,16 @@ class ImageConverter(
         val html = templateEngine.process(WEATHER_TEMPLATE, context)
 
         try {
-            val tempPath = Files.createTempFile("weather_temp", ".html")
-            Files.write(tempPath, html.toByteArray())
+            val filePath = Files.createTempFile("weather_temp_${data.hashCode()}", ".html")
+            Files.write(filePath, html.toByteArray())
 
-            return takeScreenShot(tempPath)
-                .copyTo(File(WEATHER_IMAGE_LOCAL_DIR), overwrite = true)
+            return takeScreenShot(filePath)
+                .copyTo(File("$WEATHER_IMAGE_LOCAL_DIR${data.hashCode()}.jpeg"))
 
         } catch (e: IOException) {
-            throw IllegalArgumentException("Fail to write file", e)
+            throw IllegalArgumentException("Fail to write file: ${e.localizedMessage}", e)
         } catch (e: WebDriverException) {
-            throw IllegalArgumentException("Fail to upload images to Chrome", e)
+            throw IllegalArgumentException("Fail to upload images to Chrome: ${e.localizedMessage}", e)
         }
     }
 

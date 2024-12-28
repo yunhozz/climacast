@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Component
 class MailHandler(
@@ -36,7 +37,7 @@ class MailHandler(
             MimeMessageHelper(message, true, "UTF-8").apply {
                 setTo(email)
                 setSubject("[Climacast] ${createCurrentTime()} Weather Information")
-                addInline("image", weatherImage)
+                addInline(UUID.randomUUID().toString(), weatherImage)
             }
             mailSender.send(message)
             log.info("Success to send data on Email: id=${message.messageID}, sent=${message.sentDate}")
