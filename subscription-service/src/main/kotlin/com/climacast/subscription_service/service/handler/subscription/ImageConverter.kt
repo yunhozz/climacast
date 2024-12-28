@@ -32,7 +32,7 @@ class ImageConverter(
             Files.write(filePath, html.toByteArray())
 
             return takeScreenShot(filePath)
-                .copyTo(File("$WEATHER_IMAGE_LOCAL_DIR${data.hashCode()}.jpeg"))
+                .copyTo(File("$WEATHER_IMAGE_LOCAL_DIR${System.currentTimeMillis()}.jpeg"))
 
         } catch (e: IOException) {
             throw IllegalArgumentException("Fail to write file: ${e.localizedMessage}", e)
