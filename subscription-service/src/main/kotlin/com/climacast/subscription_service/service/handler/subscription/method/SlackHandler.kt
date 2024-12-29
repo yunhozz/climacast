@@ -1,7 +1,6 @@
 package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.service.handler.subscription.ImageConverter
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
@@ -11,12 +10,11 @@ import com.slack.api.model.Attachment
 import com.slack.api.webhook.Payload
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.File
 import java.io.IOException
 
 @Component
-class SlackHandler(
-    private val imageConverter: ImageConverter
-) : SubscriptionHandler {
+class SlackHandler : SubscriptionHandler {
 
     @Value("\${slack.oauth.token}")
     private lateinit var authToken: String
@@ -33,7 +31,7 @@ class SlackHandler(
 
     override fun send(data: Any) {
         val slack = Slack.getInstance()
-        val weatherImage = imageConverter.convertHtmlToImage(data)
+        val weatherImage = data as File
 
         try {
             val fileResponse = slack.methods(authToken)

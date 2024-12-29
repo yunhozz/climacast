@@ -1,7 +1,6 @@
 package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.service.handler.subscription.ImageConverter
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
@@ -11,14 +10,14 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Component
 class MailHandler(
-    private val mailSender: JavaMailSender,
-    private val imageConverter: ImageConverter
+    private val mailSender: JavaMailSender
 ) : SubscriptionHandler {
 
     private lateinit var email: String
@@ -31,8 +30,9 @@ class MailHandler(
 
     @Async
     override fun send(data: Any) {
-        val weatherImage = imageConverter.convertHtmlToImage(data)
+        val weatherImage = data as File
         val message = mailSender.createMimeMessage()
+
         try {
             MimeMessageHelper(message, true, "UTF-8").apply {
                 setTo(email)

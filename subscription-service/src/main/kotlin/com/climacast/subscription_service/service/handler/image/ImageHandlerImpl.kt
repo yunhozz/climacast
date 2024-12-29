@@ -1,5 +1,6 @@
-package com.climacast.subscription_service.service.handler.subscription
+package com.climacast.subscription_service.service.handler.image
 
+import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriverException
@@ -15,24 +16,26 @@ import java.nio.file.Path
 import java.util.Locale
 
 @Component
-class ImageConverter(
+class ImageHandlerImpl(
     private val templateEngine: TemplateEngine
-) {
+) : ImageHandler {
+
     companion object {
         const val WEATHER_TEMPLATE = "weather_template"
         const val WEATHER_IMAGE_LOCAL_DIR = "/Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/"
     }
 
-    fun convertHtmlToImage(data: Any): File {
-        val context = Context(Locale.getDefault(), mapOf("weatherData" to data))
+    override fun convertDocumentToImage(document: WeatherDocument): File {
+        val context = Context(Locale.getDefault(), mapOf("weatherData" to document))
         val html = templateEngine.process(WEATHER_TEMPLATE, context)
 
         try {
-            val filePath = Files.createTempFile("weather_temp_${data.hashCode()}", ".html")
+            val currentTime = System.currentTimeMillis()
+            val filePath = Files.createTempFile("weather_temp_$currentTime", ".html")
             Files.write(filePath, html.toByteArray())
 
             return takeScreenShot(filePath)
-                .copyTo(File("$WEATHER_IMAGE_LOCAL_DIR${System.currentTimeMillis()}.jpeg"))
+                .copyTo(File("$WEATHER_IMAGE_LOCAL_DIR$currentTime.jpeg"))
 
         } catch (e: IOException) {
             throw IllegalArgumentException("Fail to write file: ${e.localizedMessage}", e)

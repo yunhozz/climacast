@@ -11,6 +11,7 @@ import com.twilio.type.PhoneNumber
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.io.File
 
 @Component
 class SMSHandler : SubscriptionHandler {
@@ -36,11 +37,15 @@ class SMSHandler : SubscriptionHandler {
     }
 
     override fun send(data: Any) {
+        val weatherImage = data as File
         val to = PhoneNumber(toNumber)
         val from = PhoneNumber(fromNumber)
 
         try {
-            val message = Message.creator(to, from, "Test Message").create()
+            val message = Message.creator(to, from, "Here is Weather Forecast!")
+                .setSendAsMms(true)
+                .setMediaUrl(weatherImage.toURI())
+                .create()
             if (message.status == Message.Status.FAILED) {
                 log.error("Fail to send SMS: code=${message.errorCode}, message=${message.errorMessage}")
             }
