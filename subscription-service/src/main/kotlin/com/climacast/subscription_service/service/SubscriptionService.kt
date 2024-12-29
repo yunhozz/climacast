@@ -1,9 +1,14 @@
 package com.climacast.subscription_service.service
 
 import com.climacast.global.enums.WeatherType
+import com.climacast.subscription_service.common.enums.SubscriptionInterval
+import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.dto.WeatherQueryDTO
+import com.climacast.subscription_service.model.entity.Subscription
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
+import com.climacast.subscription_service.model.repository.SubscriptionRepository
+import com.climacast.subscription_service.service.handler.image.ImageHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
@@ -12,59 +17,67 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.io.File
 
 @Service
 class SubscriptionService(
+    private val subscriptionRepository: SubscriptionRepository,
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository,
+    private val imageHandler: ImageHandler,
     private val subscriptionHandlerFactory: SubscriptionHandlerFactory
 ) {
-    // TODO: 구독자 및 지역에 대한 관계 테이블 생성
-    private val subscriberMap = LinkedHashMap<String, List<String>>().apply {
-        this["qkrdbsgh1121@naver.com"] = listOf(
-            "서울특별시 서대문구",
-            "서울특별시 강남구",
-            "서울특별시 종로구"
-        )
+    @Scheduled(cron = "0 0 * * * *")
+    @Transactional(readOnly = true)
+    suspend fun sendForecastWeathersEveryHour() = coroutineScope {
+        val subscriptionList = subscriptionRepository.findAllByIntervalsAndStatus(SubscriptionInterval.ONE_HOUR)
+        val subscriptionIds = subscriptionList.map { it.id!! }
+
+        val regions = subscriptionRepository.findRegionsByIds(subscriptionIds)
+        val weatherImages = fetchWeatherImagesByRegions(regions)
+
+        subscriptionList.map { subscription ->
+            async {
+                sendWeatherImagesToSubscriber(subscription, weatherImages)
+            }.await()
+        }
     }
 
-    @Scheduled(cron = "0 0 * * * *")
-    suspend fun sendForecastWeathersOnEmailEveryHour() = produceForecastWeathersOnEmail()
-
-    @Scheduled(cron = "0 0 * * * *")
-    suspend fun sendForecastWeathersOnSlackEveryHour() = produceForecastWeathersOnSlack()
-
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
-    suspend fun sendForecastWeathersEmailEveryDay() = produceForecastWeathersOnEmail()
-
-    private suspend fun produceForecastWeathersOnEmail() = coroutineScope {
-        val mailHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.MAIL)
-        subscriberMap.map { (email, regions) ->
+    private suspend fun fetchWeatherImagesByRegions(regions: Set<String>): Map<String, File> = coroutineScope {
+        val weatherImages = mutableMapOf<String, File>()
+        regions.map { region ->
             async {
-                regions.forEach { region ->
-                    val query = WeatherQueryDTO(WeatherType.FORECAST, region)
-                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
-                        ?: throw IllegalArgumentException("Weather data not found")
+                val query = WeatherQueryDTO(WeatherType.FORECAST, region)
+                val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
+                    ?: throw IllegalArgumentException("Weather data not found")
 
-                    mailHandler.setSubscriberInfo(SubscriberInfo(email))
-                    mailHandler.send(forecastWeather)
-                }
+                val weatherImage = imageHandler.convertDocumentToImage(forecastWeather)
+                weatherImages[region] = weatherImage
             }
         }.awaitAll()
+        weatherImages
     }
 
-    private suspend fun produceForecastWeathersOnSlack() = coroutineScope {
-        val slackHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.SLACK)
-        subscriberMap.map { (_, regions) ->
-            async {
-                regions.forEach { region ->
-                    val query = WeatherQueryDTO(WeatherType.FORECAST, region)
-                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
-                        ?: throw IllegalArgumentException("Weather data not found")
+    private suspend fun sendWeatherImagesToSubscriber(subscription: Subscription, weatherImages: Map<String, File>) {
+        val subscriptionInfo = subscription.subscriptionInfo
+        val regions = subscription.regions
 
-                    slackHandler.send(forecastWeather)
-                }
+        when (subscription.method) {
+            SubscriptionMethod.MAIL -> {
+                val mailHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.MAIL)
+                mailHandler.setSubscriberInfo(SubscriberInfo(email = subscriptionInfo.email))
+                regions.forEach { mailHandler.send(weatherImages[it]!!) }
             }
-        }.awaitAll()
+            SubscriptionMethod.SLACK -> {
+                val slackHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.SLACK)
+                regions.forEach { slackHandler.send(weatherImages[it]!!) }
+            }
+            SubscriptionMethod.SMS -> {
+                val smsHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.SMS)
+                smsHandler.setSubscriberInfo(SubscriberInfo(phoneNumber = subscriptionInfo.phoneNumber))
+                regions.forEach { smsHandler.send(weatherImages[it]!!) }
+            }
+        }
     }
 }
