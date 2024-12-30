@@ -10,6 +10,7 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.io.File
 
@@ -36,6 +37,7 @@ class SMSHandler : SubscriptionHandler {
         toNumber = info.phoneNumber!!
     }
 
+    @Async
     override fun send(data: Any) {
         val weatherImage = data as File
         val to = PhoneNumber(toNumber)

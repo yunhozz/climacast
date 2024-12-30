@@ -9,6 +9,7 @@ import com.slack.api.methods.SlackApiException
 import com.slack.api.model.Attachment
 import com.slack.api.webhook.Payload
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
@@ -29,6 +30,7 @@ class SlackHandler : SubscriptionHandler {
 
     override fun setSubscriberInfo(info: SubscriberInfo) {}
 
+    @Async
     override fun send(data: Any) {
         val slack = Slack.getInstance()
         val weatherImage = data as File
