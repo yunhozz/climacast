@@ -94,16 +94,16 @@ class SubscriptionService(
 
         when (subscription.method) {
             SubscriptionMethod.MAIL -> {
-                val mailHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.MAIL)
+                val mailHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.MAIL)
                 mailHandler.setSubscriberInfo(SubscriberInfo(email = subscriptionInfo.email))
                 regions.forEach { mailHandler.send(weatherImages[it]!!) }
             }
             SubscriptionMethod.SLACK -> {
-                val slackHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.SLACK)
+                val slackHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SLACK)
                 regions.forEach { slackHandler.send(weatherImages[it]!!) }
             }
             SubscriptionMethod.SMS -> {
-                val smsHandler = subscriptionHandlerFactory.findHandler(SubscriptionHandlerName.SMS)
+                val smsHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SMS)
                 smsHandler.setSubscriberInfo(SubscriberInfo(phoneNumber = subscriptionInfo.phoneNumber))
                 regions.forEach { smsHandler.send(weatherImages[it]!!) }
             }
