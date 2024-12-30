@@ -2,7 +2,6 @@ package com.climacast.subscription_service.model.entity
 
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
-import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import jakarta.persistence.ElementCollection
 import jakarta.persistence.Embeddable
 import jakarta.persistence.Embedded
@@ -27,7 +26,7 @@ class Subscription(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null
 
-    @ElementCollection(fetch = FetchType.LAZY, targetClass = String::class)
+    @ElementCollection(fetch = FetchType.EAGER, targetClass = String::class)
     var regions: Set<String> = regions
         protected set
 
