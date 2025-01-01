@@ -10,10 +10,8 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 @Component
 class MailHandler(
@@ -30,14 +28,14 @@ class MailHandler(
 
     @Async
     override fun send(data: Any) {
-        val weatherImage = data as File
+        val weatherHtml = data as String
         val message = mailSender.createMimeMessage()
 
         try {
             MimeMessageHelper(message, true, "UTF-8").apply {
                 setTo(email)
                 setSubject("[Climacast] ${createCurrentTime()} Weather Information")
-                addInline(UUID.randomUUID().toString(), weatherImage)
+                setText(weatherHtml, true)
             }
             mailSender.send(message)
             log.info("Success to send data on Email: id=${message.messageID}, sent=${message.sentDate}")

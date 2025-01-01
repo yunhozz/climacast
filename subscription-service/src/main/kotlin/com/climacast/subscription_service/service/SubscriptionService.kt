@@ -8,8 +8,9 @@ import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.entity.Subscription
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
+import com.climacast.subscription_service.model.repository.RegionsAndMethod
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
-import com.climacast.subscription_service.service.handler.image.ImageHandler
+import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
@@ -19,7 +20,6 @@ import kotlinx.coroutines.launch
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
@@ -27,7 +27,7 @@ class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository,
-    private val imageHandler: ImageHandler,
+    private val documentVisualizeHandler: DocumentVisualizeHandler,
     private val subscriptionHandlerFactory: SubscriptionHandlerFactory
 ) {
     @Scheduled(cron = "0 */30 * * * *")
@@ -64,31 +64,38 @@ class SubscriptionService(
         val subscriptionList = subscriptionRepository.findAllByIntervalsInAndStatus(intervals)
         val subscriptionIds = subscriptionList.map { it.id!! }
 
-        val regions = subscriptionRepository.findRegionsByIds(subscriptionIds)
-        val weatherImages = fetchWeatherImagesByRegions(regions)
+        val regionsAndMethodSet = subscriptionRepository.findRegionsAndMethodSetByIds(subscriptionIds)
+        val weatherMap = visualizeWeatherDocuments(regionsAndMethodSet)
 
         subscriptionList.map { subscription ->
             launch {
-                sendWeatherImagesToSubscribers(subscription, weatherImages)
+                sendWeatherImagesToSubscribers(subscription, weatherMap)
             }
         }.joinAll()
     }
 
-    private suspend fun fetchWeatherImagesByRegions(regions: Set<String>): Map<String, File> = coroutineScope {
-        val weatherImages = ConcurrentHashMap<String, File>()
-        regions.map { region ->
-            launch {
-                val query = WeatherQueryDTO(WeatherType.FORECAST, region)
-                val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
-                    ?: throw IllegalArgumentException("Weather data not found")
+    private suspend fun visualizeWeatherDocuments(regionsAndMethodSet: Set<RegionsAndMethod>): Map<String, Any> = coroutineScope {
+        val weatherMap = ConcurrentHashMap<String, Any>()
+        regionsAndMethodSet.forEach {
+            val method = it.getMethod()
+            it.getRegions().map { region ->
+                launch {
+                    val query = WeatherQueryDTO(WeatherType.FORECAST, region)
+                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
+                        ?: throw IllegalArgumentException("Weather data not found")
 
-                weatherImages[region] = imageHandler.convertDocumentToImage(forecastWeather)
-            }
-        }.joinAll()
-        weatherImages
+                    weatherMap[region] = if (method == SubscriptionMethod.MAIL) {
+                        documentVisualizeHandler.convertDocumentToHtml(forecastWeather)
+                    } else {
+                        documentVisualizeHandler.convertDocumentToImage(forecastWeather)
+                    }
+                }
+            }.joinAll()
+        }
+        weatherMap
     }
 
-    private suspend fun sendWeatherImagesToSubscribers(subscription: Subscription, weatherImages: Map<String, File>) {
+    private suspend fun sendWeatherImagesToSubscribers(subscription: Subscription, weatherMap: Map<String, Any>) {
         val subscriptionInfo = subscription.subscriptionInfo
         val regions = subscription.regions
 
@@ -96,16 +103,16 @@ class SubscriptionService(
             SubscriptionMethod.MAIL -> {
                 val mailHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.MAIL)
                 mailHandler.setSubscriberInfo(SubscriberInfo(email = subscriptionInfo.email))
-                regions.forEach { mailHandler.send(weatherImages[it]!!) }
+                regions.forEach { mailHandler.send(weatherMap[it]!!) }
             }
             SubscriptionMethod.SLACK -> {
                 val slackHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SLACK)
-                regions.forEach { slackHandler.send(weatherImages[it]!!) }
+                regions.forEach { slackHandler.send(weatherMap[it]!!) }
             }
             SubscriptionMethod.SMS -> {
                 val smsHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SMS)
                 smsHandler.setSubscriberInfo(SubscriberInfo(phoneNumber = subscriptionInfo.phoneNumber))
-                regions.forEach { smsHandler.send(weatherImages[it]!!) }
+                regions.forEach { smsHandler.send(weatherMap[it]!!) }
             }
         }
     }
