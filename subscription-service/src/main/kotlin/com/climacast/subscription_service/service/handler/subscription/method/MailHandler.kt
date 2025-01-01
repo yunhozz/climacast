@@ -1,9 +1,9 @@
 package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
-import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
 import jakarta.mail.MessagingException
 import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
@@ -49,7 +49,7 @@ class MailHandler(
         }
     }
 
-    override fun getHandlerName() = SubscriptionHandlerName.MAIL
+    override fun getHandlerMethod() = SubscriptionMethod.MAIL
 
     companion object {
         fun createCurrentTime(): String = LocalDateTime.now()

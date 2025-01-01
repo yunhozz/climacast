@@ -19,5 +19,5 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 interface SubscriptionSummary {
     fun getRegions(): Set<String>
     fun getMethod(): SubscriptionMethod
-    fun getSubscriptionInfo(): SubscriptionInfo
+    fun getSubscriptionInfo(): SubscriptionInfo?
 }

@@ -1,9 +1,9 @@
 package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
-import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
 import com.twilio.Twilio
 import com.twilio.exception.ApiException
 import com.twilio.rest.api.v2010.account.Message
@@ -53,9 +53,9 @@ class SMSHandler : SubscriptionHandler {
             }
             log.info("Success to send SMS: SID=${message.sid}, created=${message.dateCreated}, sent=${message.dateSent}")
         } catch (e: ApiException) {
-            throw IllegalArgumentException(e.localizedMessage, e)
+            throw IllegalArgumentException("Fail to send message on SMS: ${e.localizedMessage}", e)
         }
     }
 
-    override fun getHandlerName() = SubscriptionHandlerName.SMS
+    override fun getHandlerMethod() = SubscriptionMethod.SMS
 }

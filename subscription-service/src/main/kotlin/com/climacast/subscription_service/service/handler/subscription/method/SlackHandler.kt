@@ -1,9 +1,9 @@
 package com.climacast.subscription_service.service.handler.subscription.method
 
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
-import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
 import com.slack.api.Slack
 import com.slack.api.methods.SlackApiException
 import com.slack.api.model.Attachment
@@ -59,11 +59,12 @@ class SlackHandler : SubscriptionHandler {
 
         } catch (e: Exception) {
             when (e) {
-                is SlackApiException, is IOException -> throw IllegalArgumentException("Fail to send message on Slack", e)
+                is SlackApiException, is IOException ->
+                    throw IllegalArgumentException("Fail to send message on Slack: ${e.localizedMessage}", e)
                 else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
         }
     }
 
-    override fun getHandlerName() = SubscriptionHandlerName.SLACK
+    override fun getHandlerMethod() = SubscriptionMethod.SLACK
 }

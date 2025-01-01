@@ -12,7 +12,6 @@ import com.climacast.subscription_service.model.repository.SubscriptionSummary
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
-import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerName
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -95,21 +94,10 @@ class SubscriptionService(
         val subscriptionInfo = subscription.getSubscriptionInfo()
         val regions = subscription.getRegions()
 
-        when (subscription.getMethod()) {
-            SubscriptionMethod.MAIL -> {
-                val mailHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.MAIL)
-                mailHandler.setSubscriberInfo(SubscriberInfo(email = subscriptionInfo.email))
-                regions.forEach { mailHandler.send(weatherMap[it]!!) }
-            }
-            SubscriptionMethod.SLACK -> {
-                val slackHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SLACK)
-                regions.forEach { slackHandler.send(weatherMap[it]!!) }
-            }
-            SubscriptionMethod.SMS -> {
-                val smsHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.SMS)
-                smsHandler.setSubscriberInfo(SubscriberInfo(phoneNumber = subscriptionInfo.phoneNumber))
-                regions.forEach { smsHandler.send(weatherMap[it]!!) }
-            }
-        }
+        val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
+        val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
+        subscriptionHandler.setSubscriberInfo(subscriberInfo)
+
+        regions.forEach { subscriptionHandler.send(weatherMap[it]!!) }
     }
 }
