@@ -1,5 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <title>Weather Template</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .icon-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .icon-cell i {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
 <body>
 <h1>Weather Information</h1>
 <p>Region: <b th:text="${weatherData.region}"></b></p>
@@ -22,7 +35,9 @@
     <tbody>
     <tr th:each="time, iterStat : ${weatherData.time}">
         <td th:text="${time}"></td>
-        <td th:text="${weatherData.weatherStatus[iterStat.index]}"></td>
+        <td class="icon-cell">
+            <i th:class="${T(com.climacast.global.enums.WeatherStatus).valueOf(weatherData.weatherStatus[iterStat.index]).icon}"></i>
+        </td>
         <td th:text="${weatherData.temperature2m[iterStat.index]}"></td>
         <td th:text="${weatherData.temperature80m[iterStat.index]}"></td>
         <td th:text="${weatherData.temperature120m[iterStat.index]}"></td>
