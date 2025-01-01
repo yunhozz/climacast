@@ -5,11 +5,10 @@ import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.common.util.SubscriptionIntervalConstants
 import com.climacast.subscription_service.dto.WeatherQueryDTO
-import com.climacast.subscription_service.model.entity.Subscription
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
-import com.climacast.subscription_service.model.repository.RegionsAndMethod
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
+import com.climacast.subscription_service.model.repository.SubscriptionSummary
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
@@ -61,24 +60,21 @@ class SubscriptionService(
         sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_ONE_DAY)
 
     private suspend fun sendWeatherInformationToSubscribers(intervals: Set<SubscriptionInterval>) = coroutineScope {
-        val subscriptionList = subscriptionRepository.findAllByIntervalsInAndStatus(intervals)
-        val subscriptionIds = subscriptionList.map { it.id!! }
+        val subscriptionSummarySet = subscriptionRepository.findSubscriptionSummarySetByIntervals(intervals)
+        val weatherMap = visualizeWeatherDocuments(subscriptionSummarySet)
 
-        val regionsAndMethodSet = subscriptionRepository.findRegionsAndMethodSetByIds(subscriptionIds)
-        val weatherMap = visualizeWeatherDocuments(regionsAndMethodSet)
-
-        subscriptionList.map { subscription ->
+        subscriptionSummarySet.map { subscription ->
             launch {
                 sendWeatherImagesToSubscribers(subscription, weatherMap)
             }
         }.joinAll()
     }
 
-    private suspend fun visualizeWeatherDocuments(regionsAndMethodSet: Set<RegionsAndMethod>): Map<String, Any> = coroutineScope {
+    private suspend fun visualizeWeatherDocuments(subscriptionSummarySet: Set<SubscriptionSummary>): Map<String, Any> = coroutineScope {
         val weatherMap = ConcurrentHashMap<String, Any>()
-        regionsAndMethodSet.forEach {
-            val method = it.getMethod()
-            it.getRegions().map { region ->
+        subscriptionSummarySet.forEach { subscription ->
+            val method = subscription.getMethod()
+            subscription.getRegions().map { region ->
                 launch {
                     val query = WeatherQueryDTO(WeatherType.FORECAST, region)
                     val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
@@ -95,11 +91,11 @@ class SubscriptionService(
         weatherMap
     }
 
-    private suspend fun sendWeatherImagesToSubscribers(subscription: Subscription, weatherMap: Map<String, Any>) {
-        val subscriptionInfo = subscription.subscriptionInfo
-        val regions = subscription.regions
+    private suspend fun sendWeatherImagesToSubscribers(subscription: SubscriptionSummary, weatherMap: Map<String, Any>) {
+        val subscriptionInfo = subscription.getSubscriptionInfo()
+        val regions = subscription.getRegions()
 
-        when (subscription.method) {
+        when (subscription.getMethod()) {
             SubscriptionMethod.MAIL -> {
                 val mailHandler = subscriptionHandlerFactory.createHandler(SubscriptionHandlerName.MAIL)
                 mailHandler.setSubscriberInfo(SubscriberInfo(email = subscriptionInfo.email))
