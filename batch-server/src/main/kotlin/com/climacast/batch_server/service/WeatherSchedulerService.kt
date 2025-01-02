@@ -53,13 +53,12 @@ class WeatherSchedulerService(
     companion object {
         const val SAVE_WEATHER_FORECAST_LOCK_KEY = "save-weather-forecast"
         const val SAVE_WEATHER_HISTORY_LOCK_KEY = "save-weather-history"
-
         const val CHUNK_SIZE = "chunkSize"
         const val WEATHER_PARAM = "weatherParam"
         const val WEATHER_FORECAST_CHUNK_SIZE = "126"
         const val WEATHER_HISTORY_CHUNK_SIZE = "30"
 
-        fun createLogMessage(jobExecution: JobExecution) = StringBuilder().apply {
+        fun createLogMessage(jobExecution: JobExecution) = buildString {
             append("Job Execution: ").append(jobExecution.status).append("\n")
             append("Job Id: ").append(jobExecution.jobId).append("\n")
             append("Job Name: ").append(jobExecution.jobInstance.jobName).append("\n")
@@ -68,6 +67,6 @@ class WeatherSchedulerService(
             append("Job Step Executions: ").append(jobExecution.stepExecutions).append("\n")
             append("Job Last Updated: ").append(jobExecution.lastUpdated).append("\n")
             append("Job Failure Exceptions: ").append(jobExecution.failureExceptions).append("\n")
-        }.toString()
+        }
     }
 }
