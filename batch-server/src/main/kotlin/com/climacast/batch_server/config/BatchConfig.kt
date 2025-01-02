@@ -82,7 +82,6 @@ class BatchConfig(
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
             .writer(historicalWeatherOpenApiCallWriter(""))
-            .faultTolerant()
             .build()
 
     @Bean
@@ -92,7 +91,6 @@ class BatchConfig(
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
             .writer(forecastWeatherOpenApiCallWriter(""))
-            .faultTolerant()
             .build()
 
     @Bean
@@ -102,9 +100,6 @@ class BatchConfig(
             .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), appTransactionManager)
             .reader(apiResponseReader())
             .writer(weatherDataWriter())
-            .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean
