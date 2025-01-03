@@ -72,17 +72,21 @@ class SubscriptionService(
     private suspend fun visualizeWeatherDocuments(subscriptionSummarySet: Set<SubscriptionSummary>): Map<String, Any> = coroutineScope {
         val weatherMap = ConcurrentHashMap<String, Any>()
         subscriptionSummarySet.forEach { subscription ->
+            val weatherType = subscription.getWeatherType()
             val method = subscription.getMethod()
+
             subscription.getRegions().map { region ->
                 launch {
-                    val query = WeatherQueryDTO(WeatherType.FORECAST, region)
-                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-                        ?: throw IllegalArgumentException("Weather data not found")
+                    val query = WeatherQueryDTO(weatherType, region)
+                    val weather = when (weatherType) {
+                        WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+                        WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+                    } ?: throw IllegalArgumentException("Weather data not found")
 
                     weatherMap[region] = if (method == SubscriptionMethod.MAIL) {
-                        documentVisualizeHandler.convertDocumentToHtml(forecastWeather)
+                        documentVisualizeHandler.convertDocumentToHtml(weather, weatherType)
                     } else {
-                        documentVisualizeHandler.convertDocumentToImage(forecastWeather)
+                        documentVisualizeHandler.convertDocumentToImage(weather, weatherType)
                     }
                 }
             }.joinAll()

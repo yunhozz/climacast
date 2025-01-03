@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.model.entity
 
+import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import jakarta.persistence.ElementCollection
@@ -18,6 +19,8 @@ class Subscription(
     @Embedded
     val subscriptionInfo: SubscriptionInfo,
     regions: Set<String>,
+    @Enumerated(EnumType.STRING)
+    val weatherType: WeatherType,
     intervals: SubscriptionInterval,
     method: SubscriptionMethod,
     status: Boolean = true
@@ -42,11 +45,12 @@ class Subscription(
         protected set
 
     fun updateRegions(regions: Set<String>) {
-        require(regions.isNotEmpty()) { "Regions must not be empty" }
+        require(regions.isNotEmpty() && regions.size <= 5) { "Choose at least 1 and no more than 5 regions" }
         this.regions = regions
     }
 
     fun updateSubscriptionInterval(interval: SubscriptionInterval) {
+        require(weatherType != WeatherType.HISTORY) { "Subscription interval of history weather must be one day" }
         this.intervals = interval
     }
 

@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.model.repository
 
+import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.model.entity.Subscription
@@ -9,7 +10,7 @@ import org.springframework.data.jpa.repository.Query
 
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
     @Query("""
-        select distinct s.regions as regions, s.method as method, s.subscriptionInfo as subscriptionInfo
+        select distinct s.regions as regions, s.weatherType as weatherType, s.method as method, s.subscriptionInfo as subscriptionInfo
         from Subscription s
         where s.intervals in :intervals and s.status = true
     """)
@@ -18,6 +19,7 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
 interface SubscriptionSummary {
     fun getRegions(): Set<String>
+    fun getWeatherType(): WeatherType
     fun getMethod(): SubscriptionMethod
     fun getSubscriptionInfo(): SubscriptionInfo?
 }

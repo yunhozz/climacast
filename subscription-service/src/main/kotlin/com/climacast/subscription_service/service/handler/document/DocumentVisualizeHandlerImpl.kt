@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.service.handler.document
 
+import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
@@ -20,17 +21,21 @@ class DocumentVisualizeHandlerImpl(
 ) : DocumentVisualizeHandler {
 
     companion object {
-        const val WEATHER_TEMPLATE = "weather_template"
+        const val FORECAST_WEATHER_TEMPLATE = "forecast_weather_template"
+        const val HISTORY_WEATHER_TEMPLATE = "history_weather_template"
         const val WEATHER_IMAGE_LOCAL_DIR = "/Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/"
     }
 
-    override fun convertDocumentToHtml(document: WeatherDocument): String {
+    override fun convertDocumentToHtml(document: WeatherDocument, type: WeatherType): String {
         val context = Context(Locale.getDefault(), mapOf("weatherData" to document))
-        return templateEngine.process(WEATHER_TEMPLATE, context)
+        return templateEngine.process(when(type) {
+            WeatherType.FORECAST -> FORECAST_WEATHER_TEMPLATE
+            WeatherType.HISTORY -> HISTORY_WEATHER_TEMPLATE
+        }, context)
     }
 
-    override fun convertDocumentToImage(document: WeatherDocument): File {
-        val html = convertDocumentToHtml(document)
+    override fun convertDocumentToImage(document: WeatherDocument, type: WeatherType): File {
+        val html = convertDocumentToHtml(document, type)
         val chromeDriver = ChromeDriver(ChromeOptions().apply {
             addArguments("--headless", "--disable-gpu")
         })
