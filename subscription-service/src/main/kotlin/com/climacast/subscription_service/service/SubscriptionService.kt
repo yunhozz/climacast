@@ -64,7 +64,7 @@ class SubscriptionService(
 
         subscriptionSummarySet.map { subscription ->
             launch {
-                sendWeatherImagesToSubscribers(subscription, weatherMap)
+                sendToSubscribersByWeatherMap(subscription, weatherMap)
             }
         }.joinAll()
     }
@@ -76,7 +76,7 @@ class SubscriptionService(
             subscription.getRegions().map { region ->
                 launch {
                     val query = WeatherQueryDTO(WeatherType.FORECAST, region)
-                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByRegion(query)
+                    val forecastWeather = forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                         ?: throw IllegalArgumentException("Weather data not found")
 
                     weatherMap[region] = if (method == SubscriptionMethod.MAIL) {
@@ -90,7 +90,7 @@ class SubscriptionService(
         weatherMap
     }
 
-    private suspend fun sendWeatherImagesToSubscribers(subscription: SubscriptionSummary, weatherMap: Map<String, Any>) {
+    private suspend fun sendToSubscribersByWeatherMap(subscription: SubscriptionSummary, weatherMap: Map<String, Any>) {
         val subscriptionInfo = subscription.getSubscriptionInfo()
         val regions = subscription.getRegions()
 

@@ -7,6 +7,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.stereotype.Component
+import java.util.Date
 
 @Component
 class WeatherDataListener(
@@ -15,14 +16,18 @@ class WeatherDataListener(
 ) {
     private val log = logger()
 
-    @EventListener(ApplicationReadyEvent::class)
-    fun saveWeathers() {
+    @EventListener
+    fun saveWeathers(event: ApplicationReadyEvent) {
+        log.info("ApplicationReadyEvent triggered for application: " +
+                "${event.applicationContext.applicationName}, " +
+                "time: ${Date(event.timestamp)}")
+
         reactiveKafkaConsumer.receiveAutoAck()
             .doOnNext {
-                log.info("Received from topic={}, offset={}", it.topic(), it.offset())
+                log.info("Received from topic=${it.topic()}, offset=${it.offset()}")
             }
             .map { it.value() }
-            .flatMap { message ->
+            .doOnNext { message ->
                 documentSaveHandler.saveWeathersByMessageType(message)
             }
             .subscribe()
