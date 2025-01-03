@@ -20,7 +20,7 @@ class WeatherSchedulerService(
 ) {
     private val log = logger()
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 28,58 * * * *")
     @DistributedLock(key = SAVE_WEATHER_FORECAST_LOCK_KEY, leaseTime = 60, waitTime = 0)
     fun saveWeatherForecastEveryHour() {
         val jobParameters = createDefaultJobParameters()
