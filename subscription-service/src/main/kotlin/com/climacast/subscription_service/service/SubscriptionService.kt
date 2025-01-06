@@ -92,9 +92,11 @@ class SubscriptionService(
 
                 regions.forEach { region ->
                     val weatherData = WeatherDataBuffer.find(region)
-                    subscriptionHandler.send(weatherData!!)
+                    subscriptionHandler.send(weatherData)
                 }
             }
         }.joinAll()
+
+        WeatherDataBuffer.clear()
     }
 }

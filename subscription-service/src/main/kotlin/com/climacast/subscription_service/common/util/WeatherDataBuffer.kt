@@ -9,5 +9,10 @@ object WeatherDataBuffer {
         weatherData[key] = data
     }
 
-    fun find(key: String) = weatherData.remove(key)
+    fun find(key: String) = weatherData[key]
+        ?: throw IllegalArgumentException("Null for key: $key")
+
+    fun clear() {
+        weatherData.clear()
+    }
 }
