@@ -4,6 +4,7 @@ import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import reactor.core.publisher.Flux
@@ -40,7 +41,7 @@ abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = convertTimeFormat(weather.hourly?.time),
+                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
                     weatherStatus = weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
                     temperature2m = weather.hourly?.temperature_2m,
                     temperature80m = weather.hourly?.temperature_80m,
@@ -62,7 +63,7 @@ abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = convertTimeFormat(weather.hourly?.time),
+                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
                     weatherStatus = weather.daily?.let {
                         it.weather_code?.map { code -> WeatherStatus.of(code).name }
                     } ?: weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
@@ -70,8 +71,8 @@ abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
                     minTemperature2m = weather.daily?.temperature_2m_min,
                     maxApparentTemperature = weather.daily?.apparent_temperature_max,
                     minApparentTemperature = weather.daily?.apparent_temperature_min,
-                    sunrise = convertTimeFormat(weather.daily?.sunrise),
-                    sunset = convertTimeFormat(weather.daily?.sunset),
+                    sunrise = weather.daily?.sunrise?.map { DateTimeConverter.convertTimeFormat(it) },
+                    sunset = weather.daily?.sunset?.map { DateTimeConverter.convertTimeFormat(it) },
                     daylightDuration = weather.daily?.daylight_duration,
                     sunshineDuration = weather.daily?.sunshine_duration,
                     maxUvIndex = weather.daily?.uv_index_max,
@@ -99,14 +100,4 @@ abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
                 )
             }
             .collectList()
-
-    companion object {
-        fun convertTimeFormat(timeList: List<String>?) =
-            timeList?.map { time ->
-                time.replace("-", "/")
-                    .replace("T", " ")
-                    .replace(":", "시 ")
-                    .plus("분")
-            }
-    }
 }
