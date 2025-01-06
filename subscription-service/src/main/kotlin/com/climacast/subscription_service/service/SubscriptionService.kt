@@ -4,11 +4,11 @@ import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.common.util.SubscriptionIntervalConstants
+import com.climacast.subscription_service.common.util.WeatherDataBuffer
 import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
-import com.climacast.subscription_service.model.repository.SubscriptionSummary
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.concurrent.ConcurrentHashMap
 
 @Service
 class SubscriptionService(
@@ -60,17 +59,6 @@ class SubscriptionService(
 
     private suspend fun sendWeatherInformationToSubscribers(intervals: Set<SubscriptionInterval>) = coroutineScope {
         val subscriptionSummarySet = subscriptionRepository.findSubscriptionSummarySetByIntervals(intervals)
-        val weatherMap = visualizeWeatherDocuments(subscriptionSummarySet)
-
-        subscriptionSummarySet.map { subscription ->
-            launch {
-                sendToSubscribersByWeatherMap(subscription, weatherMap)
-            }
-        }.joinAll()
-    }
-
-    private suspend fun visualizeWeatherDocuments(subscriptionSummarySet: Set<SubscriptionSummary>): Map<String, Any> = coroutineScope {
-        val weatherMap = ConcurrentHashMap<String, Any>()
         subscriptionSummarySet.forEach { subscription ->
             val weatherType = subscription.getWeatherType()
             val method = subscription.getMethod()
@@ -83,25 +71,30 @@ class SubscriptionService(
                         WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                     } ?: throw IllegalArgumentException("Weather data not found")
 
-                    weatherMap[region] = if (method == SubscriptionMethod.MAIL) {
+                    val data = if (method == SubscriptionMethod.MAIL) {
                         documentVisualizeHandler.convertDocumentToHtml(weather, weatherType)
                     } else {
                         documentVisualizeHandler.convertDocumentToImage(weather, weatherType)
                     }
+                    WeatherDataBuffer.put(region, data)
                 }
             }.joinAll()
         }
-        weatherMap
-    }
 
-    private suspend fun sendToSubscribersByWeatherMap(subscription: SubscriptionSummary, weatherMap: Map<String, Any>) {
-        val subscriptionInfo = subscription.getSubscriptionInfo()
-        val regions = subscription.getRegions()
+        subscriptionSummarySet.map { subscription ->
+            launch {
+                val subscriptionInfo = subscription.getSubscriptionInfo()
+                val regions = subscription.getRegions()
 
-        val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
-        val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
-        subscriptionHandler.setSubscriberInfo(subscriberInfo)
+                val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
+                val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
+                subscriptionHandler.setSubscriberInfo(subscriberInfo)
 
-        regions.forEach { subscriptionHandler.send(weatherMap[it]!!) }
+                regions.forEach { region ->
+                    val weatherData = WeatherDataBuffer.find(region)
+                    subscriptionHandler.send(weatherData!!)
+                }
+            }
+        }.joinAll()
     }
 }
