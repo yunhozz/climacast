@@ -34,7 +34,7 @@ class KafkaConfig(
 ) {
     companion object {
         const val GROUP_ID = "subscription-service-group"
-        const val AUTO_OFFSET_RESET = "latest"
+        const val AUTO_OFFSET_RESET = "earliest"
         const val JSON_DESERIALIZER_TRUST_PACKAGE = "com.climacast.global.*"
     }
 
