@@ -12,9 +12,9 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
     @Query("""
         select distinct s.regions as regions, s.weatherType as weatherType, s.method as method, s.subscriptionInfo as subscriptionInfo
         from Subscription s
-        where s.intervals in :intervals and s.status = true
+        where s.intervals = :interval and s.status = true
     """)
-    fun findSubscriptionSummarySetByIntervals(intervals: Set<SubscriptionInterval>): Set<SubscriptionSummary>
+    fun findSubscriptionSummarySetByInterval(interval: SubscriptionInterval): Set<SubscriptionSummary>
 }
 
 interface SubscriptionSummary {

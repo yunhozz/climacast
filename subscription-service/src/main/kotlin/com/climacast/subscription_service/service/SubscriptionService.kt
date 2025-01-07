@@ -3,7 +3,6 @@ package com.climacast.subscription_service.service
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
-import com.climacast.subscription_service.common.util.SubscriptionIntervalConstants
 import com.climacast.subscription_service.common.util.WeatherDataBuffer
 import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
@@ -30,40 +29,40 @@ class SubscriptionService(
     @Scheduled(cron = "0 */30 * * * *")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEveryThirtyMinute() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_THIRTY_MINUTE)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.THIRTY_MINUTE)
 
     @Scheduled(cron = "0 0 * * * *")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEveryHour() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_ONE_HOUR)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.ONE_HOUR)
 
     @Scheduled(cron = "0 0 */3 * * *", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEveryThreeHour() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_THREE_HOUR)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.THREE_HOURS)
 
     @Scheduled(cron = "0 0 */6 * * *", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEverySixHour() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_SIX_HOUR)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.SIX_HOURS)
 
     @Scheduled(cron = "0 0 0,12 * * *", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEveryTwelveHour() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_TWELVE_HOUR)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.TWELVE_HOURS)
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     suspend fun sendForecastWeathersEveryDay() =
-        sendWeatherInformationToSubscribers(SubscriptionIntervalConstants.EVERY_ONE_DAY)
+        sendWeatherInformationToSubscribers(SubscriptionInterval.ONE_DAY)
 
-    private suspend fun sendWeatherInformationToSubscribers(intervals: Set<SubscriptionInterval>) = coroutineScope {
-        val subscriptionSummarySet = subscriptionRepository.findSubscriptionSummarySetByIntervals(intervals)
+    private suspend fun sendWeatherInformationToSubscribers(interval: SubscriptionInterval) = coroutineScope {
+        val subscriptionSummarySet = subscriptionRepository.findSubscriptionSummarySetByInterval(interval)
         subscriptionSummarySet.forEach { subscription ->
             val weatherType = subscription.getWeatherType()
-            val method = subscription.getMethod()
+            val regions = subscription.getRegions()
 
-            subscription.getRegions().map { region ->
+            regions.map { region ->
                 launch {
                     val query = WeatherQueryDTO(weatherType, region)
                     val weather = when (weatherType) {
@@ -71,7 +70,7 @@ class SubscriptionService(
                         WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                     } ?: throw IllegalArgumentException("Weather data not found")
 
-                    val data = if (method == SubscriptionMethod.MAIL) {
+                    val data = if (subscription.getMethod() == SubscriptionMethod.MAIL) {
                         documentVisualizeHandler.convertDocumentToHtml(weather, weatherType)
                     } else {
                         documentVisualizeHandler.convertDocumentToImage(weather, weatherType)
@@ -79,23 +78,19 @@ class SubscriptionService(
                     WeatherDataBuffer.put(region, data)
                 }
             }.joinAll()
-        }
 
-        subscriptionSummarySet.map { subscription ->
-            launch {
-                val subscriptionInfo = subscription.getSubscriptionInfo()
-                val regions = subscription.getRegions()
+            val subscriptionInfo = subscription.getSubscriptionInfo()
+            val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
+            val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
+            subscriptionHandler.setSubscriberInfo(subscriberInfo)
 
-                val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
-                val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
-                subscriptionHandler.setSubscriberInfo(subscriberInfo)
-
-                regions.forEach { region ->
+            regions.map { region ->
+                launch {
                     val weatherData = WeatherDataBuffer.find(region)
                     subscriptionHandler.send(weatherData)
                 }
-            }
-        }.joinAll()
+            }.joinAll()
+        }
 
         WeatherDataBuffer.clear()
     }
