@@ -7,6 +7,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Mono
 import java.util.Date
 
 @Component
@@ -22,13 +23,20 @@ class WeatherDataListener(
                 "${event.applicationContext.applicationName}, " +
                 "time: ${Date(event.timestamp)}")
 
-        reactiveKafkaConsumer.receiveAutoAck()
-            .doOnNext {
-                log.info("Received from topic=${it.topic()}, offset=${it.offset()}")
+        reactiveKafkaConsumer.receive()
+            .flatMap { record ->
+                log.info("Received from topic=${record.topic()}, offset=${record.offset()}")
+                try {
+                    documentSaveHandler.saveWeathersByMessageType(record.value())
+                    Mono.just(record)
+
+                } catch (e: Exception) {
+                    log.error("Failed to save weather data: ${e.message}")
+                    Mono.empty()
+                }
             }
-            .map { it.value() }
-            .doOnNext { message ->
-                documentSaveHandler.saveWeathersByMessageType(message)
+            .flatMap { record ->
+                record.receiverOffset().commit()
             }
             .subscribe()
     }
