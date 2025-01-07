@@ -41,7 +41,7 @@ class DocumentVisualizeHandlerImpl(
         })
 
         try {
-            val currentTime = System.currentTimeMillis()
+            val currentTime = System.nanoTime()
             val filePath = Files.createTempFile("weather_temp_$currentTime", ".html")
             Files.write(filePath, html.toByteArray())
 
