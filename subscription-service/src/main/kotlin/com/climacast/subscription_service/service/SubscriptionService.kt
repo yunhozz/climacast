@@ -57,37 +57,42 @@ class SubscriptionService(
         sendWeatherInformationToSubscribers(SubscriptionInterval.ONE_DAY)
 
     private suspend fun sendWeatherInformationToSubscribers(interval: SubscriptionInterval) = coroutineScope {
-        val subscriptionSummarySet = subscriptionRepository.findSubscriptionSummarySetByInterval(interval)
-        subscriptionSummarySet.forEach { subscription ->
-            val weatherType = subscription.getWeatherType()
-            val regions = subscription.getRegions()
+        val subscriptionList = subscriptionRepository.findAllByIntervals(interval)
+
+        subscriptionList.forEach { subscription ->
+            val subscriptionMethod = subscription.method
+            val subscriptionInfo = subscription.subscriptionInfo
+
+            val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscriptionMethod)
+            val subscriberInfo = SubscriberInfo(email = subscriptionInfo.email, phoneNumber = subscriptionInfo.phoneNumber)
+            subscriptionHandler.setSubscriberInfo(subscriberInfo)
+
+            val weatherType = subscription.weatherType
+            val regions = subscription.regions
 
             regions.map { region ->
                 launch {
                     val query = WeatherQueryDTO(weatherType, region)
-                    val weather = when (weatherType) {
+                    val weatherDocument = when (weatherType) {
                         WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                         WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                     } ?: throw IllegalArgumentException("Weather data not found")
 
-                    val data = if (subscription.getMethod() == SubscriptionMethod.MAIL) {
-                        documentVisualizeHandler.convertDocumentToHtml(weather, weatherType)
+                    val weatherData = if (subscriptionMethod == SubscriptionMethod.MAIL) {
+                        documentVisualizeHandler.convertDocumentToHtml(weatherDocument, weatherType)
                     } else {
-                        documentVisualizeHandler.convertDocumentToImage(weather, weatherType)
+                        documentVisualizeHandler.convertDocumentToImage(weatherDocument, weatherType)
                     }
-                    WeatherDataBuffer.put(region, data)
+
+                    WeatherDataBuffer.store(region, weatherData, subscriptionMethod)
                 }
             }.joinAll()
 
-            val subscriptionInfo = subscription.getSubscriptionInfo()
-            val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscription.getMethod())
-            val subscriberInfo = SubscriberInfo(email = subscriptionInfo?.email, phoneNumber = subscriptionInfo?.phoneNumber)
-            subscriptionHandler.setSubscriberInfo(subscriberInfo)
-
             regions.map { region ->
                 launch {
-                    val weatherData = WeatherDataBuffer.find(region)
-                    subscriptionHandler.send(weatherData)
+                    WeatherDataBuffer.find(region, subscriptionMethod)?.let {
+                        subscriptionHandler.send(it)
+                    }
                 }
             }.joinAll()
         }

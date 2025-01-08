@@ -15,6 +15,8 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
         where s.intervals = :interval and s.status = true
     """)
     fun findSubscriptionSummarySetByInterval(interval: SubscriptionInterval): Set<SubscriptionSummary>
+
+    fun findAllByIntervals(intervals: SubscriptionInterval): List<Subscription>
 }
 
 interface SubscriptionSummary {
