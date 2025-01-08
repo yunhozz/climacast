@@ -1,12 +1,14 @@
 package com.climacast.subscription_service.service.handler.document
 
 import com.climacast.global.enums.WeatherType
+import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
@@ -14,6 +16,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.util.Locale
+import java.util.concurrent.CompletableFuture
 
 @Component
 class DocumentVisualizeHandlerImpl(
@@ -26,7 +29,15 @@ class DocumentVisualizeHandlerImpl(
         const val WEATHER_IMAGE_LOCAL_DIR = "/Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/"
     }
 
-    override fun convertDocumentToHtml(document: WeatherDocument, type: WeatherType): String {
+    @Async
+    override fun convertDocumentToHtmlAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum> =
+        CompletableFuture.completedFuture(WeatherDatum(region, convertDocumentToHtml(document, type)))
+
+    @Async
+    override fun convertDocumentToImageAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum> =
+        CompletableFuture.completedFuture(WeatherDatum(region, convertDocumentToImage(document, type)))
+
+    private fun convertDocumentToHtml(document: WeatherDocument, type: WeatherType): String {
         val context = Context(Locale.getDefault(), mapOf("weatherData" to document))
         return templateEngine.process(when(type) {
             WeatherType.FORECAST -> FORECAST_WEATHER_TEMPLATE
@@ -34,7 +45,7 @@ class DocumentVisualizeHandlerImpl(
         }, context)
     }
 
-    override fun convertDocumentToImage(document: WeatherDocument, type: WeatherType): File {
+    private fun convertDocumentToImage(document: WeatherDocument, type: WeatherType): File {
         val html = convertDocumentToHtml(document, type)
         val chromeDriver = ChromeDriver(ChromeOptions().apply {
             addArguments("--headless", "--disable-gpu")

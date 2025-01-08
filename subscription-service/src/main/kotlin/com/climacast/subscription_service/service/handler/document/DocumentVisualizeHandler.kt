@@ -1,10 +1,11 @@
 package com.climacast.subscription_service.service.handler.document
 
 import com.climacast.global.enums.WeatherType
+import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
-import java.io.File
+import java.util.concurrent.CompletableFuture
 
 interface DocumentVisualizeHandler {
-    fun convertDocumentToHtml(document: WeatherDocument, type: WeatherType): String
-    fun convertDocumentToImage(document: WeatherDocument, type: WeatherType): File
+    fun convertDocumentToHtmlAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum>
+    fun convertDocumentToImageAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum>
 }

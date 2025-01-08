@@ -13,9 +13,9 @@ object WeatherDataBuffer {
         }
     }
 
-    fun store(region: String, resource: Any, method: SubscriptionMethod) {
+    fun store(datum: WeatherDatum, method: SubscriptionMethod) {
         val dataSet = weatherData[method]
-        dataSet?.add(WeatherDatum(region, resource))
+        dataSet?.add(datum)
     }
 
     fun find(region: String, method: SubscriptionMethod): Any? {
@@ -26,18 +26,18 @@ object WeatherDataBuffer {
     fun clear() {
         weatherData.clear()
     }
+}
 
-    data class WeatherDatum(val region: String, val resource: Any): Comparable<WeatherDatum> {
-        override fun compareTo(other: WeatherDatum): Int {
-            val regionComparison = this.region.compareTo(other.region)
-            if (regionComparison != 0) {
-                return regionComparison
-            }
+data class WeatherDatum(val region: String, val resource: Any): Comparable<WeatherDatum> {
+    override fun compareTo(other: WeatherDatum): Int {
+        val regionComparison = this.region.compareTo(other.region)
+        if (regionComparison != 0) {
+            return regionComparison
+        }
 
-            return when {
-                this.resource == other.resource -> 0
-                else -> 1
-            }
+        return when {
+            this.resource == other.resource -> 0
+            else -> 1
         }
     }
 }

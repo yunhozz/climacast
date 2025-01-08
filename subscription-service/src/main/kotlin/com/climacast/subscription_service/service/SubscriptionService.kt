@@ -11,6 +11,8 @@ import com.climacast.subscription_service.model.repository.SubscriptionRepositor
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -70,23 +72,24 @@ class SubscriptionService(
             val weatherType = subscription.weatherType
             val regions = subscription.regions
 
-            regions.map { region ->
-                launch {
+            val futures = regions.map { region ->
+                async {
                     val query = WeatherQueryDTO(weatherType, region)
                     val weatherDocument = when (weatherType) {
                         WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                         WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
                     } ?: throw IllegalArgumentException("Weather data not found")
 
-                    val weatherData = if (subscriptionMethod == SubscriptionMethod.MAIL) {
-                        documentVisualizeHandler.convertDocumentToHtml(weatherDocument, weatherType)
-                    } else {
-                        documentVisualizeHandler.convertDocumentToImage(weatherDocument, weatherType)
-                    }
-
-                    WeatherDataBuffer.store(region, weatherData, subscriptionMethod)
+                    if (subscriptionMethod == SubscriptionMethod.MAIL)
+                        documentVisualizeHandler.convertDocumentToHtmlAsync(region, weatherDocument, weatherType)
+                    else
+                        documentVisualizeHandler.convertDocumentToImageAsync(region, weatherDocument, weatherType)
                 }
-            }.joinAll()
+            }.awaitAll()
+
+            futures.forEach {
+                WeatherDataBuffer.store(it.get(), subscriptionMethod)
+            }
 
             regions.map { region ->
                 launch {
