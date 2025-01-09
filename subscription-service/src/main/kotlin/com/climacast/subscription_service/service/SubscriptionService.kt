@@ -59,7 +59,7 @@ class SubscriptionService(
         sendWeatherInformationToSubscribers(SubscriptionInterval.ONE_DAY)
 
     private suspend fun sendWeatherInformationToSubscribers(interval: SubscriptionInterval) = coroutineScope {
-        val subscriptionList = subscriptionRepository.findAllByIntervals(interval)
+        val subscriptionList = subscriptionRepository.findAllByIntervalsAndStatus(interval)
 
         subscriptionList.forEach { subscription ->
             val subscriptionMethod = subscription.method
