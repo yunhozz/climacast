@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Weather Template</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .icon-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .icon-cell i {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+<h1>History Weather Information</h1>
+<h3>Region: <b th:text="${weatherData.region}"></b></h3>
+<p>[Summary]</p>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Weather Status</th>
+        <th>Sunrise</th>
+        <th>Sunset</th>
+        <th>Sunshine Duration</th>
+        <th>Daylight Duration</th>
+        <th>Min Temperature</th>
+        <th>Max Temperature</th>
+        <th>Min Temperature (apparent) </th>
+        <th>Max Temperature (apparent)</th>
+        <th>Rain Sum</th>
+        <th>Showers Sum</th>
+        <th>Snowfall Sum</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="icon-cell">
+            <i th:class="${T(com.climacast.global.enums.WeatherStatus).valueOf(weatherData.weatherStatus[0]).icon}"></i>
+        </td>
+        <td th:text="${weatherData.sunrise[0]}"></td>
+        <td th:text="${weatherData.sunset[0]}"></td>
+        <td th:text="${weatherData.sunshineDuration[0]}"></td>
+        <td th:text="${weatherData.daylightDuration[0]}"></td>
+        <td th:text="${weatherData.minTemperature2m[0]}"></td>
+        <td th:text="${weatherData.maxTemperature2m[0]}"></td>
+        <td th:text="${weatherData.minApparentTemperature[0]}"></td>
+        <td th:text="${weatherData.maxApparentTemperature[0]}"></td>
+        <td th:text="${weatherData.rainSum[0]}"></td>
+        <td th:text="${weatherData.showersSum[0]}"></td>
+        <td th:text="${weatherData.snowfallSum[0]}"></td>
+    </tr>
+    </tbody>
+</table>
+<br>
+<p>[Details]</p>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Time</th>
+        <th>Temperature (2m)</th>
+        <th>Temperature (80m)</th>
+        <th>Temperature (120m)</th>
+        <th>Temperature (180m)</th>
+        <th>Wind Speed (10m)</th>
+        <th>Wind Speed (80m)</th>
+        <th>Wind Speed (120m)</th>
+        <th>Wind Speed (180m)</th>
+        <th>Humidity</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="time, iterStat : ${weatherData.time}">
+        <td th:text="${time}"></td>
+        <td th:text="${weatherData.temperature2m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed10m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.humidity2m[iterStat.index]}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

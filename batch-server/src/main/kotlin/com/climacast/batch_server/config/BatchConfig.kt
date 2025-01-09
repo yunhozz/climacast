@@ -4,8 +4,8 @@ import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.batch_server.config.handler.KafkaMessageHandler
-import com.climacast.batch_server.config.handler.WeatherDataHandler
 import com.climacast.batch_server.config.handler.api.OpenApiHandler
+import com.climacast.batch_server.config.handler.data.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
@@ -82,7 +82,6 @@ class BatchConfig(
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
             .writer(historicalWeatherOpenApiCallWriter(""))
-            .faultTolerant()
             .build()
 
     @Bean
@@ -92,7 +91,6 @@ class BatchConfig(
             .chunk<Region, Region>(chunkSize.toInt(), batchTransactionManager)
             .reader(regionInfoReader())
             .writer(forecastWeatherOpenApiCallWriter(""))
-            .faultTolerant()
             .build()
 
     @Bean
@@ -102,9 +100,6 @@ class BatchConfig(
             .chunk<WeatherResponseDTO, WeatherResponseDTO>(chunkSize.toInt(), appTransactionManager)
             .reader(apiResponseReader())
             .writer(weatherDataWriter())
-            .faultTolerant()
-            .retryLimit(STEP_RETRY_COUNT)
-            .retry(Exception::class.java)
             .build()
 
     @Bean

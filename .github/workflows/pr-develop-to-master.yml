@@ -30,6 +30,7 @@ jobs:
           echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
           
           echo "${{ secrets.ENV }}" > .env
+          echo "GIT_COMMIT_HASH=${{ github.sha }}" >> .env
           
           echo 'user nginx;' > nginx/nginx.conf
           echo 'worker_processes auto;' >> nginx/nginx.conf

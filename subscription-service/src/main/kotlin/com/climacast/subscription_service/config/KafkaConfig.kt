@@ -17,6 +17,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
+import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer
 import org.springframework.kafka.listener.DefaultErrorHandler
@@ -24,6 +25,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
 import org.springframework.util.backoff.FixedBackOff
 import reactor.kafka.receiver.ReceiverOptions
+import reactor.kafka.sender.SenderOptions
 
 @Configuration
 @EnableKafka
@@ -32,7 +34,7 @@ class KafkaConfig(
 ) {
     companion object {
         const val GROUP_ID = "subscription-service-group"
-        const val AUTO_OFFSET_RESET = "latest"
+        const val AUTO_OFFSET_RESET = "earliest"
         const val JSON_DESERIALIZER_TRUST_PACKAGE = "com.climacast.global.*"
     }
 
@@ -46,6 +48,10 @@ class KafkaConfig(
     @Bean
     fun kafkaConsumerFactory(): ConsumerFactory<String, KafkaMessage> =
         DefaultKafkaConsumerFactory(kafkaConsumerProperties())
+
+    @Bean
+    fun reactiveKafkaProducerTemplate(): ReactiveKafkaProducerTemplate<String, KafkaMessage> =
+        ReactiveKafkaProducerTemplate(SenderOptions.create(kafkaProducerProperties()))
 
     @Bean
     fun reactiveKafkaConsumerTemplate(): ReactiveKafkaConsumerTemplate<String, KafkaMessage> =
@@ -71,14 +77,14 @@ class KafkaConfig(
         }
 
     @Bean
-    fun kafkaProducerProperties(): Map<String, Any> = mapOf(
+    fun kafkaProducerProperties() = mapOf(
         ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to kafkaProperties.bootstrapServers,
         ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java
     )
 
     @Bean
-    fun kafkaConsumerProperties(): Map<String, Any> = mapOf(
+    fun kafkaConsumerProperties() = mapOf(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to kafkaProperties.bootstrapServers,
         ConsumerConfig.GROUP_ID_CONFIG to GROUP_ID,
         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
