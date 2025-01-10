@@ -61,44 +61,46 @@ class SubscriptionService(
     private suspend fun sendWeatherInformationToSubscribers(interval: SubscriptionInterval) = coroutineScope {
         val subscriptionList = subscriptionRepository.findAllByIntervalsAndStatus(interval)
 
-        subscriptionList.forEach { subscription ->
-            val subscriptionMethod = subscription.method
-            val subscriptionInfo = subscription.subscriptionInfo
+        subscriptionList.map { subscription ->
+            launch {
+                val subscriptionMethod = subscription.method
+                val subscriptionInfo = subscription.subscriptionInfo
 
-            val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscriptionMethod)
-            val subscriberInfo = SubscriberInfo(email = subscriptionInfo.email, phoneNumber = subscriptionInfo.phoneNumber)
-            subscriptionHandler.setSubscriberInfo(subscriberInfo)
+                val subscriptionHandler = subscriptionHandlerFactory.createHandlerByMethod(subscriptionMethod)
+                val subscriberInfo = SubscriberInfo(email = subscriptionInfo.email, phoneNumber = subscriptionInfo.phoneNumber)
+                subscriptionHandler.setSubscriberInfo(subscriberInfo)
 
-            val weatherType = subscription.weatherType
-            val regions = subscription.regions
+                val weatherType = subscription.weatherType
+                val regions = subscription.regions
 
-            val futures = regions.map { region ->
-                async {
-                    val query = WeatherQueryDTO(weatherType, region)
-                    val weatherDocument = when (weatherType) {
-                        WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-                        WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-                    } ?: throw IllegalArgumentException("Weather data not found")
+                val futures = regions.map { region ->
+                    async {
+                        val query = WeatherQueryDTO(weatherType, region)
+                        val weatherDocument = when (weatherType) {
+                            WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+                            WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+                        } ?: throw IllegalArgumentException("Weather data not found for region: $region")
 
-                    if (subscriptionMethod == SubscriptionMethod.MAIL)
-                        documentVisualizeHandler.convertDocumentToHtmlAsync(region, weatherDocument, weatherType)
-                    else
-                        documentVisualizeHandler.convertDocumentToImageAsync(region, weatherDocument, weatherType)
+                        if (subscriptionMethod == SubscriptionMethod.MAIL)
+                            documentVisualizeHandler.convertDocumentToHtmlAsync(region, weatherDocument, weatherType)
+                        else
+                            documentVisualizeHandler.convertDocumentToImageAsync(region, weatherDocument, weatherType)
+                    }
+                }.awaitAll()
+
+                futures.forEach {
+                    WeatherDataBuffer.store(it.get(), subscriptionMethod)
                 }
-            }.awaitAll()
 
-            futures.forEach {
-                WeatherDataBuffer.store(it.get(), subscriptionMethod)
-            }
-
-            regions.map { region ->
-                launch {
-                    WeatherDataBuffer.find(region, subscriptionMethod)?.let {
-                        subscriptionHandler.send(it)
+                regions.forEach { region ->
+                    launch {
+                        WeatherDataBuffer.find(region, subscriptionMethod)?.let {
+                            subscriptionHandler.send(it)
+                        }
                     }
                 }
-            }.joinAll()
-        }
+            }
+        }.joinAll()
 
         WeatherDataBuffer.clear()
     }
