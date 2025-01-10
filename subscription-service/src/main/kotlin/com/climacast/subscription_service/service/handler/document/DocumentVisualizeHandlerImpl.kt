@@ -30,12 +30,25 @@ class DocumentVisualizeHandlerImpl(
     }
 
     @Async
-    override fun convertDocumentToHtmlAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum> =
-        CompletableFuture.completedFuture(WeatherDatum(region, convertDocumentToHtml(document, type)))
+    override fun convertDocumentToHtmlAsync(
+        region: String,
+        document: WeatherDocument,
+        type: WeatherType
+    ): CompletableFuture<WeatherDatum> {
+        val datum = WeatherDatum(region, convertDocumentToHtml(document, type))
+        return CompletableFuture.completedFuture(datum)
+    }
+
 
     @Async
-    override fun convertDocumentToImageAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum> =
-        CompletableFuture.completedFuture(WeatherDatum(region, convertDocumentToImage(document, type)))
+    override fun convertDocumentToImageAsync(
+        region: String,
+        document: WeatherDocument,
+        type: WeatherType
+    ): CompletableFuture<WeatherDatum> {
+        val datum = WeatherDatum(region, convertDocumentToImage(document, type))
+        return CompletableFuture.completedFuture(datum)
+    }
 
     private fun convertDocumentToHtml(document: WeatherDocument, type: WeatherType): String {
         val context = Context(Locale.getDefault(), mapOf("weatherData" to document))

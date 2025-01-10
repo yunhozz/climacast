@@ -28,15 +28,16 @@ object WeatherDataBuffer {
     }
 }
 
-data class WeatherDatum(val region: String, val resource: Any): Comparable<WeatherDatum> {
+data class WeatherDatum(
+    val region: String,
+    val resource: Any
+) : Comparable<WeatherDatum> {
     override fun compareTo(other: WeatherDatum): Int {
         val regionComparison = this.region.compareTo(other.region)
-        if (regionComparison != 0) {
-            return regionComparison
-        }
+        val resourceComparison = this.resource == other.resource
 
         return when {
-            this.resource == other.resource -> 0
+            regionComparison == 0 && resourceComparison -> 0
             else -> 1
         }
     }
