@@ -20,5 +20,4 @@ dependencies {
 	implementation("com.twilio.sdk:twilio:10.6.4")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
