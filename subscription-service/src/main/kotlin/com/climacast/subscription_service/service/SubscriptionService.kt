@@ -11,6 +11,7 @@ import com.climacast.subscription_service.model.repository.SubscriptionRepositor
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -73,8 +74,8 @@ class SubscriptionService(
                 val weatherType = subscription.weatherType
                 val regions = subscription.regions
 
-                val futures = regions.map { region ->
-                    async {
+                val weatherDatumFutures = regions.map { region ->
+                    async(Dispatchers.IO) {
                         val query = WeatherQueryDTO(weatherType, region)
                         val weatherDocument = when (weatherType) {
                             WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
@@ -88,12 +89,12 @@ class SubscriptionService(
                     }
                 }.awaitAll()
 
-                futures.forEach {
-                    WeatherDataBuffer.store(it.get(), subscriptionMethod)
+                weatherDatumFutures.forEach { future ->
+                    WeatherDataBuffer.store(future.get(), subscriptionMethod)
                 }
 
                 regions.forEach { region ->
-                    launch {
+                    launch(Dispatchers.IO) {
                         WeatherDataBuffer.find(region, subscriptionMethod)?.let {
                             subscriptionHandler.send(it)
                         }
