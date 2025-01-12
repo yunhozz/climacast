@@ -174,13 +174,14 @@ class SubscriptionServiceTests {
         println("Total execution time: $time ms")
 
         /*
-        Measure the time taken based on the number of subscriptions
-        1 -> 8ms
-        10 -> 15ms
-        10^2 -> 43ms
-        10^3 -> 161ms
-        10^4 -> 729ms
-        10^5 -> 4679ms
+        Measure the time taken based on the number of subscriptions (Assume that it takes 2 seconds per iteration)
+        1 -> 2015 ms
+        10 -> 2021 ms
+        10^2 -> 2046 ms
+        10^3 -> 2139 ms
+        10^4 -> 2645 ms
+        10^5 -> 5449 ms
+        10^6 -> java.lang.OutOfMemoryError: Java heap space
          */
     }
 }
