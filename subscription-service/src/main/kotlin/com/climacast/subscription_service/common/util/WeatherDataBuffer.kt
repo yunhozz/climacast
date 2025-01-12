@@ -14,17 +14,17 @@ object WeatherDataBuffer {
     }
 
     fun store(datum: WeatherDatum, method: SubscriptionMethod) {
-        val dataSet = weatherData[method]
-        dataSet?.add(datum)
+        weatherData[method]?.add(datum)
     }
 
-    fun find(region: String, method: SubscriptionMethod): Any? {
-        val dataSet = weatherData[method]
-        return dataSet?.firstOrNull { it.region == region }?.resource
-    }
+    fun find(region: String, method: SubscriptionMethod): Any? =
+        weatherData[method]
+            ?.firstOrNull { it.region == region }?.resource
 
     fun clear() {
-        weatherData.clear()
+        weatherData.values.forEach { data ->
+            data.clear()
+        }
     }
 }
 
