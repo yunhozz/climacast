@@ -14,6 +14,12 @@ import com.climacast.subscription_service.model.repository.SubscriptionRepositor
 import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -143,45 +149,51 @@ class SubscriptionServiceTests {
     }
 
     @Test
-    fun measureTimeForHandleMultipleSubscriptions() = runBlocking {
+    fun measureTimeForSendingWeatherInformationToSubscribers() = runBlocking {
         // given
-        val weatherDocument = mock(WeatherDocument::class.java)
-        val subscriptionHandler = mock(SubscriptionHandler::class.java)
-        val weatherDatum = WeatherDatum("region", "resource")
+        val nSubscriptionList = 100000
+        val nRegions = 5
 
-        val numOfSubscription = 100000
-        val subscriptionList = (1..numOfSubscription).map { subscription }
+        val jobs = (1..nSubscriptionList).map {
+            launch {
+                println("Set Subscription Handler on ${Thread.currentThread().name}")
+                delay(100)
 
-        given(subscriptionRepository.findAllByIntervalsAndStatus(any(), anyBoolean()))
-            .willReturn(subscriptionList)
-        given(subscriptionHandlerFactory.createHandlerByMethod(any()))
-            .willReturn(subscriptionHandler)
-        doNothing()
-            .`when`(subscriptionHandler).setSubscriberInfo(any())
-        given(forecastWeatherSearchRepository.findWeatherByTypeAndRegion(any()))
-            .willReturn(weatherDocument)
-        given(documentVisualizeHandler.convertDocumentToHtmlAsync(anyString(), any(), any()))
-            .willReturn(CompletableFuture.completedFuture(weatherDatum))
-        doNothing()
-            .`when`(subscriptionHandler).send(any())
+                (1..nRegions).map {
+                    async(Dispatchers.IO) {
+                        println("Convert Document to Resource on ${Thread.currentThread().name}")
+                        delay(1000)
+                    }
+                }.awaitAll()
+
+                delay(100)
+
+                repeat(nRegions) {
+                    launch(Dispatchers.IO) {
+                        println("Send Weather Data to Subscriber on ${Thread.currentThread().name}")
+                        delay(1000)
+                    }
+                }
+            }
+        }
 
         // when
         val time = measureTimeMillis {
-            subscriptionService.sendForecastWeathersEveryThirtyMinute()
+            jobs.joinAll()
         }
 
         // then
         println("Total execution time: $time ms")
 
         /*
-        Measure the time taken based on the number of subscriptions (Assume that it takes 2 seconds per iteration)
-        1 -> 2015 ms
-        10 -> 2021 ms
-        10^2 -> 2046 ms
-        10^3 -> 2139 ms
-        10^4 -> 2645 ms
-        10^5 -> 5449 ms
-        10^6 -> java.lang.OutOfMemoryError: Java heap space
+        Number of subscriptions : Time
+
+        1    : 2224 ms
+        10   : 2227 ms
+        10^2 : 2243 ms
+        10^3 : 2280 ms
+        10^4 : 2643 ms
+        10^5 : 5022 ms
          */
     }
 }
