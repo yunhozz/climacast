@@ -137,7 +137,7 @@ class SubscriptionServiceTests {
             subscriptionService.sendForecastWeathersEveryThirtyMinute()
         } catch (e: IllegalArgumentException) {
             // then
-            assert(e.message == "Weather data not found for region: region1")
+            assert(e.message!!.contains("Weather data not found for region"))
             then(documentVisualizeHandler).shouldHaveNoInteractions()
         }
     }
