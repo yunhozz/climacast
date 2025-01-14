@@ -99,7 +99,7 @@ class SubscriptionServiceTests {
             .`when`(subscriptionHandler).send(any())
 
         // when
-        subscriptionService.sendForecastWeathersEveryThirtyMinute()
+        subscriptionService.sendEveryThirtyMinute()
 
         // then
         val regionSize = subscription.regions.size
@@ -116,7 +116,7 @@ class SubscriptionServiceTests {
             .willReturn(emptyList())
 
         // when
-        subscriptionService.sendForecastWeathersEveryThirtyMinute()
+        subscriptionService.sendEveryThirtyMinute()
 
         // then
         then(subscriptionHandlerFactory).shouldHaveNoInteractions()
@@ -140,7 +140,7 @@ class SubscriptionServiceTests {
 
         try {
             // when
-            subscriptionService.sendForecastWeathersEveryThirtyMinute()
+            subscriptionService.sendEveryThirtyMinute()
         } catch (e: IllegalArgumentException) {
             // then
             assert(e.message!!.contains("Weather data not found for region"))
