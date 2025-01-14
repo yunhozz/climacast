@@ -1,5 +1,5 @@
-import java.net.URI
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.URI
 
 plugins {
 	kotlin("jvm") version "2.0.0"
@@ -70,6 +70,7 @@ subprojects {
 		testImplementation("org.springframework.boot:spring-boot-starter-test")
 		testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 		testImplementation("org.springframework.kafka:spring-kafka-test")
+		testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	}
 

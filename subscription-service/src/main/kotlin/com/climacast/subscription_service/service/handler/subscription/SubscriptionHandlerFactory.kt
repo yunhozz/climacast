@@ -1,11 +1,10 @@
 package com.climacast.subscription_service.service.handler.subscription
 
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class SubscriptionHandlerFactory @Autowired constructor(handlers: Set<SubscriptionHandler>) {
+class SubscriptionHandlerFactory(handlers: Set<SubscriptionHandler>) {
 
     private val handlerMap = mutableMapOf<SubscriptionMethod, SubscriptionHandler>()
 

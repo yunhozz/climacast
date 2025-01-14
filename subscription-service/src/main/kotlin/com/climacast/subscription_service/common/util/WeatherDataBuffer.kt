@@ -14,29 +14,30 @@ object WeatherDataBuffer {
     }
 
     fun store(datum: WeatherDatum, method: SubscriptionMethod) {
-        val dataSet = weatherData[method]
-        dataSet?.add(datum)
+        weatherData[method]?.add(datum)
     }
 
-    fun find(region: String, method: SubscriptionMethod): Any? {
-        val dataSet = weatherData[method]
-        return dataSet?.firstOrNull { it.region == region }?.resource
-    }
+    fun find(region: String, method: SubscriptionMethod): Any? =
+        weatherData[method]
+            ?.firstOrNull { it.region == region }?.resource
 
     fun clear() {
-        weatherData.clear()
+        weatherData.values.forEach { data ->
+            data.clear()
+        }
     }
 }
 
-data class WeatherDatum(val region: String, val resource: Any): Comparable<WeatherDatum> {
+data class WeatherDatum(
+    val region: String,
+    val resource: Any
+) : Comparable<WeatherDatum> {
     override fun compareTo(other: WeatherDatum): Int {
         val regionComparison = this.region.compareTo(other.region)
-        if (regionComparison != 0) {
-            return regionComparison
-        }
+        val resourceComparison = this.resource == other.resource
 
         return when {
-            this.resource == other.resource -> 0
+            regionComparison == 0 && resourceComparison -> 0
             else -> 1
         }
     }
