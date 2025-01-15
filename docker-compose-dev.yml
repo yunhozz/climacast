@@ -320,7 +320,7 @@ services:
     ports:
       - 19090:9090
     volumes:
-      - ./prometheus-dev.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - climacast-network
 
