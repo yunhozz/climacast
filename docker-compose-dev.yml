@@ -68,11 +68,17 @@ services:
       dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:${GIT_COMMIT_HASH}
 
+  subscription-service:
+    build:
+      context: .
+      dockerfile: subscription-service/Dockerfile
+    image: climacast/subscription-service:${GIT_COMMIT_HASH}
+
   batch-server-blue:
     image: climacast/batch-server:${GIT_COMMIT_HASH}
-    container_name: batch-server-blue
     ports:
-      - 18999:8999
+      - "18998-18999:8999"
+    scale: 2
     environment:
       APPLICATION_PROFILE: dev
     depends_on:
@@ -94,9 +100,9 @@ services:
 
   batch-server-green:
     image: climacast/batch-server:${GIT_COMMIT_HASH}
-    container_name: batch-server-green
     ports:
-      - 28999:8999
+      - "28998-28999:8999"
+    scale: 2
     environment:
       APPLICATION_PROFILE: dev
     depends_on:
@@ -116,23 +122,19 @@ services:
     networks:
       - climacast-network
 
-  subscription-service:
-    build:
-      context: .
-      dockerfile: subscription-service/Dockerfile
-    image: climacast/subscription-service:${GIT_COMMIT_HASH}
-
   subscription-service-blue:
     image: climacast/subscription-service:${GIT_COMMIT_HASH}
-    container_name: subscription-service-blue
     ports:
-      - 18090:8090
+      - "18090-18091:8090"
+    scale: 2
     environment:
       APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
+      - mysql-source
+      - mysql-replica
       - elasticsearch
     healthcheck:
       test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
@@ -146,15 +148,17 @@ services:
 
   subscription-service-green:
     image: climacast/subscription-service:${GIT_COMMIT_HASH}
-    container_name: subscription-service-green
     ports:
-      - 28090:8090
+      - "28090-28091:8090"
+    scale: 2
     environment:
       APPLICATION_PROFILE: dev
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
+      - mysql-source
+      - mysql-replica
       - elasticsearch
     healthcheck:
       test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
@@ -282,6 +286,10 @@ services:
       discovery.type: single-node
       xpack.security.enabled: false
       xpack.security.enrollment.enabled: false
+    deploy:
+      resources:
+        limits:
+          memory: 4g
     networks:
       - climacast-network
 
