@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: config-server/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:config-server-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:config-server
     container_name: config-server
     ports:
       - 8888:8888
@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: eureka-server/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:eureka-server-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:eureka-server
     container_name: eureka-server
     ports:
       - 18761:8761
@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:api-gateway-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:api-gateway
     container_name: api-gateway
     ports:
       - 18000:8000
@@ -68,16 +68,16 @@ services:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server
 
   subscription-service:
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service
 
   batch-server-blue:
-    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server
     ports:
       - "18998-18999:8999"
     scale: 2
@@ -102,7 +102,7 @@ services:
       - climacast-network
 
   batch-server-green:
-    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:batch-server
     ports:
       - "28998-28999:8999"
     scale: 2
@@ -127,7 +127,7 @@ services:
       - climacast-network
 
   subscription-service-blue:
-    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service
     ports:
       - "18090-18091:8090"
     scale: 2
@@ -152,7 +152,7 @@ services:
       - climacast-network
 
   subscription-service-green:
-    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
+    image: ${ECR_REGISTRY}/climacast:subscription-service
     ports:
       - "28090-28091:8090"
     scale: 2
