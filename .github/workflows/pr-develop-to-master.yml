@@ -2,8 +2,7 @@ name: Develop to Master PR Test
 
 on:
   pull_request:
-    branches:
-      - "master"
+    branches: [ "master" ]
 
 jobs:
   test:
@@ -51,13 +50,12 @@ jobs:
             ALL_SERVICES_RUNNING=true
           
             for SERVICE in $SERVICES; do
-              SERVICE_STATUS=$(docker inspect --format='{{json .State.Health.Status}}' "$SERVICE")
-              
-              if [[ "$SERVICE_STATUS" != "\"healthy\"" ]]; then
-                echo "$SERVICE is not ready yet (status: $SERVICE_STATUS)"
+              SERVICE_STATUS=$(docker compose -f docker-compose-dev.yml ps --filter "status=running" --services $SERVICE)
+          
+              if [[ -z "$SERVICE_STATUS" ]]; then
+                echo "$SERVICE is not running yet..."
                 ALL_SERVICES_RUNNING=false
-              else
-                echo "$SERVICE is ready (status: $SERVICE_STATUS)"
+                break
               fi
             done
           
@@ -69,3 +67,6 @@ jobs:
             echo "Waiting for all services to be ready..."
             sleep 6
           done
+          
+          echo "Some services failed to start after 10 attempts."
+          exit 1
