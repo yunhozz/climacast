@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Weather Template</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .icon-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .icon-cell i {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+<h1>Forecast Weather Information</h1>
+<h3>Region: <b th:text="${weatherData.region}"></b></h3>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Time</th>
+        <th>Weather Status</th>
+        <th>Temperature (2m)</th>
+        <th>Temperature (80m)</th>
+        <th>Temperature (120m)</th>
+        <th>Temperature (180m)</th>
+        <th>Wind Speed (10m)</th>
+        <th>Wind Speed (80m)</th>
+        <th>Wind Speed (120m)</th>
+        <th>Wind Speed (180m)</th>
+        <th>Humidity</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="time, iterStat : ${weatherData.time}">
+        <td th:text="${time}"></td>
+        <td class="icon-cell">
+            <i th:class="${T(com.climacast.global.enums.WeatherStatus).valueOf(weatherData.weatherStatus[iterStat.index]).icon}"></i>
+        </td>
+        <td th:text="${weatherData.temperature2m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.temperature180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed10m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed80m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed120m[iterStat.index]}"></td>
+        <td th:text="${weatherData.windSpeed180m[iterStat.index]}"></td>
+        <td th:text="${weatherData.humidity2m[iterStat.index]}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

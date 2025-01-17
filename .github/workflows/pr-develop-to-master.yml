@@ -2,8 +2,7 @@ name: Develop to Master PR Test
 
 on:
   pull_request:
-    branches:
-      - "master"
+    branches: [ "master" ]
 
 jobs:
   test:
@@ -30,6 +29,7 @@ jobs:
           echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
           
           echo "${{ secrets.ENV }}" > .env
+          echo "GIT_COMMIT_HASH=${{ github.sha }}" >> .env
           
           echo 'user nginx;' > nginx/nginx.conf
           echo 'worker_processes auto;' >> nginx/nginx.conf
@@ -50,21 +50,23 @@ jobs:
             ALL_SERVICES_RUNNING=true
           
             for SERVICE in $SERVICES; do
-              SERVICE_STATUS=$(docker inspect --format='{{json .State.Health.Status}}' "$SERVICE")
-              
-              if [[ "$SERVICE_STATUS" != "\"healthy\"" ]]; then
-                echo "$SERVICE is not ready yet (status: $SERVICE_STATUS)"
+              SERVICE_STATUS=$(docker compose -f docker-compose-dev.yml ps --filter "status=running" --services $SERVICE)
+          
+              if [[ -z "$SERVICE_STATUS" ]]; then
+                echo "$SERVICE is not running yet..."
                 ALL_SERVICES_RUNNING=false
-              else
-                echo "$SERVICE is ready (status: $SERVICE_STATUS)"
+                break
               fi
             done
           
             if [[ "$ALL_SERVICES_RUNNING" == true ]]; then
               echo "All services are healthy!"
-              break
+              exit 0
             fi
           
             echo "Waiting for all services to be ready..."
             sleep 6
           done
+          
+          echo "Some services failed to start after 10 attempts."
+          exit 1

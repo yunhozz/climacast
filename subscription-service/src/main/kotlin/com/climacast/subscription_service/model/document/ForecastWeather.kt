@@ -1,15 +1,15 @@
 package com.climacast.subscription_service.model.document
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.Document
-import java.util.UUID
 
-@Document(indexName = "forecast_weather", createIndex = true)
+@Document(indexName = "forecast_weather")
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ForecastWeather(
-    @Id
-    val id: String = UUID.randomUUID().toString(),
     val lat: Double,
     val lon: Double,
+    @Id
     val region: String,
     val time: List<String>?,
     val weatherStatus: List<String>?,
@@ -22,4 +22,6 @@ data class ForecastWeather(
     val windSpeed120m: List<Double>?,
     val windSpeed180m: List<Double>?,
     val humidity2m: List<Int>?
-): WeatherDocument
+): WeatherDocument {
+    override fun getId() = region
+}

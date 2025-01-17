@@ -1,38 +1,38 @@
-package com.climacast.subscription_service.service.handler
+package com.climacast.subscription_service.service.handler.document
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.utils.logger
+import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
-import com.climacast.subscription_service.model.document.WeatherDocument
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-abstract class AbstractWeatherDataHandler: WeatherDataHandler {
+abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
 
     protected val log = logger()
 
-    override fun saveWeathersByMessageType(message: KafkaMessage): Flux<out WeatherDocument> =
+    override fun saveWeathersByMessageType(message: KafkaMessage) {
         when (message) {
             is KafkaMessage.ForecastWeathersMessage -> {
                 makeForecastWeathers(message.data)
-                    .flatMapMany { saveForecastWeathers(it) }
+                    .subscribe { saveForecastWeathers(it) }
             }
             is KafkaMessage.HistoryWeathersMessage -> {
                 makeHistoryWeathers(message.data)
-                    .flatMapMany { saveHistoryWeathers(it) }
+                    .subscribe { saveHistoryWeathers(it) }
             }
             else -> {
                 log.warn("Unsupported message type: ${message::class.simpleName}")
-                Flux.empty()
             }
         }
+    }
 
-    abstract fun saveForecastWeathers(forecastWeathers: List<ForecastWeather>): Flux<ForecastWeather>
+    abstract fun saveForecastWeathers(forecastWeathers: List<ForecastWeather>)
 
-    abstract fun saveHistoryWeathers(historyWeathers: List<HistoryWeather>): Flux<HistoryWeather>
+    abstract fun saveHistoryWeathers(historyWeathers: List<HistoryWeather>)
 
     private fun makeForecastWeathers(data: List<WeatherResponseDTO>): Mono<List<ForecastWeather>> =
         Flux.fromIterable(data)
@@ -41,7 +41,7 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = weather.hourly?.time,
+                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
                     weatherStatus = weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
                     temperature2m = weather.hourly?.temperature_2m,
                     temperature80m = weather.hourly?.temperature_80m,
@@ -63,7 +63,7 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = weather.hourly?.time,
+                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
                     weatherStatus = weather.daily?.let {
                         it.weather_code?.map { code -> WeatherStatus.of(code).name }
                     } ?: weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
@@ -71,8 +71,8 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                     minTemperature2m = weather.daily?.temperature_2m_min,
                     maxApparentTemperature = weather.daily?.apparent_temperature_max,
                     minApparentTemperature = weather.daily?.apparent_temperature_min,
-                    sunrise = weather.daily?.sunrise,
-                    sunset = weather.daily?.sunset,
+                    sunrise = weather.daily?.sunrise?.map { DateTimeConverter.convertTimeFormat(it) },
+                    sunset = weather.daily?.sunset?.map { DateTimeConverter.convertTimeFormat(it) },
                     daylightDuration = weather.daily?.daylight_duration,
                     sunshineDuration = weather.daily?.sunshine_duration,
                     maxUvIndex = weather.daily?.uv_index_max,
