@@ -61,7 +61,7 @@ jobs:
           
             if [[ "$ALL_SERVICES_RUNNING" == true ]]; then
               echo "All services are healthy!"
-              break
+              exit 0
             fi
           
             echo "Waiting for all services to be ready..."
