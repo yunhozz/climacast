@@ -7,6 +7,12 @@ services:
     container_name: config-server
     ports:
       - 8888:8888
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: always
     networks:
       - climacast-network
@@ -20,9 +26,15 @@ services:
     ports:
       - 18761:8761
     environment:
-      APPLICATION_PROFILE: dev
+      APPLICATION_PROFILE: prod
     depends_on:
       - config-server
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -36,10 +48,16 @@ services:
     ports:
       - 18000:8000
     environment:
-      APPLICATION_PROFILE: dev
+      APPLICATION_PROFILE: prod
     depends_on:
       - config-server
       - eureka-server
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8000/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -50,76 +68,104 @@ services:
       dockerfile: batch-server/Dockerfile
     image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
 
-  batch-server-blue:
-    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
-    container_name: batch-server-blue
-    ports:
-      - 18999:8999
-    environment:
-      APPLICATION_PROFILE: dev
-    depends_on:
-      - config-server
-      - eureka-server
-      - api-gateway
-      - mysql-source
-      - mysql-replica
-      - mysql-batch
-    restart: on-failure
-    networks:
-      - climacast-network
-
-  batch-server-green:
-    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
-    container_name: batch-server-green
-    ports:
-      - 28999:8999
-    environment:
-      APPLICATION_PROFILE: dev
-    depends_on:
-      - config-server
-      - eureka-server
-      - api-gateway
-      - mysql-source
-      - mysql-replica
-      - mysql-batch
-    restart: on-failure
-    networks:
-      - climacast-network
-
   subscription-service:
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
     image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
 
-  subscription-service-blue:
-    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
-    container_name: subscription-service-blue
+  batch-server-blue:
+    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
     ports:
-      - 18090:8090
+      - "18998-18999:8999"
+    scale: 2
     environment:
-      APPLICATION_PROFILE: dev
+      APPLICATION_PROFILE: prod
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  batch-server-green:
+    image: ${ECR_REGISTRY}/climacast:batch-server-${GIT_COMMIT_HASH}
+    ports:
+      - "28998-28999:8999"
+    scale: 2
+    environment:
+      APPLICATION_PROFILE: prod
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
+      - mysql-batch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: on-failure
+    networks:
+      - climacast-network
+
+  subscription-service-blue:
+    image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
+    ports:
+      - "18090-18091:8090"
+    scale: 2
+    environment:
+      APPLICATION_PROFILE: prod
+    depends_on:
+      - config-server
+      - eureka-server
+      - api-gateway
+      - mysql-source
+      - mysql-replica
       - elasticsearch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
 
   subscription-service-green:
     image: ${ECR_REGISTRY}/climacast:subscription-service-${GIT_COMMIT_HASH}
-    container_name: subscription-service-green
     ports:
-      - 28090:8090
+      - "28090-28091:8090"
+    scale: 2
     environment:
-      APPLICATION_PROFILE: dev
+      APPLICATION_PROFILE: prod
     depends_on:
       - config-server
       - eureka-server
       - api-gateway
+      - mysql-source
+      - mysql-replica
       - elasticsearch
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: on-failure
     networks:
       - climacast-network
@@ -240,6 +286,10 @@ services:
       discovery.type: single-node
       xpack.security.enabled: false
       xpack.security.enrollment.enabled: false
+    deploy:
+      resources:
+        limits:
+          memory: 4g
     networks:
       - climacast-network
 
@@ -270,7 +320,7 @@ services:
     ports:
       - 19090:9090
     volumes:
-      - ./prometheus-dev.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - climacast-network
 
