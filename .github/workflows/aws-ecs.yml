@@ -40,13 +40,10 @@ jobs:
       - name: Load Properties and Environments from Secrets and Process
         run: |
           mkdir -p ./global/src/main/resources
-
           touch ./global/src/main/resources/application.properties
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
-
           touch ./config-server/src/main/resources/application-key.yml
           echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
-
           echo "${{ secrets.ENV }}" > .env
 
       - name: Build and push Docker images to ECR
@@ -55,31 +52,24 @@ jobs:
         run: |
           echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
           echo "GIT_COMMIT_HASH=${{ env.GIT_COMMIT_HASH }}" >> .env
-
           SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
 
           for SERVICE in ${SERVICES[@]}; do
             echo "Building image for $SERVICE"
-
             docker compose build $SERVICE
-            docker image ls
             docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$SERVICE
-
-            echo "$SERVICE-image=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$SERVICE" >> $GITHUB_ENV
           done
+          
+          docker image ls
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      - name: Deploy each Service on ECS
+        run : |
+          SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
+          
+          for SERVICE in ${SERVICES[@]}; do
+            echo "Deploying $SERVICE to ECS"
+            aws ecs update-service \
+              --cluster ${{ env.ECS_CLUSTER }} \
+              --service $SERVICE \
+              --task-definition file://${{ env.ECS_TASK_DEFINITION }}
+          done
