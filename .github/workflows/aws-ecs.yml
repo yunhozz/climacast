@@ -9,8 +9,8 @@ env:
   ECR_REPOSITORY: climacast
   ECS_SERVICE: climacast-service
   ECS_CLUSTER: climacast-cluster
-  ECS_TASK_DEFINITION: climacast-task-revision.json
-  CONTAINER_NAME: climacast-container
+  ECS_TASK_DEFINITION: climacast-task
+  ECS_TASK_REVISION: 2
   GIT_COMMIT_HASH: ${{ github.sha }}
 
 permissions:
@@ -70,6 +70,6 @@ jobs:
             echo "Deploying $SERVICE to ECS"
             aws ecs update-service \
               --cluster ${{ env.ECS_CLUSTER }} \
-              --service $SERVICE \
-              --task-definition climacast-task:2
+              --service ${{ env.ECS_SERVICE }} \
+              --task-definition ${{ env.ECS_TASK_DEFINITION }}:${{ env.ECS_TASK_REVISION }}
           done
