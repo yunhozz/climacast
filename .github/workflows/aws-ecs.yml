@@ -71,5 +71,5 @@ jobs:
             aws ecs update-service \
               --cluster ${{ env.ECS_CLUSTER }} \
               --service $SERVICE \
-              --task-definition file://${{ env.ECS_TASK_DEFINITION }}
+              --task-definition climacast-task:2
           done
