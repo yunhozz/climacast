@@ -62,14 +62,9 @@ jobs:
           
           docker image ls
 
-      - name: Deploy each Service on ECS
+      - name: Deploy Services on ECS
         run : |
-          SERVICES=("config-server" "eureka-server" "api-gateway" "batch-server" "subscription-service")
-          
-          for SERVICE in ${SERVICES[@]}; do
-            echo "Deploying $SERVICE to ECS"
-            aws ecs update-service \
-              --cluster ${{ env.ECS_CLUSTER }} \
-              --service ${{ env.ECS_SERVICE }} \
-              --task-definition ${{ env.ECS_TASK_DEFINITION }}:${{ env.ECS_TASK_REVISION }}
-          done
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ env.ECS_TASK_DEFINITION }}:${{ env.ECS_TASK_REVISION }}
