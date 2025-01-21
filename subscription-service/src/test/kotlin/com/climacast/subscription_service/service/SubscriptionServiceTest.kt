@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.system.measureTimeMillis
 
 @ExtendWith(MockitoExtension::class)
-class SubscriptionServiceTests {
+class SubscriptionServiceTest {
     @InjectMocks
     private lateinit var subscriptionService: SubscriptionService
     @Mock
