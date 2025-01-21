@@ -1,24 +1,24 @@
-name: Deploy to Amazon ECS
+name: Deploy Batch Server to Amazon ECS
 
 on:
   push:
     branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "eureka-server/**" ]
+#    paths: [ "batch-server/**" ]
 
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: climacast
-  ECS_SERVICE: eureka-server
+  ECS_SERVICE: batch-server
   ECS_CLUSTER: climacast-cluster
-  ECS_TASK_DEFINITION: .aws/eureka-server-task-definition.json
-  CONTAINER_NAME: eureka-server-container
+  ECS_TASK_DEFINITION: .aws/batch-server-task-definition.json
+  CONTAINER_NAME: batch-server-container
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-    name: Deploy
+    name: Batch Server Deploy
     runs-on: ubuntu-latest
     environment: production
 
@@ -37,15 +37,29 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Load Properties and Environments from Secrets and Process
+        run: |
+          mkdir -p ./global/src/main/resources
+          touch ./global/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
+          touch ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.ENV }}" > .env
+
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
+          echo "GIT_COMMIT_HASH=${{ env.GIT_COMMIT_HASH }}" >> .env
+          
+          SERVICE="batch-server"
+          
+          docker compose build $SERVICE
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
