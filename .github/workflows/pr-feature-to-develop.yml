@@ -2,8 +2,7 @@ name: Feature to Develop PR Test
 
 on:
   pull_request:
-    branches:
-      - "develop"
+    branches: [ "develop" ]
 
 jobs:
   test:
@@ -18,7 +17,7 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Grant execute permission for gradlew
+      - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
       - name: Cache Gradle packages
@@ -31,7 +30,7 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Load Properties and Environments from secrets and process
+      - name: Load Properties and Environments from Secrets and Process
         run: |
           mkdir -p ./global/src/main/resources
           touch ./global/src/main/resources/application.properties
@@ -43,7 +42,7 @@ jobs:
           docker compose -f docker-compose-db.yml --env-file .env up -d
           docker compose -f docker-compose-db.yml ps
 
-      - name: Wait for services to be ready
+      - name: Wait for Services to be Ready
         run: |
           for i in {1..10}; do
             SERVICES=$(docker compose -f docker-compose-db.yml ps --services)
