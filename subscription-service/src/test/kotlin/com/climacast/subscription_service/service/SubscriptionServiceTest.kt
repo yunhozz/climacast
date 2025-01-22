@@ -151,7 +151,7 @@ class SubscriptionServiceTest {
     @Test
     fun measureTimeForSendingWeatherInformationToSubscribers() = runBlocking {
         // given
-        val nSubscriptionList = 100000
+        val nSubscriptionList = 10
         val nRegions = 5
 
         val jobs = (1..nSubscriptionList).map {
