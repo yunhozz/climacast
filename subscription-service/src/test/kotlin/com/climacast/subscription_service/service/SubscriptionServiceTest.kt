@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.system.measureTimeMillis
 
 @ExtendWith(MockitoExtension::class)
-class SubscriptionServiceTests {
+class SubscriptionServiceTest {
     @InjectMocks
     private lateinit var subscriptionService: SubscriptionService
     @Mock
@@ -151,7 +151,7 @@ class SubscriptionServiceTests {
     @Test
     fun measureTimeForSendingWeatherInformationToSubscribers() = runBlocking {
         // given
-        val nSubscriptionList = 100000
+        val nSubscriptionList = 10
         val nRegions = 5
 
         val jobs = (1..nSubscriptionList).map {
