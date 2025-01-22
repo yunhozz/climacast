@@ -2,8 +2,8 @@ name: Deploy Batch Server to Amazon ECS
 
 on:
   push:
-    branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "batch-server/**" ]
+    branches: [ "master" ]
+    paths: [ "batch-server/**" ]
 
 env:
   AWS_REGION: ap-northeast-2

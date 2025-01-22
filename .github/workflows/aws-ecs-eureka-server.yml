@@ -2,8 +2,8 @@ name: Deploy Eureka Server to Amazon ECS
 
 on:
   push:
-    branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "eureka-server/**" ]
+    branches: [ "master" ]
+    paths: [ "eureka-server/**" ]
 
 env:
   AWS_REGION: ap-northeast-2

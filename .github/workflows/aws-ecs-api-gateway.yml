@@ -2,8 +2,8 @@ name: Deploy API Gateway to Amazon ECS
 
 on:
   push:
-    branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "api-gateway/**" ]
+    branches: [ "master" ]
+    paths: [ "api-gateway/**" ]
 
 env:
   AWS_REGION: ap-northeast-2

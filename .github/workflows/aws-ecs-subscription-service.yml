@@ -2,8 +2,8 @@ name: Deploy Subscription Service to Amazon ECS
 
 on:
   push:
-    branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "subscription-service/**" ]
+    branches: [ "master" ]
+    paths: [ "subscription-service/**" ]
 
 env:
   AWS_REGION: ap-northeast-2

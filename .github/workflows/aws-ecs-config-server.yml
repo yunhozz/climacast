@@ -2,8 +2,8 @@ name: Deploy Config Server to Amazon ECS
 
 on:
   push:
-    branches: [ "26-create-aws-ecs-deployment" ]
-#    paths: [ "config-server/**" ]
+    branches: [ "master" ]
+    paths: [ "config-server/**" ]
 
 env:
   AWS_REGION: ap-northeast-2
