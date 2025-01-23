@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-source-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-source
+  template:
+    metadata:
+      labels:
+        app: mysql-source
+    spec:
+      containers:
+        - name: mysql-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: source-data
+            - mountPath: /var/lib/mysql-files
+              name: source-logs
+      volumes:
+        - name: source-data
+          persistentVolumeClaim:
+            claimName: mysql-source-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-replica-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-replica
+  template:
+    metadata:
+      labels:
+        app: mysql-replica
+    spec:
+      containers:
+        - name: mysql-replica
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: replica-data
+            - mountPath: /var/lib/mysql-files
+              name: replica-logs
+      volumes:
+        - name: replica-data
+          persistentVolumeClaim:
+            claimName: mysql-replica-pvc
