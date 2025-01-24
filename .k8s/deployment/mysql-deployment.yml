@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: mysql-source-deployment
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: mysql-source
@@ -44,7 +43,6 @@ kind: Deployment
 metadata:
   name: mysql-replica-deployment
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: mysql-replica
@@ -79,3 +77,37 @@ spec:
         - name: replica-data
           persistentVolumeClaim:
             claimName: mysql-replica-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-batch-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mysql-batch
+  template:
+    metadata:
+      labels:
+        app: mysql-batch
+    spec:
+      containers:
+        - name: mysql-batch
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: batch-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: batch-data
+          persistentVolumeClaim:
+            claimName: mysql-batch-pvc

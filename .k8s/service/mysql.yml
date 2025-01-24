@@ -23,3 +23,16 @@ spec:
       port: 3308
       targetPort: 3306
   type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-batch
+spec:
+  selector:
+    app: mysql-batch
+  ports:
+    - protocol: TCP
+      port: 3309
+      targetPort: 3306
+  type: ClusterIP
