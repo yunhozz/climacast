@@ -26,11 +26,15 @@ spec:
           ports:
             - containerPort: 3306
           volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: source-data
-            - mountPath: /var/lib/mysql-files
-              name: source-logs
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: source-data
+              mountPath: /var/lib/mysql
       volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-source-configmap
         - name: source-data
           persistentVolumeClaim:
             claimName: mysql-source-pvc
@@ -63,11 +67,15 @@ spec:
           ports:
             - containerPort: 3306
           volumeMounts:
-            - mountPath: /var/lib/mysql
-              name: replica-data
-            - mountPath: /var/lib/mysql-files
-              name: replica-logs
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: replica-data
+              mountPath: /var/lib/mysql
       volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-replica-configmap
         - name: replica-data
           persistentVolumeClaim:
             claimName: mysql-replica-pvc
