@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

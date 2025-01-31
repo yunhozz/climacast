@@ -1,3 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-source
+spec:
+  selector:
+    app: mysql-source
+  type: ClusterIP
+  ports:
+    - port: 3307
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-replica
+spec:
+  selector:
+    app: mysql-replica
+  type: ClusterIP
+  ports:
+    - port: 3308
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-batch
+spec:
+  selector:
+    app: mysql-batch
+  type: ClusterIP
+  ports:
+    - port: 3309
+      targetPort: 3306
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
