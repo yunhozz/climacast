@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: zoo-pv-0
+  name: zookeeper-pv-0
 spec:
   capacity:
-    storage: 10Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zoo-pv"
+  storageClassName: "zookeeper-pv"
   hostPath:
     path: /data/
     type: DirectoryOrCreate
@@ -16,14 +16,14 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: zoo-pv-1
+  name: zookeeper-pv-1
 spec:
   capacity:
-    storage: 10Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zoo-pv"
+  storageClassName: "zookeeper-pv"
   hostPath:
     path: /data/
     type: DirectoryOrCreate
@@ -31,14 +31,14 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: zoo-pv-2
+  name: zookeeper-pv-2
 spec:
   capacity:
-    storage: 10Gi
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zoo-pv"
+  storageClassName: "zookeeper-pv"
   hostPath:
     path: /data/
     type: DirectoryOrCreate
