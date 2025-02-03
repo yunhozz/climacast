@@ -26,6 +26,16 @@ spec:
     - port: 2181
       name: client
 ---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zookeeper-pdb
+spec:
+  selector:
+    matchLabels:
+      app: zookeeper
+  maxUnavailable: 1
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -38,22 +48,24 @@ spec:
   replicas: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: OrderedReady
+  podManagementPolicy: Parallel
   template:
     metadata:
       labels:
         app: zookeeper
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: "app"
-                    operator: In
-                    values:
-                      - zookeeper
-              topologyKey: "kubernetes.io/hostname"
+#      affinity:
+#        podAntiAffinity:
+#          preferredDuringSchedulingIgnoredDuringExecution:
+#            - weight: 100
+#              podAffinityTerm:
+#                labelSelector:
+#                  matchExpressions:
+#                    - key: "app"
+#                      operator: In
+#                      values:
+#                        - zookeeper
+#                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: kubernetes-zookeeper
           imagePullPolicy: Always
@@ -72,24 +84,24 @@ spec:
           command:
             - sh
             - -c
-            - "start-zookeeper \
-          --servers=3 \
-          --data_dir=/var/lib/zookeeper/data \
-          --data_log_dir=/var/lib/zookeeper/data/log \
-          --conf_dir=/opt/zookeeper/conf \
-          --client_port=2181 \
-          --election_port=3888 \
-          --server_port=2888 \
-          --tick_time=2000 \
-          --init_limit=10 \
-          --sync_limit=5 \
-          --heap=512M \
-          --max_client_cnxns=60 \
-          --snap_retain_count=3 \
-          --purge_interval=12 \
-          --max_session_timeout=40000 \
-          --min_session_timeout=4000 \
-          --log_level=INFO"
+            - start-zookeeper \
+              --servers=3 \
+              --data_dir=/var/lib/zookeeper/data \
+              --data_log_dir=/var/lib/zookeeper/data/log \
+              --conf_dir=/opt/zookeeper/conf \
+              --client_port=2181 \
+              --election_port=3888 \
+              --server_port=2888 \
+              --tick_time=2000 \
+              --init_limit=10 \
+              --sync_limit=5 \
+              --heap=512M \
+              --max_client_cnxns=60 \
+              --snap_retain_count=3 \
+              --purge_interval=12 \
+              --max_session_timeout=40000 \
+              --min_session_timeout=4000 \
+              --log_level=INFO
           readinessProbe:
             exec:
               command:
@@ -114,7 +126,7 @@ spec:
         name: datadir
       spec:
         accessModes: [ "ReadWriteOnce" ]
-        storageClassName: "zoo-pv"
+        storageClassName: "zookeeper-pv"
         resources:
           requests:
-            storage: 10Gi
+            storage: 5Gi
