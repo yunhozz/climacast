@@ -48,7 +48,7 @@ spec:
   replicas: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: Parallel
+  podManagementPolicy: OrderedReady
   template:
     metadata:
       labels:
@@ -84,7 +84,7 @@ spec:
           command:
             - sh
             - -c
-            - start-zookeeper \
+            - "start-zookeeper \
               --servers=3 \
               --data_dir=/var/lib/zookeeper/data \
               --data_log_dir=/var/lib/zookeeper/data/log \
@@ -101,7 +101,7 @@ spec:
               --purge_interval=12 \
               --max_session_timeout=40000 \
               --min_session_timeout=4000 \
-              --log_level=INFO
+              --log_level=INFO"
           readinessProbe:
             exec:
               command:
