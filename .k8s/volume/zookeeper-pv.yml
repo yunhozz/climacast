@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zookeeper-pv"
+  storageClassName: zookeeper-pv
   hostPath:
     path: /data/
     type: DirectoryOrCreate
@@ -23,7 +23,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zookeeper-pv"
+  storageClassName: zookeeper-pv
   hostPath:
     path: /data/
     type: DirectoryOrCreate
@@ -38,7 +38,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
-  storageClassName: "zookeeper-pv"
+  storageClassName: zookeeper-pv
   hostPath:
     path: /data/
     type: DirectoryOrCreate
