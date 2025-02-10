@@ -21,7 +21,6 @@ spec:
   selector:
     app: zookeeper
   type: ClusterIP
-  clusterIP: None
   ports:
     - port: 2181
       name: client
@@ -56,20 +55,18 @@ spec:
     spec:
       affinity:
         podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: "app"
-                      operator: In
-                      values:
-                        - zookeeper
-                topologyKey: "kubernetes.io/hostname"
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - zookeeper
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: kubernetes-zookeeper
           imagePullPolicy: Always
-          image: "k8s.gcr.io/kubernetes-zookeeper:1.0-3.4.10"
+          image: "registry.k8s.io/kubernetes-zookeeper:1.0-3.4.10"
           resources:
             requests:
               memory: "1Gi"
@@ -125,8 +122,9 @@ spec:
     - metadata:
         name: datadir
       spec:
-        accessModes: [ "ReadWriteOnce" ]
-        storageClassName: "zookeeper-pv"
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: zookeeper-pv
         resources:
           requests:
             storage: 5Gi
