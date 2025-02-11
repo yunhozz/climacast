@@ -5,16 +5,17 @@ metadata:
 spec:
   selector:
     app: redis
-  type: ClusterIP
+  clusterIP: None
   ports:
     - port: 6379
-      targetPort: 6379
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: redis-deployment
+  name: redis-statefulset
 spec:
+  serviceName: redis
+  replicas: 3
   selector:
     matchLabels:
       app: redis
@@ -23,8 +24,30 @@ spec:
       labels:
         app: redis
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - redis
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: redis
           image: redis:latest
           ports:
             - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

@@ -5,16 +5,22 @@ metadata:
 spec:
   selector:
     app: elasticsearch
-  type: ClusterIP
+  clusterIP: None
   ports:
-    - port: 9200
-      targetPort: 9200
+    - name: http
+      port: 9200
+    - name: transport
+      port: 9300
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: elasticsearch-deployment
+  name: elasticsearch-statefulset
+  labels:
+    app: elasticsearch
 spec:
+  serviceName: elasticsearch
+  replicas: 3
   selector:
     matchLabels:
       app: elasticsearch
@@ -23,28 +29,44 @@ spec:
       labels:
         app: elasticsearch
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - elasticsearch
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: elasticsearch
-          image: elasticsearch:8.16.1
-          imagePullPolicy: IfNotPresent
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
           ports:
             - containerPort: 9200
+              name: http
+            - containerPort: 9300
+              name: transport
           env:
-            - name: discovery.type
-              value: single-node
+            - name: discovery.seed_hosts
+              value: "elasticsearch-statefulset-0.elasticsearch,elasticsearch-statefulset-1.elasticsearch,elasticsearch-statefulset-2.elasticsearch"
+            - name: cluster.initial_master_nodes
+              value: "elasticsearch-statefulset-0,elasticsearch-statefulset-1,elasticsearch-statefulset-2"
+            - name: ES_JAVA_OPTS
+              value: "-Xms300m -Xmx300m"
             - name: xpack.security.enabled
               value: "false"
             - name: xpack.security.enrollment.enabled
               value: "false"
-            - name: ES_JAVA_OPTS
-              value: "-Xms1g -Xmx1g"
           volumeMounts:
-            - name: elasticsearch-data
-              mountPath: /usr/share/elasticsearch/data
-          resources:
-            limits:
-              memory: "4Gi"
-      volumes:
-        - name: elasticsearch-data
-          persistentVolumeClaim:
-            claimName: elasticsearch-pvc
+            - name: es-data
+              mountPath: /var/data/elasticsearch
+  volumeClaimTemplates:
+    - metadata:
+        name: es-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
