@@ -5,7 +5,6 @@ metadata:
 spec:
   selector:
     app: mysql-source
-  type: ClusterIP
   ports:
     - port: 3307
       targetPort: 3306
@@ -17,7 +16,6 @@ metadata:
 spec:
   selector:
     app: mysql-replica
-  type: ClusterIP
   ports:
     - port: 3308
       targetPort: 3306
@@ -29,16 +27,17 @@ metadata:
 spec:
   selector:
     app: mysql-batch
-  type: ClusterIP
   ports:
     - port: 3309
       targetPort: 3306
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mysql-source-deployment
+  name: mysql-source-statefulset
 spec:
+  serviceName: mysql-source
+  replicas: 1
   selector:
     matchLabels:
       app: mysql-source
@@ -70,15 +69,23 @@ spec:
         - name: mysql-config
           configMap:
             name: mysql-source-configmap
-        - name: source-data
-          persistentVolumeClaim:
-            claimName: mysql-source-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: source-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mysql-replica-deployment
+  name: mysql-replica-statefulset
 spec:
+  serviceName: mysql-replica
+  replicas: 3
   selector:
     matchLabels:
       app: mysql-replica
@@ -110,15 +117,23 @@ spec:
         - name: mysql-config
           configMap:
             name: mysql-replica-configmap
-        - name: replica-data
-          persistentVolumeClaim:
-            claimName: mysql-replica-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: replica-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mysql-batch-deployment
+  name: mysql-batch-statefulset
 spec:
+  serviceName: mysql-batch
+  replicas: 1
   selector:
     matchLabels:
       app: mysql-batch
@@ -143,7 +158,12 @@ spec:
           volumeMounts:
             - name: batch-data
               mountPath: /var/lib/mysql
-      volumes:
-        - name: batch-data
-          persistentVolumeClaim:
-            claimName: mysql-batch-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: batch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
