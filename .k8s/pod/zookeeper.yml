@@ -1,49 +1,51 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: zookeeper-hs
+  name: zk-hs
+  labels:
+    app: zk
 spec:
-  selector:
-    app: zookeeper
-  type: ClusterIP
-  clusterIP: None
   ports:
     - port: 2888
       name: server
     - port: 3888
       name: leader-election
+  clusterIP: None
+  selector:
+    app: zk
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: zookeeper-cs
+  name: zk-cs
+  labels:
+    app: zk
 spec:
-  selector:
-    app: zookeeper
-  type: ClusterIP
   ports:
     - port: 2181
       name: client
+  selector:
+    app: zk
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: zookeeper-pdb
+  name: zk-pdb
 spec:
   selector:
     matchLabels:
-      app: zookeeper
+      app: zk
   maxUnavailable: 1
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: zookeeper-statefulset
+  name: zk-statefulset
 spec:
   selector:
     matchLabels:
-      app: zookeeper
-  serviceName: zookeeper-hs
+      app: zk
+  serviceName: zk-hs
   replicas: 3
   updateStrategy:
     type: RollingUpdate
@@ -51,7 +53,7 @@ spec:
   template:
     metadata:
       labels:
-        app: zookeeper
+        app: zk
     spec:
       affinity:
         podAntiAffinity:
@@ -61,7 +63,7 @@ spec:
                   - key: "app"
                     operator: In
                     values:
-                      - zookeeper
+                      - zk
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: kubernetes-zookeeper
@@ -82,23 +84,23 @@ spec:
             - sh
             - -c
             - "start-zookeeper \
-              --servers=3 \
-              --data_dir=/var/lib/zookeeper/data \
-              --data_log_dir=/var/lib/zookeeper/data/log \
-              --conf_dir=/opt/zookeeper/conf \
-              --client_port=2181 \
-              --election_port=3888 \
-              --server_port=2888 \
-              --tick_time=2000 \
-              --init_limit=10 \
-              --sync_limit=5 \
-              --heap=512M \
-              --max_client_cnxns=60 \
-              --snap_retain_count=3 \
-              --purge_interval=12 \
-              --max_session_timeout=40000 \
-              --min_session_timeout=4000 \
-              --log_level=INFO"
+            --servers=3 \
+            --data_dir=/var/lib/zookeeper/data \
+            --data_log_dir=/var/lib/zookeeper/data/log \
+            --conf_dir=/opt/zookeeper/conf \
+            --client_port=2181 \
+            --election_port=3888 \
+            --server_port=2888 \
+            --tick_time=2000 \
+            --init_limit=10 \
+            --sync_limit=5 \
+            --heap=512M \
+            --max_client_cnxns=60 \
+            --snap_retain_count=3 \
+            --purge_interval=12 \
+            --max_session_timeout=40000 \
+            --min_session_timeout=4000 \
+            --log_level=INFO"
           readinessProbe:
             exec:
               command:
@@ -118,6 +120,9 @@ spec:
           volumeMounts:
             - name: datadir
               mountPath: /var/lib/zookeeper
+      securityContext:
+        runAsUser: 0
+        fsGroup: 0
   volumeClaimTemplates:
     - metadata:
         name: datadir

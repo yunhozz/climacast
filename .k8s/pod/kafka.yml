@@ -5,7 +5,6 @@ metadata:
 spec:
   selector:
     app: kafka
-  type: ClusterIP
   clusterIP: None
   ports:
     - port: 9092
@@ -55,7 +54,7 @@ spec:
             - name: KAFKA_ADVERTISED_LISTENERS
               value: PLAINTEXT://$(MY_POD_NAME).kafka.default.svc.cluster.local:9092
             - name: KAFKA_ZOOKEEPER_CONNECT
-              value: zookeeper-statefulset-0.zookeeper-hs.default.svc.cluster.local:2181,zookeeper-statefulset-1.zookeeper-hs.default.svc.cluster.local:2181,zookeeper-statefulset-1.zookeeper-hs.default.svc.cluster.local:2181
+              value: zk-statefulset-0.zk-hs.default.svc.cluster.local:2181,zk-statefulset-1.zk-hs.default.svc.cluster.local:2181,zk-statefulset-2.zk-hs.default.svc.cluster.local:2181
             - name: KAFKA_LISTENERS
               value: PLAINTEXT://:9092
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
