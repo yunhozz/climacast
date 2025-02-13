@@ -167,3 +167,33 @@ spec:
         resources:
           requests:
             storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-source-configmap
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=1
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-replica-configmap
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=2
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
