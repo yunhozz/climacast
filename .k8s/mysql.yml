@@ -63,21 +63,15 @@ spec:
             - name: mysql-config
               mountPath: /etc/mysql/conf.d
               readOnly: true
-            - name: source-data
+            - name: mysql-source-data
               mountPath: /var/lib/mysql
       volumes:
         - name: mysql-config
           configMap:
             name: mysql-source-configmap
-  volumeClaimTemplates:
-    - metadata:
-        name: source-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
+        - name: mysql-source-data
+          persistentVolumeClaim:
+            claimName: mysql-source-pvc
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -111,21 +105,25 @@ spec:
             - name: mysql-config
               mountPath: /etc/mysql/conf.d
               readOnly: true
-            - name: replica-data
+            - name: mysql-replica-data
               mountPath: /var/lib/mysql
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-replica
       volumes:
         - name: mysql-config
           configMap:
             name: mysql-replica-configmap
-  volumeClaimTemplates:
-    - metadata:
-        name: replica-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
+        - name: mysql-replica-data
+          persistentVolumeClaim:
+            claimName: mysql-replica-pvc
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -133,7 +131,7 @@ metadata:
   name: mysql-batch-statefulset
 spec:
   serviceName: mysql-batch
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: mysql-batch
@@ -156,17 +154,22 @@ spec:
           ports:
             - containerPort: 3306
           volumeMounts:
-            - name: batch-data
+            - name: mysql-batch-data
               mountPath: /var/lib/mysql
-  volumeClaimTemplates:
-    - metadata:
-        name: batch-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 5Gi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-batch
+      volumes:
+        - name: mysql-batch-data
+          persistentVolumeClaim:
+            claimName: mysql-batch-pvc
 ---
 apiVersion: v1
 kind: ConfigMap
