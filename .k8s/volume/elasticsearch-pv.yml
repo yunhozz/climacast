@@ -1,0 +1,59 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: es-storage
+  labels:
+    app: elasticsearch
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: es-pv-0
+  labels:
+    app: elasticsearch
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: es-storage
+  hostPath:
+    path: /es/data_0
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: es-pv-1
+  labels:
+    app: elasticsearch
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: es-storage
+  hostPath:
+    path: /es/data_1
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: es-pv-2
+  labels:
+    app: elasticsearch
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: es-storage
+  hostPath:
+    path: /es/data_2
+    type: DirectoryOrCreate

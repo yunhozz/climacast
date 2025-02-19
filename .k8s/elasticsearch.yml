@@ -15,7 +15,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: elasticsearch-statefulset
+  name: elasticsearch
   labels:
     app: elasticsearch
 spec:
@@ -49,9 +49,9 @@ spec:
               name: transport
           env:
             - name: discovery.seed_hosts
-              value: "elasticsearch-statefulset-0.elasticsearch,elasticsearch-statefulset-1.elasticsearch,elasticsearch-statefulset-2.elasticsearch"
+              value: "elasticsearch-0.elasticsearch,elasticsearch-1.elasticsearch,elasticsearch-2.elasticsearch"
             - name: cluster.initial_master_nodes
-              value: "elasticsearch-statefulset-0,elasticsearch-statefulset-1,elasticsearch-statefulset-2"
+              value: "elasticsearch-0,elasticsearch-1,elasticsearch-2"
             - name: ES_JAVA_OPTS
               value: "-Xms300m -Xmx300m"
             - name: xpack.security.enabled
@@ -67,6 +67,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
+        storageClassName: es-storage
         resources:
           requests:
-            storage: 1Gi
+            storage: 5Gi
