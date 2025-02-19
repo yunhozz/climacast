@@ -27,20 +27,10 @@ spec:
   selector:
     app: zk
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: zk-pdb
-spec:
-  selector:
-    matchLabels:
-      app: zk
-  maxUnavailable: 1
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: zk-statefulset
+  name: zk
 spec:
   selector:
     matchLabels:
@@ -118,18 +108,28 @@ spec:
             initialDelaySeconds: 10
             timeoutSeconds: 5
           volumeMounts:
-            - name: datadir
+            - name: zkdir
               mountPath: /var/lib/zookeeper
       securityContext:
         runAsUser: 0
         fsGroup: 0
   volumeClaimTemplates:
     - metadata:
-        name: datadir
+        name: zkdir
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: zookeeper-pv
+        storageClassName: zk-storage
         resources:
           requests:
             storage: 5Gi
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  selector:
+    matchLabels:
+      app: zk
+  maxUnavailable: 1

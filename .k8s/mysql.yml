@@ -34,7 +34,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mysql-source-statefulset
+  name: mysql-source
 spec:
   serviceName: mysql-source
   replicas: 1
@@ -69,14 +69,21 @@ spec:
         - name: mysql-config
           configMap:
             name: mysql-source-configmap
-        - name: mysql-source-data
-          persistentVolumeClaim:
-            claimName: mysql-source-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-source-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-storage
+        resources:
+          requests:
+            storage: 5Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mysql-replica-statefulset
+  name: mysql-replica
 spec:
   serviceName: mysql-replica
   replicas: 3
@@ -88,6 +95,16 @@ spec:
       labels:
         app: mysql-replica
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-replica
       containers:
         - name: mysql-replica
           image: mysql:latest
@@ -107,28 +124,25 @@ spec:
               readOnly: true
             - name: mysql-replica-data
               mountPath: /var/lib/mysql
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: kubernetes.io/hostname
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - mysql-replica
       volumes:
         - name: mysql-config
           configMap:
             name: mysql-replica-configmap
-        - name: mysql-replica-data
-          persistentVolumeClaim:
-            claimName: mysql-replica-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-replica-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-storage
+        resources:
+          requests:
+            storage: 5Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: mysql-batch-statefulset
+  name: mysql-batch
 spec:
   serviceName: mysql-batch
   replicas: 3
@@ -140,6 +154,16 @@ spec:
       labels:
         app: mysql-batch
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-batch
       containers:
         - name: mysql-batch
           image: mysql:latest
@@ -156,20 +180,16 @@ spec:
           volumeMounts:
             - name: mysql-batch-data
               mountPath: /var/lib/mysql
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - topologyKey: kubernetes.io/hostname
-              labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - mysql-batch
-      volumes:
-        - name: mysql-batch-data
-          persistentVolumeClaim:
-            claimName: mysql-batch-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-batch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-storage
+        resources:
+          requests:
+            storage: 5Gi
 ---
 apiVersion: v1
 kind: ConfigMap
