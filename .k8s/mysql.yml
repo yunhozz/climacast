@@ -86,7 +86,7 @@ metadata:
   name: mysql-replica
 spec:
   serviceName: mysql-replica
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: mysql-replica
@@ -105,6 +105,7 @@ spec:
                     operator: In
                     values:
                       - mysql-replica
+                      - mysql-source
       containers:
         - name: mysql-replica
           image: mysql:latest
@@ -145,7 +146,7 @@ metadata:
   name: mysql-batch
 spec:
   serviceName: mysql-batch
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: mysql-batch
