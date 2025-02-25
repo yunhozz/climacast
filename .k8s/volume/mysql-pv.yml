@@ -12,7 +12,7 @@ kind: PersistentVolume
 metadata:
   name: mysql-source-pv
   labels:
-    app: mysql
+    app: mysql-source
 spec:
   capacity:
     storage: 5Gi
@@ -28,7 +28,7 @@ kind: PersistentVolume
 metadata:
   name: mysql-replica-pv-0
   labels:
-    app: mysql
+    app: mysql-replica
 spec:
   capacity:
     storage: 5Gi
@@ -44,7 +44,7 @@ kind: PersistentVolume
 metadata:
   name: mysql-replica-pv-1
   labels:
-    app: mysql
+    app: mysql-replica
 spec:
   capacity:
     storage: 5Gi
@@ -58,9 +58,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mysql-replica-pv-2
+  name: mysql-batch-pv
   labels:
-    app: mysql
+    app: mysql-batch
 spec:
   capacity:
     storage: 5Gi
@@ -69,52 +69,4 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: mysql-storage
   hostPath:
-    path: /mysql/mysql_data/replica_2
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-batch-pv-0
-  labels:
-    app: mysql
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
-  hostPath:
-    path: /mysql/mysql_data/batch_0
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-batch-pv-1
-  labels:
-    app: mysql
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
-  hostPath:
-    path: /mysql/mysql_data/batch_1
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-batch-pv-2
-  labels:
-    app: mysql
-spec:
-  capacity:
-    storage: 5Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
-  hostPath:
-    path: /mysql/mysql_data/batch_2
+    path: /mysql/mysql_data/batch

@@ -73,6 +73,9 @@ spec:
     - metadata:
         name: mysql-source-data
       spec:
+        selector:
+          matchLabels:
+            app: mysql-source
         accessModes:
           - ReadWriteOnce
         storageClassName: mysql-storage
@@ -133,6 +136,9 @@ spec:
     - metadata:
         name: mysql-replica-data
       spec:
+        selector:
+          matchLabels:
+            app: mysql-replica
         accessModes:
           - ReadWriteOnce
         storageClassName: mysql-storage
@@ -185,6 +191,9 @@ spec:
     - metadata:
         name: mysql-batch-data
       spec:
+        selector:
+          matchLabels:
+            app: mysql-batch
         accessModes:
           - ReadWriteOnce
         storageClassName: mysql-storage
