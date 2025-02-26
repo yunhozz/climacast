@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: climacast.com
+      http:
+        paths:
+          - path: /batch
+            pathType: Prefix
+            backend:
+              service:
+                name: batch-server
+                port:
+                  number: 8999
+          - path: /subscription
+            pathType: Prefix
+            backend:
+              service:
+                name: subscription-service
+                port:
+                  number: 8090
