@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: config-server/Dockerfile
-    image: climacast/config-server:${IMAGE_TAG}
+    image: climacast/config-server:latest
     container_name: config-server
     ports:
       - 8888:8888
@@ -17,48 +17,6 @@ services:
     networks:
       - climacast-network
 
-  eureka-server:
-    build:
-      context: .
-      dockerfile: eureka-server/Dockerfile
-    image: climacast/eureka-server:${IMAGE_TAG}
-    container_name: eureka-server
-    ports:
-      - 18761:8761
-    environment:
-      APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
-  api-gateway:
-    build:
-      context: .
-      dockerfile: api-gateway/Dockerfile
-    image: climacast/api-gateway:${IMAGE_TAG}
-    container_name: api-gateway
-    ports:
-      - 18000:8000
-    environment:
-      APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8000/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
   batch-server:
     build:
       context: .
@@ -68,8 +26,8 @@ services:
   batch-server-blue:
     image: climacast/batch-server:${IMAGE_TAG}
     ports:
-      - "18998-18999:8999"
-    scale: 2
+      - 18997-18999:8999
+    scale: 3
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -86,8 +44,8 @@ services:
   batch-server-green:
     image: climacast/batch-server:${IMAGE_TAG}
     ports:
-      - "28998-28999:8999"
-    scale: 2
+      - 28997-28999:8999
+    scale: 3
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -110,8 +68,8 @@ services:
   subscription-service-blue:
     image: climacast/subscription-service:${IMAGE_TAG}
     ports:
-      - "18090-18091:8090"
-    scale: 2
+      - 18090-18092:8090
+    scale: 3
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -128,8 +86,8 @@ services:
   subscription-service-green:
     image: climacast/subscription-service:${IMAGE_TAG}
     ports:
-      - "28090-28091:8090"
-    scale: 2
+      - 28090-28092:8090
+    scale: 3
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
