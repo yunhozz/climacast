@@ -8,18 +8,6 @@ spec:
   ports:
     - port: 8090
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx
-spec:
-  selector:
-    app: nginx
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 8080
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,6 +17,11 @@ spec:
     matchLabels:
       app: subscription-service
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -36,8 +29,8 @@ spec:
     spec:
       containers:
         - name: subscription-service
-          image: climacast/subscription-service:latest
-          imagePullPolicy: IfNotPresent
+          image: climacast/subscription-service:${IMAGE_TAG}
+          imagePullPolicy: Never
           ports:
             - containerPort: 8090
           env:
@@ -45,65 +38,3 @@ spec:
               value: prod
             - name: TZ
               value: Asia/Seoul
-        - name: nginx
-          image: nginx:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: nginx-conf
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
-      volumes:
-        - name: nginx-conf
-          configMap:
-            name: nginx-configmap
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-configmap
-data:
-  default.conf: |
-    server {
-      listen  8080;
-      server_name localhost;
-      
-      location / {
-        proxy_pass  http://subscription-service:8090;
-        proxy_read_timeout  3000;
-        proxy_connect_timeout 3000;
-        proxy_send_timeout  3000;
-        send_timeout  3000;
-      }
-    }
-#    user  nginx;
-#    worker_processes  auto;
-#
-#    events {
-#      worker_connections  1024;
-#    }
-#
-#    http {
-#      include       /etc/nginx/mime.types;
-#      default_type  application/octet-stream;
-#
-#      sendfile        on;
-#      keepalive_timeout  65;
-#
-#      upstream subscription-service {
-#        server subscription-service:8090;
-#      }
-#
-#      server {
-#        listen 8080;
-#
-#        location / {
-#          proxy_pass http://subscription-service;
-#          proxy_set_header Host $host;
-#          proxy_set_header X-Real-IP $remote_addr;
-#          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-#          proxy_set_header X-Forwarded-Proto $scheme;
-#        }
-#      }
-#    }

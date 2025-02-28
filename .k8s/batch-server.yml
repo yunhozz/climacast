@@ -18,6 +18,11 @@ spec:
     matchLabels:
       app: batch-server
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -25,8 +30,8 @@ spec:
     spec:
       containers:
         - name: batch-server
-          image: climacast/batch-server:latest
-          imagePullPolicy: IfNotPresent
+          image: climacast/batch-server:${IMAGE_TAG}
+          imagePullPolicy: Never
           ports:
             - containerPort: 8999
           env:
