@@ -39,7 +39,7 @@ spec:
   replicas: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: Parallel
+  podManagementPolicy: OrderedReady
   template:
     metadata:
       labels:
@@ -55,6 +55,18 @@ spec:
                     values:
                       - zk
               topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: set-myid
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              myid=$(echo $HOSTNAME | sed 's/[^0-9]*//g')
+              echo $((myid + 1)) > /var/lib/zookeeper/data/myid
+          volumeMounts:
+            - name: zkdir
+              mountPath: /var/lib/zookeeper
       containers:
         - name: kubernetes-zookeeper
           imagePullPolicy: Always
