@@ -20,7 +20,7 @@ metadata:
     app: elasticsearch
 spec:
   serviceName: elasticsearch
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: elasticsearch
@@ -30,34 +30,41 @@ spec:
         app: elasticsearch
     spec:
       affinity:
-        podAntiAffinity:
+        nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: "app"
+            nodeSelectorTerms:
+              - matchFields:
+                  - key: metadata.name
                     operator: In
                     values:
-                      - elasticsearch
-              topologyKey: "kubernetes.io/hostname"
+                      - minikube
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.17.2
           ports:
             - containerPort: 9200
               name: http
             - containerPort: 9300
               name: transport
           env:
-            - name: discovery.seed_hosts
-              value: "elasticsearch-0.elasticsearch,elasticsearch-1.elasticsearch,elasticsearch-2.elasticsearch"
-            - name: cluster.initial_master_nodes
-              value: "elasticsearch-0,elasticsearch-1,elasticsearch-2"
+            - name: discovery.type
+              value: single-node
+#            - name: discovery.seed_hosts
+#              value: elasticsearch-0.elasticsearch,elasticsearch-1.elasticsearch,elasticsearch-2.elasticsearch
+#            - name: cluster.initial_master_nodes
+#              value: elasticsearch-0,elasticsearch-1,elasticsearch-2
             - name: ES_JAVA_OPTS
-              value: "-Xms300m -Xmx300m"
+              value: -Xms1g -Xmx1g
             - name: xpack.security.enabled
               value: "false"
             - name: xpack.security.enrollment.enabled
               value: "false"
+            - name: bootstrap.memory_lock
+              value: "true"
           volumeMounts:
             - name: es-data
               mountPath: /var/data/elasticsearch
@@ -65,9 +72,11 @@ spec:
     - metadata:
         name: es-data
       spec:
+        selector:
+          matchLabels:
+            app: elasticsearch
         accessModes:
           - ReadWriteOnce
-        storageClassName: es-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
