@@ -8,17 +8,12 @@ import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.utils.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Flux
-import reactor.util.retry.Retry
-import java.time.Duration
 import kotlin.math.ceil
 
 @Component
 class KafkaMessageHandler(
-    private val kafkaTemplate: KafkaTemplate<String, KafkaMessage>,
-    private val reactiveKafkaProducerTemplate: ReactiveKafkaProducerTemplate<String, KafkaMessage>
+    private val kafkaTemplate: KafkaTemplate<String, KafkaMessage>
 ) {
     private val log = logger()
 
@@ -33,21 +28,28 @@ class KafkaMessageHandler(
     fun sendWeatherResponses(param: WeatherParameters, weatherData: List<WeatherResponseDTO>) {
         val bytes = objectMapper.writeValueAsString(weatherData).toByteArray()
         val chunkSize = calculateChunkSize(weatherData.size, bytes)
+        log.info("""
+            [Weather Data Information]
+            bytes=${bytes.size}, chunkSize=$chunkSize
+        """.trimIndent())
 
-        Flux.fromIterable(weatherData.chunked(chunkSize))
-            .flatMap { weathers ->
-                val event = createKafkaEvent(param, weathers)
-                reactiveKafkaProducerTemplate.send(event.topic, event.message)
-                    .retryWhen(Retry.backoff(3, Duration.ofMillis(500)))
-                    .doOnSuccess {
-                        val metadata = it.recordMetadata()
-                        log.info("Kafka send success : ${metadata.topic()} / ${metadata.offset()}")
+        weatherData.chunked(chunkSize).forEach { weathers ->
+            val event = createKafkaEvent(param, weathers)
+            kafkaTemplate.send(event.topic, event.message)
+                .whenComplete { result, ex ->
+                    val metadata = result.recordMetadata
+                    log.info("""
+                        [Send Weather Data on Kafka]
+                        timestamp=${metadata.timestamp()}
+                        topic=${metadata.topic()}
+                        partition=${metadata.partition()}
+                        offset=${metadata.offset()}
+                    """.trimIndent())
+                    if (ex != null) {
+                        log.error("Kafka send failed: ${ex.localizedMessage}", ex)
                     }
-                    .doOnError {
-                        log.error("Kafka send error : ${it.localizedMessage}", it)
-                    }
-            }
-            .subscribe()
+                }
+        }
     }
 
     private fun createKafkaEvent(param: WeatherParameters, weathers: List<WeatherResponseDTO>): KafkaEvent =
