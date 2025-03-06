@@ -26,7 +26,12 @@ class SchedulerLoggingAspect {
             result
 
         } catch (e: Exception) {
-            log.error("<<<<< Failed to run scheduler: $schedulerName", e)
+            when (e) {
+                is InterruptedException, is IllegalMonitorStateException ->
+                    log.info("<<<<< Failed to run scheduler: $schedulerName")
+                else ->
+                    log.error(e.localizedMessage, e)
+            }
             null
         }
     }

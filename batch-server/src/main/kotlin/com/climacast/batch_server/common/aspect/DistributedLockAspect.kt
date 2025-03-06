@@ -29,14 +29,14 @@ class DistributedLockAspect(
         return try {
             val lockable = rLock.tryLock(distributedLock.waitTime, distributedLock.leaseTime, TimeUnit.SECONDS)
             if (!lockable) {
-                log.warn("Failed to acquire lock for key : $lockKey")
+                log.info("Failed to acquire lock for key : $lockKey")
                 null
             } else joinPoint.proceed()
         } finally {
             try {
                 rLock.unlock()
             } catch (e: Exception) {
-                log.warn("Redisson lock already unlocked : $lockKey")
+                log.info("Redisson lock already unlocked : $lockKey")
             }
         }
     }

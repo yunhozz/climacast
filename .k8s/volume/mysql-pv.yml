@@ -1,0 +1,72 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-storage
+  labels:
+    app: mysql
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-source-pv
+  labels:
+    app: mysql-source
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mysql-storage
+  hostPath:
+    path: /mysql/mysql_data/source
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-replica-pv-0
+  labels:
+    app: mysql-replica
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mysql-storage
+  hostPath:
+    path: /mysql/mysql_data/replica_0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-replica-pv-1
+  labels:
+    app: mysql-replica
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mysql-storage
+  hostPath:
+    path: /mysql/mysql_data/replica_1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-batch-pv
+  labels:
+    app: mysql-batch
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mysql-storage
+  hostPath:
+    path: /mysql/mysql_data/batch
