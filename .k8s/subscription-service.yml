@@ -8,6 +8,16 @@ spec:
   ports:
     - port: 8090
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium-chrome
+spec:
+  selector:
+    app: selenium-chrome
+  ports:
+    - port: 4444
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,3 +48,26 @@ spec:
               value: prod
             - name: TZ
               value: Asia/Seoul
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium-chrome
+spec:
+  selector:
+    matchLabels:
+      app: selenium-chrome
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: selenium-chrome
+    spec:
+      containers:
+        - name: selenium-chrome
+          image: seleniarm/standalone-chromium:latest
+          ports:
+            - containerPort: 4444
+          env:
+            - name: SE_NODE_MAX_SESSIONS
+              value: "3"
