@@ -69,7 +69,7 @@ spec:
         storageClassName: kafka-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget

@@ -39,7 +39,7 @@ spec:
   replicas: 3
   updateStrategy:
     type: RollingUpdate
-  podManagementPolicy: OrderedReady
+  podManagementPolicy: Parallel
   template:
     metadata:
       labels:
@@ -134,7 +134,7 @@ spec:
         storageClassName: zk-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
