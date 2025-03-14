@@ -20,8 +20,17 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: mysql-storage
+  volumeMode: Filesystem
   hostPath:
-    path: /mysql/mysql_data/source
+    path: /mnt/data/mysql/source
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube-m02
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -36,8 +45,17 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: mysql-storage
+  volumeMode: Filesystem
   hostPath:
-    path: /mysql/mysql_data/replica_0
+    path: /mnt/data/mysql/replica_0
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube-m03
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -52,8 +70,17 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: mysql-storage
+  volumeMode: Filesystem
   hostPath:
-    path: /mysql/mysql_data/replica_1
+    path: /mnt/data/mysql/replica_1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube-m04
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -68,5 +95,14 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: mysql-storage
+  volumeMode: Filesystem
   hostPath:
-    path: /mysql/mysql_data/batch
+    path: /mnt/data/mysql/batch
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - minikube-m02
