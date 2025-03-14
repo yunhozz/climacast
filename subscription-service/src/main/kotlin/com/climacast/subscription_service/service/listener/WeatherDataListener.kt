@@ -3,7 +3,7 @@ package com.climacast.subscription_service.service.listener
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.service.handler.document.DocumentSaveHandler
+import com.climacast.subscription_service.service.handler.document.save.DocumentSaveHandler
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.kafka.support.KafkaHeaders

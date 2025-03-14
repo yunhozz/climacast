@@ -10,7 +10,7 @@ import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
-import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
+import com.climacast.subscription_service.service.handler.document.visual.DocumentVisualizerHandlerFactory
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository,
-    private val documentVisualizeHandler: DocumentVisualizeHandler,
+    private val documentVisualizerHandlerFactory: DocumentVisualizerHandlerFactory,
     private val subscriptionHandlerFactory: SubscriptionHandlerFactory
 ) {
     @Scheduled(cron = "0 */30 * * * *")
@@ -117,11 +117,9 @@ class SubscriptionService(
             WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
         } ?: throw IllegalArgumentException("Weather data not found for region: ${query.region}")
 
-        return when (method) {
-            SubscriptionMethod.MAIL ->
-                documentVisualizeHandler.convertDocumentToHtmlAsync(region, weatherDocument, weatherType)
-            else ->
-                documentVisualizeHandler.convertDocumentToImageAsync(region, weatherDocument, weatherType)
-        }
+        val documentVisualizeHandler =
+            documentVisualizerHandlerFactory.createDocumentVisualizerHandlerByMethod(method)
+
+        return documentVisualizeHandler.convertDocumentAsync(region, weatherDocument, weatherType)
     }
 }

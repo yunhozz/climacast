@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.document
+package com.climacast.subscription_service.service.handler.document.save
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
