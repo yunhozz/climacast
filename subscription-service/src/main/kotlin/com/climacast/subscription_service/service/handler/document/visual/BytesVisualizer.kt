@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
 import java.io.IOException
+import java.nio.charset.Charset
 import java.util.Base64
 import java.util.concurrent.CompletableFuture
 
@@ -30,7 +31,9 @@ class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
         val chromeDriver = createWebDriverSession(weatherImageRemoteUrl)
 
         val bytes = try {
-            val encodedHtml = Base64.getEncoder().encodeToString(html.toByteArray())
+            val bytes = html.toByteArray(Charset.forName("EUC-KR"))
+            val encodedHtml = Base64.getEncoder().encodeToString(bytes)
+
             chromeDriver.get("data:text/html;base64,$encodedHtml")
             determineWindowSize(chromeDriver)
 
