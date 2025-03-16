@@ -3,9 +3,11 @@ package com.climacast.subscription_service.service.handler.document.visual
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.Dimension
+import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
+import java.net.URI
 import java.util.Locale
 
 abstract class AbstractDocumentVisualizerHandler(
@@ -20,9 +22,18 @@ abstract class AbstractDocumentVisualizerHandler(
             }, Context(Locale.getDefault(), mapOf("weatherData" to document))
         )
 
+    fun createWebDriverSession(remoteUrl: String) = RemoteWebDriver(
+        URI(remoteUrl).toURL(),
+        ChromeOptions().apply {
+            addArguments("--no-sandbox", "--headless=new", "--disable-gpu")
+            addArguments("--font-render-hinting=none", "--lang=ko-KR")
+            addArguments("--force-device-scale-factor=0.8")
+        }
+    )
+
     fun determineWindowSize(driver: RemoteWebDriver) {
         val pageWidth = driver.executeScript("return document.documentElement.scrollWidth") as Long + 50
         val pageHeight = driver.executeScript("return document.documentElement.scrollHeight") as Long + 50
-        driver.manage().window().size = Dimension(192, 192)
+        driver.manage().window().size = Dimension(pageWidth.toInt(), pageHeight.toInt() / 7)
     }
 }

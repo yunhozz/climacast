@@ -11,7 +11,6 @@ import com.slack.api.webhook.Payload
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
-import java.io.File
 import java.io.IOException
 
 @Component
@@ -33,18 +32,18 @@ class SlackHandler : SubscriptionHandler {
     @Async
     override fun send(data: Any) {
         val slack = Slack.getInstance()
-        val weatherImage = data as File
+        val weatherImageBytes = data as ByteArray
 
         try {
             val fileResponse = slack.methods(authToken)
                 .filesUploadV2 {
-                    it.file(weatherImage)
+                    it.fileData(weatherImageBytes)
                         .channel(channelId)
-                        .title("Weather Forecast Image")
-                        .filename(weatherImage.nameWithoutExtension)
+                        .title("Weather Image")
                 }
+
             val payload = Payload.builder()
-                .text("Here is Weather Forecast!")
+                .text("Here is Weather Data!")
                 .attachments(listOf(
                     Attachment.builder()
                         .imageUrl(fileResponse.file.urlPrivate)

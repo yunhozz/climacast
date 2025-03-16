@@ -39,14 +39,14 @@ class SMSHandler : SubscriptionHandler {
 
     @Async
     override fun send(data: Any) {
-        val weatherImage = data as File
+        val weatherImageFile = data as File
         val to = PhoneNumber(toNumber)
         val from = PhoneNumber(fromNumber)
 
         try {
-            val message = Message.creator(to, from, "Here is Weather Forecast!")
+            val message = Message.creator(to, from, "Here is Weather Data!")
                 .setSendAsMms(true)
-                .setMediaUrl(weatherImage.toURI())
+                .setMediaUrl(weatherImageFile.toURI())
                 .create()
             if (message.status == Message.Status.FAILED) {
                 log.error("Fail to send SMS: code=${message.errorCode}, message=${message.errorMessage}")

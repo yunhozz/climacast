@@ -6,15 +6,12 @@ import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriverException
-import org.openqa.selenium.chrome.ChromeOptions
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
 import java.io.File
 import java.io.IOException
-import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 @Component
@@ -48,6 +45,7 @@ class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
             outputFile.deleteOnExit()
 
             chromeDriver.getScreenshotAs(OutputType.FILE).copyTo(outputFile)
+
         } catch (e: Exception) {
             when (e) {
                 is IOException -> throw IllegalArgumentException("Fail to write file: ${e.localizedMessage}", e)
@@ -63,11 +61,4 @@ class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
     }
 
     override fun getSubscriptionMethods(): Array<SubscriptionMethod> = arrayOf(SubscriptionMethod.SMS)
-
-    private fun createWebDriverSession(url: String) = RemoteWebDriver(
-        URI(weatherImageRemoteUrl).toURL(),
-        ChromeOptions().apply {
-            addArguments("--no-sandbox", "--headless=new", "--disable-gpu")
-        }
-    )
 }

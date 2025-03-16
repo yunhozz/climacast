@@ -4,21 +4,15 @@ import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
-import org.openqa.selenium.Dimension
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriverException
-import org.openqa.selenium.chrome.ChromeOptions
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
-import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.net.URI
 import java.util.Base64
 import java.util.concurrent.CompletableFuture
-import javax.imageio.ImageIO
 
 @Component
 class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizerHandler(templateEngine) {
@@ -37,16 +31,10 @@ class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
 
         val bytes = try {
             val encodedHtml = Base64.getEncoder().encodeToString(html.toByteArray())
-            val dataUrl = "data:text/html;base64,$encodedHtml"
-            chromeDriver.get(dataUrl)
-
+            chromeDriver.get("data:text/html;base64,$encodedHtml")
             determineWindowSize(chromeDriver)
 
-            val baos = ByteArrayOutputStream()
-            val screenshot = chromeDriver.getScreenshotAs(OutputType.FILE)
-            ImageIO.write(ImageIO.read(screenshot), "jpeg", baos)
-
-            baos.toByteArray()
+            chromeDriver.getScreenshotAs(OutputType.BYTES)
 
         } catch (e: Exception) {
             when (e) {
@@ -63,11 +51,4 @@ class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
     }
 
     override fun getSubscriptionMethods(): Array<SubscriptionMethod> = arrayOf(SubscriptionMethod.SLACK)
-
-    private fun createWebDriverSession(url: String) = RemoteWebDriver(
-        URI(weatherImageRemoteUrl).toURL(),
-        ChromeOptions().apply {
-            addArguments("--no-sandbox", "--headless=new", "--disable-gpu")
-        }
-    )
 }
