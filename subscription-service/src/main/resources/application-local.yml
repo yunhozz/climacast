@@ -57,3 +57,8 @@ logging:
     org:
       springframework:
         scheduling: debug
+
+image:
+  weather:
+    url: http://localhost:4444
+    dir: /Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/
