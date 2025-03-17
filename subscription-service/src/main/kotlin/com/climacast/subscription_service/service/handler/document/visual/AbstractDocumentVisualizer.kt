@@ -26,15 +26,14 @@ abstract class AbstractDocumentVisualizer(
         fun createWebDriverSession(remoteUrl: String) = RemoteWebDriver(
             URI(remoteUrl).toURL(),
             ChromeOptions().apply {
-                addArguments("--no-sandbox", "--headless=new", "--disable-gpu")
-                addArguments("--font-render-hinting=none", "--lang=ko-KR")
-                addArguments("--force-device-scale-factor=0.8")
+                addArguments("--no-sandbox", "--headless=new", "--disable-gpu", "--disable-dev-shm-usage")
+                addArguments("--font-render-hinting=none", "--lang=ko-KR", "--force-device-scale-factor=0.8")
             }
         )
 
         fun determineWindowSize(driver: RemoteWebDriver) {
             val pageWidth = driver.executeScript("return document.documentElement.scrollWidth") as Long + 50
-            val pageHeight = driver.executeScript("return document.documentElement.scrollHeight") as Long + 50
+            val pageHeight = driver.executeScript("return document.documentElement.scrollHeight") as Long
             driver.manage().window().size = Dimension(pageWidth.toInt(), pageHeight.toInt() / 5)
         }
     }
