@@ -48,6 +48,13 @@ spec:
               value: prod
             - name: TZ
               value: Asia/Seoul
+          volumeMounts:
+            - name: weather-image-volume
+              mountPath: /mnt/weather
+      volumes:
+        - name: weather-image-volume
+          persistentVolumeClaim:
+            claimName: weather-image-pvc
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -71,3 +78,10 @@ spec:
           env:
             - name: SE_NODE_MAX_SESSIONS
               value: "3"
+          volumeMounts:
+            - name: weather-image-volume
+              mountPath: /mnt/weather
+      volumes:
+        - name: weather-image-volume
+          persistentVolumeClaim:
+            claimName: weather-image-pvc
