@@ -10,15 +10,15 @@ import org.thymeleaf.context.Context
 import java.net.URI
 import java.util.Locale
 
-abstract class AbstractDocumentVisualizerHandler(
+abstract class AbstractDocumentVisualizer(
     private val templateEngine: TemplateEngine
-) : DocumentVisualizeHandler {
+) : DocumentVisualizer {
 
-    override fun createHtml(document: WeatherDocument, type: WeatherType): String =
+    fun createHtml(document: WeatherDocument, type: WeatherType): String =
         templateEngine.process(
             when (type) {
-                WeatherType.FORECAST -> DocumentVisualizeHandler.FORECAST_WEATHER_TEMPLATE
-                WeatherType.HISTORY -> DocumentVisualizeHandler.HISTORY_WEATHER_TEMPLATE
+                WeatherType.FORECAST -> DocumentVisualizer.FORECAST_WEATHER_TEMPLATE
+                WeatherType.HISTORY -> DocumentVisualizer.HISTORY_WEATHER_TEMPLATE
             }, Context(Locale.getDefault(), mapOf("weatherData" to document))
         )
 

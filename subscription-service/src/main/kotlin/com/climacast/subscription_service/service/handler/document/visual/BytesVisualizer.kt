@@ -16,7 +16,7 @@ import java.util.Base64
 import java.util.concurrent.CompletableFuture
 
 @Component
-class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizerHandler(templateEngine) {
+class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
 
     @Value("\${image.weather.url}")
     private lateinit var weatherImageRemoteUrl: String

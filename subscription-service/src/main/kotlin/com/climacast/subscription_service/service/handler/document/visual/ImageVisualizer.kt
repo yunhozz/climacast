@@ -15,7 +15,7 @@ import java.io.IOException
 import java.util.concurrent.CompletableFuture
 
 @Component
-class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizerHandler(templateEngine) {
+class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
 
     @Value("\${image.weather.url}")
     private lateinit var weatherImageRemoteUrl: String

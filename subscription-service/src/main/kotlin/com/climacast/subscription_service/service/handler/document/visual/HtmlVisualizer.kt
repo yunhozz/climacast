@@ -10,7 +10,7 @@ import org.thymeleaf.TemplateEngine
 import java.util.concurrent.CompletableFuture
 
 @Component
-class HtmlVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizerHandler(templateEngine) {
+class HtmlVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
 
     @Async
     override fun convertDocumentAsync(

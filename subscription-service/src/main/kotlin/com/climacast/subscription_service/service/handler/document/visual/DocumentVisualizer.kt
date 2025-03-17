@@ -6,8 +6,7 @@ import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
 import java.util.concurrent.CompletableFuture
 
-interface DocumentVisualizeHandler {
-    fun createHtml(document: WeatherDocument, type: WeatherType): String
+interface DocumentVisualizer {
     fun convertDocumentAsync(region: String, document: WeatherDocument, type: WeatherType): CompletableFuture<WeatherDatum>
     fun getSubscriptionMethods(): Array<SubscriptionMethod>
 
