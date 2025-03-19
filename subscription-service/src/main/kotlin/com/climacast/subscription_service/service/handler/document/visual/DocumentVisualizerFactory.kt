@@ -4,17 +4,14 @@ import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import org.springframework.stereotype.Component
 
 @Component
-class DocumentVisualizerFactory(handlers: Set<DocumentVisualizer>) {
+class DocumentVisualizerFactory(visualizers: Set<DocumentVisualizer>) {
 
-    private val documentVisualizers = mutableMapOf<SubscriptionMethod, DocumentVisualizer>()
-
-    init {
-        handlers.forEach { handler ->
-            handler.getSubscriptionMethods().forEach { method -> documentVisualizers[method] = handler }
-        }
-    }
+    private val documentVisualizerMap: Map<SubscriptionMethod, DocumentVisualizer> =
+        visualizers.flatMap { visualizer ->
+            visualizer.getSubscriptionMethods().map { method -> method to visualizer }
+        }.toMap()
 
     fun createDocumentVisualizerByMethod(method: SubscriptionMethod): DocumentVisualizer =
-        documentVisualizers[method]
-            ?: throw IllegalArgumentException("Document Visualizer Handler with $method Not Found")
+        documentVisualizerMap[method]
+            ?: throw IllegalArgumentException("No DocumentVisualizer found for SubscriptionMethod: $method")
 }
