@@ -1,14 +1,4 @@
 scrape_configs:
-  - job_name: 'eureka-server'
-    metrics_path: '/actuator/prometheus'
-    scrape_interval: 5s
-    static_configs:
-      - targets: [ 'host.docker.internal:18761' ]
-  - job_name: 'api-gateway'
-    metrics_path: '/actuator/prometheus'
-    scrape_interval: 5s
-    static_configs:
-      - targets: [ 'host.docker.internal:18000' ]
   - job_name: 'batch-server-blue'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
