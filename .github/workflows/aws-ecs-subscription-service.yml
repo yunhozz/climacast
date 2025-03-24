@@ -1,0 +1,78 @@
+name: Deploy Subscription Service to Amazon ECS
+
+on:
+  push:
+    branches: [ "master" ]
+    paths: [ "subscription-service/**" ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: climacast
+  ECS_SERVICE: subscription-service
+  ECS_CLUSTER: climacast-cluster
+  ECS_TASK_DEFINITION: .aws/subscription-service-task-definition.json
+  CONTAINER_NAME: subscription-service-container
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Subscription Service Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Load Properties and Environments from Secrets and Process
+        run: |
+          mkdir -p ./global/src/main/resources
+          touch ./global/src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./global/src/main/resources/application.properties
+          touch ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.APPLICATION_KEY_YML }}" | base64 -d > ./config-server/src/main/resources/application-key.yml
+          echo "${{ secrets.ENV }}" > .env
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "ECR_REGISTRY=$ECR_REGISTRY" >> .env
+          echo "GIT_COMMIT_HASH=${{ env.GIT_COMMIT_HASH }}" >> .env
+          
+          SERVICE="subscription-service"
+          
+          docker compose build $SERVICE
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$SERVICE" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

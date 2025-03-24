@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    config:
+      name: subscription-service
+      profile: prod
+  config:
+    import: configserver:http://config-server:8888/

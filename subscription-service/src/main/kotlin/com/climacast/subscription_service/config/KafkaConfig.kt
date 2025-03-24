@@ -68,6 +68,7 @@ class KafkaConfig(
         ConcurrentKafkaListenerContainerFactory<String, KafkaMessage>().apply {
             consumerFactory = kafkaConsumerFactory()
             containerProperties.ackMode = ContainerProperties.AckMode.MANUAL
+            setConcurrency(3)
             setCommonErrorHandler(
                 DefaultErrorHandler(
                     DeadLetterPublishingRecoverer(kafkaTemplate()),

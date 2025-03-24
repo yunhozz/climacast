@@ -6,12 +6,10 @@ import org.springframework.stereotype.Component
 @Component
 class SubscriptionHandlerFactory(handlers: Set<SubscriptionHandler>) {
 
-    private val handlerMap = mutableMapOf<SubscriptionMethod, SubscriptionHandler>()
+    private val handlerMap: Map<SubscriptionMethod, SubscriptionHandler> =
+        handlers.associateBy { it.getHandlerMethod() }
 
-    init {
-        handlers.forEach { handlerMap[it.getHandlerMethod()] = it }
-    }
-
-    fun createHandlerByMethod(method: SubscriptionMethod): SubscriptionHandler = handlerMap[method]
-        ?: throw IllegalArgumentException("Subscription handler with $method not found")
+    fun createHandlerByMethod(method: SubscriptionMethod): SubscriptionHandler =
+        handlerMap[method]
+            ?: throw IllegalArgumentException("No SubscriptionHandler found for SubscriptionMethod: $method")
 }

@@ -5,11 +5,12 @@ import com.climacast.subscription_service.common.annotation.DistributedLock
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.common.util.WeatherDataBuffer
+import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
-import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
+import com.climacast.subscription_service.service.handler.document.visual.DocumentVisualizerFactory
 import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
 import kotlinx.coroutines.Dispatchers
@@ -21,13 +22,14 @@ import kotlinx.coroutines.launch
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.concurrent.CompletableFuture
 
 @Service
 class SubscriptionService(
     private val subscriptionRepository: SubscriptionRepository,
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository,
-    private val documentVisualizeHandler: DocumentVisualizeHandler,
+    private val documentVisualizerFactory: DocumentVisualizerFactory,
     private val subscriptionHandlerFactory: SubscriptionHandlerFactory
 ) {
     @Scheduled(cron = "0 */30 * * * *")
@@ -83,13 +85,7 @@ class SubscriptionService(
 
                 val weatherDatumFutures = regions.map { region ->
                     async(Dispatchers.IO) {
-                        val query = WeatherQueryDTO(weatherType, region)
-                        val weatherDocument = createWeatherDocument(query)
-
-                        if (subscriptionMethod == SubscriptionMethod.MAIL)
-                            documentVisualizeHandler.convertDocumentToHtmlAsync(region, weatherDocument, weatherType)
-                        else
-                            documentVisualizeHandler.convertDocumentToImageAsync(region, weatherDocument, weatherType)
+                        createWeatherDatumByMethod(subscriptionMethod, weatherType, region)
                     }
                 }.awaitAll()
 
@@ -110,8 +106,19 @@ class SubscriptionService(
         WeatherDataBuffer.clear()
     }
 
-    private fun createWeatherDocument(query: WeatherQueryDTO) = when (query.weatherType) {
-        WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-        WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-    } ?: throw IllegalArgumentException("Weather data not found for region: ${query.region}")
+    private fun createWeatherDatumByMethod(
+        method: SubscriptionMethod,
+        weatherType: WeatherType,
+        region: String
+    ): CompletableFuture<WeatherDatum> {
+        val query = WeatherQueryDTO(weatherType, region)
+        val weatherDocument = when (query.weatherType) {
+            WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+            WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
+        } ?: throw IllegalArgumentException("Weather data not found for region: ${query.region}")
+
+        val documentVisualizer = documentVisualizerFactory.createDocumentVisualizerByMethod(method)
+
+        return documentVisualizer.convertDocumentAsync(region, weatherDocument, weatherType)
+    }
 }

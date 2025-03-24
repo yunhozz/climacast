@@ -9,6 +9,8 @@ application.yml
 .env
 mysql
 nginx
+.k8s/secret/**
+scripts/**
 
 ### STS ###
 .apt_generated

@@ -107,7 +107,5 @@ subprojects {
 
 project(":global")
 project(":config-server")
-project(":eureka-server")
-project(":api-gateway")
 project(":batch-server")
 project(":subscription-service")

@@ -29,15 +29,20 @@ class DistributedLockAspect(
         return try {
             val lockable = rLock.tryLock(distributedLock.waitTime, distributedLock.leaseTime, TimeUnit.SECONDS)
             if (!lockable) {
-                log.warn("Failed to acquire lock for key: $lockKey")
+                log.info("Failed to acquire lock for key: $lockKey")
                 null
             } else {
                 log.info("Acquire distributed lock for key: $lockKey")
                 joinPoint.proceed()
             }
 
-        } catch (e: InterruptedException) {
-            log.error("Failed to acquire lock for key: $lockKey", e)
+        } catch (e: Exception) {
+            when (e) {
+                is InterruptedException, is IllegalMonitorStateException ->
+                    log.info("Failed to acquire lock for key: $lockKey", e)
+                else ->
+                    log.error(e.localizedMessage, e)
+            }
             null
 
         } finally {
