@@ -17,53 +17,6 @@ services:
     networks:
       - climacast-network
 
-  eureka-server:
-    build:
-      context: .
-      dockerfile: eureka-server/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:eureka-server
-    container_name: eureka-server
-    ports:
-      - 18761:8761
-    environment:
-      APPLICATION_PROFILE: prod
-      TZ: Asia/Seoul
-    depends_on:
-      - config-server
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8761/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
-  api-gateway:
-    build:
-      context: .
-      dockerfile: api-gateway/Dockerfile
-    image: ${ECR_REGISTRY}/climacast:api-gateway
-    container_name: api-gateway
-    ports:
-      - 18000:8000
-    environment:
-      APPLICATION_PROFILE: prod
-      TZ: Asia/Seoul
-    depends_on:
-      - config-server
-      - eureka-server
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8000/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
   batch-server:
     build:
       context: .
