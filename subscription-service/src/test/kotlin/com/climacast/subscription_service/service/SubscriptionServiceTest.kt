@@ -11,7 +11,8 @@ import com.climacast.subscription_service.model.entity.SubscriptionInfo
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
-import com.climacast.subscription_service.service.handler.document.DocumentVisualizeHandler
+import com.climacast.subscription_service.service.handler.document.visual.DocumentVisualizer
+import com.climacast.subscription_service.service.handler.document.visual.DocumentVisualizerFactory
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
 import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandlerFactory
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,7 @@ class SubscriptionServiceTest {
     @Mock
     private lateinit var historyWeatherSearchRepository: HistoryWeatherSearchRepository
     @Mock
-    private lateinit var documentVisualizeHandler: DocumentVisualizeHandler
+    private lateinit var documentVisualizerFactory: DocumentVisualizerFactory
     @Mock
     private lateinit var subscriptionHandlerFactory: SubscriptionHandlerFactory
 
@@ -83,6 +84,7 @@ class SubscriptionServiceTest {
         // given
         val weatherDocument = mock(WeatherDocument::class.java)
         val subscriptionHandler = mock(SubscriptionHandler::class.java)
+        val documentVisualizer = mock(DocumentVisualizer::class.java)
         val weatherDatum = WeatherDatum("region", "resource")
 
         given(subscriptionRepository.findAllByIntervalsAndStatus(any(), anyBoolean()))
@@ -93,7 +95,9 @@ class SubscriptionServiceTest {
             .`when`(subscriptionHandler).setSubscriberInfo(any())
         given(forecastWeatherSearchRepository.findWeatherByTypeAndRegion(any()))
             .willReturn(weatherDocument)
-        given(documentVisualizeHandler.convertDocumentToHtmlAsync(anyString(), any(), any()))
+        given(documentVisualizerFactory.createDocumentVisualizerByMethod(any()))
+            .willReturn(documentVisualizer)
+        given(documentVisualizer.convertDocumentAsync(anyString(), any(), any()))
             .willReturn(CompletableFuture.completedFuture(weatherDatum))
         doNothing()
             .`when`(subscriptionHandler).send(any())
@@ -121,7 +125,7 @@ class SubscriptionServiceTest {
         // then
         then(subscriptionHandlerFactory).shouldHaveNoInteractions()
         then(forecastWeatherSearchRepository).shouldHaveNoInteractions()
-        then(documentVisualizeHandler).shouldHaveNoInteractions()
+        then(documentVisualizerFactory).shouldHaveNoInteractions()
     }
 
     @Test
@@ -144,7 +148,7 @@ class SubscriptionServiceTest {
         } catch (e: IllegalArgumentException) {
             // then
             assert(e.message!!.contains("Weather data not found for region"))
-            then(documentVisualizeHandler).shouldHaveNoInteractions()
+            then(documentVisualizerFactory).shouldHaveNoInteractions()
         }
     }
 
