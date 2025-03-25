@@ -16,9 +16,12 @@ data class HistoryWeathersMessage(
 ) : KafkaMessage
 
 data class WeatherQueryRequestMessage(
-    val data: Any
+    val parentRegion: String,
+    val childRegion: String,
+    val startTime: String,
+    val endTime: String
 ) : KafkaMessage
 
 data class WeatherQueryResponseMessage(
-    val data: Any
+    val weatherData: String
 ) : KafkaMessage

@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.infra.listener
+package com.climacast.subscription_service.infra.kafka
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.enums.KafkaTopic

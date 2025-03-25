@@ -8,6 +8,7 @@ dependencies {
 	implementation(platform("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT"))
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }

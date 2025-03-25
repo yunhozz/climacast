@@ -4,6 +4,7 @@ import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.infra.document.save.AbstractDocumentSaver
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
+import com.climacast.subscription_service.model.document.WeatherDocument
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import org.springframework.stereotype.Service
@@ -22,5 +23,9 @@ class WeatherDocumentService(
     override fun saveHistoryWeathers(historyWeathers: List<HistoryWeather>) {
         historyWeatherSearchRepository.upsertWeatherDocuments(historyWeathers, WeatherType.HISTORY)
         log.info("History weathers saved")
+    }
+
+    fun findWeatherByQuery(): WeatherDocument? {
+        TODO()
     }
 }

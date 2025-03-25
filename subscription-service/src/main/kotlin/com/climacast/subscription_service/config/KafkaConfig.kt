@@ -26,6 +26,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer
 import org.springframework.util.backoff.FixedBackOff
 import reactor.kafka.receiver.ReceiverOptions
 import reactor.kafka.sender.SenderOptions
+import java.util.Collections
 
 @Configuration
 @EnableKafka
@@ -57,9 +58,8 @@ class KafkaConfig(
     fun reactiveKafkaConsumerTemplate(): ReactiveKafkaConsumerTemplate<String, KafkaMessage> =
         ReactiveKafkaConsumerTemplate(
             ReceiverOptions.create<String, KafkaMessage>(kafkaConsumerProperties())
-                .subscription(setOf(
-                    KafkaTopic.WEATHER_FORECAST_TOPIC,
-                    KafkaTopic.WEATHER_HISTORY_TOPIC
+                .subscription(Collections.singletonList(
+                    KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC
                 ))
         )
 
