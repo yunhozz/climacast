@@ -45,6 +45,12 @@ subprojects {
 		maven {
 			url = URI.create("https://plugins.gradle.org/m2/")
 		}
+		maven {
+			url = URI.create("https://repo.spring.io/milestone")
+		}
+		maven {
+			url = URI.create("https://repo.spring.io/snapshot")
+		}
 		mavenCentral()
 	}
 
@@ -109,3 +115,4 @@ project(":global")
 project(":config-server")
 project(":batch-server")
 project(":subscription-service")
+project("ai-service")
