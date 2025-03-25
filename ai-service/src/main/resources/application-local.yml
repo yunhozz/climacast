@@ -1,0 +1,28 @@
+server:
+  port: 8070
+
+spring:
+  application:
+    name: ai-service
+  cloud:
+    config:
+      enabled: false
+  ai:
+    ollama:
+      chat:
+        model: llama3.2
+#    openai:
+#      api-key: ${openai.api-key}
+#      chat:
+#        options:
+#          model: gpt-4o
+
+logging:
+  level:
+    org:
+      springframework:
+        scheduling: debug
+
+redis:
+  host: localhost
+  port: 6379
