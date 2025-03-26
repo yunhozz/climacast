@@ -1,6 +1,8 @@
 package com.climacast.batch_server.config.handler
 
 import com.climacast.batch_server.common.enums.WeatherParameters
+import com.climacast.global.dto.ForecastWeathersMessage
+import com.climacast.global.dto.HistoryWeathersMessage
 import com.climacast.global.dto.KafkaEvent
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
@@ -57,12 +59,12 @@ class KafkaMessageHandler(
             WeatherParameters.WEATHER_FORECAST ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_FORECAST_TOPIC,
-                    message = KafkaMessage.ForecastWeathersMessage(weathers)
+                    message = ForecastWeathersMessage(weathers)
                 )
             WeatherParameters.WEATHER_HISTORY ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_HISTORY_TOPIC,
-                    message = KafkaMessage.HistoryWeathersMessage(weathers)
+                    message = HistoryWeathersMessage(weathers)
                 )
         }
 }
