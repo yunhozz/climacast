@@ -1,5 +1,7 @@
 package com.climacast.subscription_service.infra.document.save
 
+import com.climacast.global.dto.ForecastWeathersMessage
+import com.climacast.global.dto.HistoryWeathersMessage
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
@@ -16,11 +18,11 @@ abstract class AbstractDocumentSaver : DocumentSaver {
 
     override fun saveWeathersByMessageType(message: KafkaMessage) {
         when (message) {
-            is KafkaMessage.ForecastWeathersMessage -> {
+            is ForecastWeathersMessage -> {
                 makeForecastWeathers(message.data)
                     .subscribe { saveForecastWeathers(it) }
             }
-            is KafkaMessage.HistoryWeathersMessage -> {
+            is HistoryWeathersMessage -> {
                 makeHistoryWeathers(message.data)
                     .subscribe { saveHistoryWeathers(it) }
             }
