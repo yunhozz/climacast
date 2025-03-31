@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler.api
+package com.climacast.batch_server.common.api
 
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO

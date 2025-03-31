@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler
+package com.climacast.batch_server.common.message
 
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.global.dto.KafkaEvent
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 import kotlin.math.ceil
 
 @Component
-class KafkaMessageHandler(
+class WeatherDataKafkaSender(
     private val kafkaTemplate: KafkaTemplate<String, KafkaMessage>
 ) {
     private val log = logger()

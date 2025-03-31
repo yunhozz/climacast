@@ -1,12 +1,12 @@
 package com.climacast.batch_server.config
 
+import com.climacast.batch_server.common.api.OpenApiHandler
+import com.climacast.batch_server.common.data.WeatherDataProcessor
 import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.common.enums.WeatherParameters
+import com.climacast.batch_server.common.message.WeatherDataKafkaSender
 import com.climacast.batch_server.common.util.BatchDataBuffer
-import com.climacast.batch_server.config.handler.KafkaMessageHandler
-import com.climacast.batch_server.config.handler.api.OpenApiHandler
-import com.climacast.batch_server.config.handler.data.WeatherDataHandler
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
@@ -38,8 +38,8 @@ class BatchConfig(
     private val appTransactionManager: PlatformTransactionManager,
     private val historyWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
     private val forecastWeatherOpenApiHandler: OpenApiHandler<Region, WeatherResponseDTO>,
-    private val weatherDataHandler: WeatherDataHandler,
-    private val kafkaMessageHandler: KafkaMessageHandler
+    private val weatherDataProcessor: WeatherDataProcessor,
+    private val weatherDataKafkaSender: WeatherDataKafkaSender
 ) {
     companion object {
         const val CSV_PATH = "/static/region-list.csv"
@@ -148,7 +148,7 @@ class BatchConfig(
             .query(dto)
             .callOpenApi()
 
-        kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), data)
+        weatherDataKafkaSender.sendWeatherResponses(WeatherParameters.of(weatherParam), data)
         BatchDataBuffer.store(data)
     }
 
@@ -161,7 +161,7 @@ class BatchConfig(
             .query(dto)
             .callOpenApi()
 
-        kafkaMessageHandler.sendWeatherResponses(WeatherParameters.of(weatherParam), data)
+        weatherDataKafkaSender.sendWeatherResponses(WeatherParameters.of(weatherParam), data)
         BatchDataBuffer.store(data)
     }
 
@@ -172,6 +172,6 @@ class BatchConfig(
     @Bean
     @StepScope
     fun weatherDataWriter(): ItemWriter<WeatherResponseDTO> = ItemWriter { chunk ->
-        weatherDataHandler.process(chunk.items)
+        weatherDataProcessor.process(chunk.items)
     }
 }

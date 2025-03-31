@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler.data
+package com.climacast.batch_server.common.data
 
 import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
 import com.climacast.batch_server.model.entity.DailyWeather
@@ -12,7 +12,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-abstract class AbstractWeatherDataHandler: WeatherDataHandler {
+abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
     override fun process(weatherResponseDTOs: List<WeatherResponseDTO>) {
         weatherResponseDTOs.forEach { dto ->
             when (val weatherData = convertToPojo(dto)) {
@@ -139,15 +139,4 @@ abstract class AbstractWeatherDataHandler: WeatherDataHandler {
                 }
             }
     }
-}
-
-sealed class ConvertedWeatherData {
-    data class WeatherForecastData(
-        val hourlyWeatherUpsertDTOs: Set<HourlyWeatherUpsertRequestDTO>
-    ): ConvertedWeatherData()
-
-    data class WeatherHistoryData(
-        val dailyWeathers: Set<DailyWeather>,
-        val hourlyWeathers: Set<HourlyWeather>
-    ): ConvertedWeatherData()
 }

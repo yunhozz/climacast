@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler.api
+package com.climacast.batch_server.common.api
 
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 @Component
 class HistoryWeatherOpenApiHandler(
     private val weatherResponseProcessor: WeatherResponseProcessor
-): OpenApiHandler<Region, WeatherResponseDTO>() {
+) : OpenApiHandler<Region, WeatherResponseDTO>() {
 
     override fun callOpenApi(): List<WeatherResponseDTO> {
         val (hourlyValues, dailyValues, pastDays, _) = query as OpenApiQueryRequestDTO

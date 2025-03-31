@@ -1,4 +1,4 @@
-package com.climacast.batch_server.config.handler.api
+package com.climacast.batch_server.common.api
 
 import org.springframework.batch.item.Chunk
 import reactor.core.publisher.Flux
