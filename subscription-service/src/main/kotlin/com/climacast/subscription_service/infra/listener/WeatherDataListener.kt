@@ -1,9 +1,9 @@
-package com.climacast.subscription_service.service.listener
+package com.climacast.subscription_service.infra.listener
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.service.handler.document.save.DocumentSaveHandler
+import com.climacast.subscription_service.infra.document.save.DocumentSaver
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment
 import org.springframework.kafka.support.KafkaHeaders
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class WeatherDataListener(
-    private val documentSaveHandler: DocumentSaveHandler
+    private val documentSaver: DocumentSaver
 ) {
     private val log = logger()
 
@@ -35,7 +35,7 @@ class WeatherDataListener(
             Key: $key
             """.trimIndent()
         )
-        documentSaveHandler.saveWeathersByMessageType(message)
+        documentSaver.saveWeathersByMessageType(message)
         ack.acknowledge()
     }
 

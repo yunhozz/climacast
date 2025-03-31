@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.document.visual
+package com.climacast.subscription_service.infra.document.visual
 
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
@@ -10,18 +10,16 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
-import java.io.File
 import java.io.IOException
+import java.nio.charset.Charset
+import java.util.Base64
 import java.util.concurrent.CompletableFuture
 
 @Component
-class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
+class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
 
     @Value("\${image.weather.url}")
     private lateinit var weatherImageRemoteUrl: String
-
-    @Value("\${image.weather.dir}")
-    private lateinit var weatherImageDir: String
 
     @Async
     override fun convertDocumentAsync(
@@ -32,19 +30,14 @@ class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
         val html = createHtml(document, type)
         val chromeDriver = createWebDriverSession(weatherImageRemoteUrl)
 
-        val image = try {
-            val currentTime = System.nanoTime()
-            val tempFile = File("$weatherImageDir/weather_temp_$currentTime.html")
-            tempFile.writeText(html)
-            tempFile.deleteOnExit()
-            chromeDriver.get("file:///${tempFile.absolutePath}")
+        val bytes = try {
+            val bytes = html.toByteArray(Charset.forName("EUC-KR"))
+            val encodedHtml = Base64.getEncoder().encodeToString(bytes)
 
+            chromeDriver.get("data:text/html;base64,$encodedHtml")
             determineWindowSize(chromeDriver)
 
-            val outputFile = File("$weatherImageDir/weather_image_$currentTime.jpeg")
-            outputFile.deleteOnExit()
-
-            chromeDriver.getScreenshotAs(OutputType.FILE).copyTo(outputFile)
+            chromeDriver.getScreenshotAs(OutputType.BYTES)
 
         } catch (e: Exception) {
             when (e) {
@@ -57,8 +50,8 @@ class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
             chromeDriver.quit()
         }
 
-        return CompletableFuture.completedFuture(WeatherDatum(region, image))
+        return CompletableFuture.completedFuture(WeatherDatum(region, bytes))
     }
 
-    override fun getSubscriptionMethods(): Array<SubscriptionMethod> = arrayOf(SubscriptionMethod.SMS)
+    override fun getSubscriptionMethods(): Array<SubscriptionMethod> = arrayOf(SubscriptionMethod.SLACK)
 }

@@ -1,9 +1,9 @@
-package com.climacast.subscription_service.service.handler.subscription.method
+package com.climacast.subscription_service.infra.subscription.method
 
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
-import com.climacast.subscription_service.service.handler.subscription.SubscriberInfo
-import com.climacast.subscription_service.service.handler.subscription.SubscriptionHandler
+import com.climacast.subscription_service.infra.subscription.SubscriberInfo
+import com.climacast.subscription_service.infra.subscription.SubscriptionHandler
 import com.twilio.Twilio
 import com.twilio.exception.ApiException
 import com.twilio.rest.api.v2010.account.Message

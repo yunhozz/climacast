@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.document.visual
+package com.climacast.subscription_service.infra.document.visual
 
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionMethod

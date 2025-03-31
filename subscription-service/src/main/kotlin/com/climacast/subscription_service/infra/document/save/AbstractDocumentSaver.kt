@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.document.save
+package com.climacast.subscription_service.infra.document.save
 
 import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
@@ -10,7 +10,7 @@ import com.climacast.subscription_service.model.document.HistoryWeather
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-abstract class AbstractDocumentSaveHandler : DocumentSaveHandler {
+abstract class AbstractDocumentSaver : DocumentSaver {
 
     protected val log = logger()
 

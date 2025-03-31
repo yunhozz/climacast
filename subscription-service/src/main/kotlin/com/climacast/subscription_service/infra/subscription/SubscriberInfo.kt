@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.subscription
+package com.climacast.subscription_service.infra.subscription
 
 data class SubscriberInfo(
     val email: String? = null,

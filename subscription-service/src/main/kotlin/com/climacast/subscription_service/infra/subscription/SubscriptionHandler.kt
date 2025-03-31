@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.service.handler.subscription
+package com.climacast.subscription_service.infra.subscription
 
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 
