@@ -1,4 +1,4 @@
-package com.climacast.batch_server.common.data
+package com.climacast.batch_server.infra.data
 
 import com.climacast.global.dto.WeatherResponseDTO
 

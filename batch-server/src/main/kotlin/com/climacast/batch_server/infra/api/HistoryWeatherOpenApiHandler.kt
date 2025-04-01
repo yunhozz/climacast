@@ -1,18 +1,19 @@
-package com.climacast.batch_server.common.api
+package com.climacast.batch_server.infra.api
 
 import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherType
+import org.springframework.batch.item.Chunk
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
 @Component
 class HistoryWeatherOpenApiHandler(
-    private val weatherResponseProcessor: WeatherResponseProcessor
+    private val weatherApiProcessor: WeatherApiProcessor
 ) : OpenApiHandler<Region, WeatherResponseDTO>() {
 
-    override fun callOpenApi(): List<WeatherResponseDTO> {
+    override fun callOpenApi(chunk: Chunk<out Region>, query: Any): List<WeatherResponseDTO> {
         val (hourlyValues, dailyValues, pastDays, _) = query as OpenApiQueryRequestDTO
         val hourly = hourlyValues?.joinToString(",")
         val daily = dailyValues?.joinToString(",")
@@ -20,13 +21,13 @@ class HistoryWeatherOpenApiHandler(
 
         return Mono.zip(
             Mono.fromCallable {
-                callWeatherOpenApi { region ->
-                    weatherResponseProcessor.sendHourlyWeatherRequest(region, req, hourly)
+                callWeatherOpenApi(chunk) { region ->
+                    weatherApiProcessor.sendHourlyWeatherRequest(region, req, hourly)
                 }
             },
             Mono.fromCallable {
-                callWeatherOpenApi { region ->
-                    weatherResponseProcessor.sendDailyWeatherRequest(region, req, daily)
+                callWeatherOpenApi(chunk) { region ->
+                    weatherApiProcessor.sendDailyWeatherRequest(region, req, daily)
                 }
             })
             .map { tuple -> tuple.t1!! + tuple.t2!! }

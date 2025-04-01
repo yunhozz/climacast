@@ -21,24 +21,22 @@ class WeatherSchedulerService(
     private val log = logger()
 
     @Scheduled(cron = "0 28,58 * * * *")
-    @DistributedLock(key = SAVE_WEATHER_FORECAST_LOCK_KEY, leaseTime = 60, waitTime = 0)
+    @DistributedLock(key = WEATHER_FORECAST_JOB_LOCK_KEY, leaseTime = 60, waitTime = 0)
     fun saveWeatherForecastEveryHour() {
         val jobParameters = createDefaultJobParameters()
-            .addString(CHUNK_SIZE, WEATHER_FORECAST_CHUNK_SIZE)
-            .addString(WEATHER_PARAM, WeatherParameters.WEATHER_FORECAST.name)
+            .addString("weatherParam", WeatherParameters.WEATHER_FORECAST.name)
             .toJobParameters()
-        val jobExecution = jobLauncher.run(batchConfig.saveWeatherForecastJob(), jobParameters)
+        val jobExecution = jobLauncher.run(batchConfig.weatherForecastJob(), jobParameters)
         log.info(createLogMessage(jobExecution))
     }
 
     @Scheduled(cron = "0 3 0 * * *", zone = "Asia/Seoul")
-    @DistributedLock(key = SAVE_WEATHER_HISTORY_LOCK_KEY, leaseTime = 30, waitTime = 0)
+    @DistributedLock(key = WEATHER_HISTORY_JOB_LOCK_KEY, leaseTime = 30, waitTime = 0)
     fun saveWeatherHistoryEveryDay() {
         val jobParameters = createDefaultJobParameters()
-            .addString(CHUNK_SIZE, WEATHER_HISTORY_CHUNK_SIZE)
-            .addString(WEATHER_PARAM, WeatherParameters.WEATHER_HISTORY.name)
+            .addString("weatherParam", WeatherParameters.WEATHER_HISTORY.name)
             .toJobParameters()
-        val jobExecution = jobLauncher.run(batchConfig.saveWeatherHistoryJob(), jobParameters)
+        val jobExecution = jobLauncher.run(batchConfig.weatherHistoryJob(), jobParameters)
         log.info(createLogMessage(jobExecution))
     }
 
@@ -51,12 +49,8 @@ class WeatherSchedulerService(
         )
 
     companion object {
-        const val SAVE_WEATHER_FORECAST_LOCK_KEY = "save-weather-forecast"
-        const val SAVE_WEATHER_HISTORY_LOCK_KEY = "save-weather-history"
-        const val CHUNK_SIZE = "chunkSize"
-        const val WEATHER_PARAM = "weatherParam"
-        const val WEATHER_FORECAST_CHUNK_SIZE = "126"
-        const val WEATHER_HISTORY_CHUNK_SIZE = "30"
+        const val WEATHER_FORECAST_JOB_LOCK_KEY = "weather-forecast-job-lock"
+        const val WEATHER_HISTORY_JOB_LOCK_KEY = "weather-history-job-lock"
 
         fun createLogMessage(jobExecution: JobExecution) = buildString {
             append("Job Execution: ").append(jobExecution.status).append("\n")

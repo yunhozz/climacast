@@ -1,4 +1,4 @@
-package com.climacast.batch_server.common.message
+package com.climacast.batch_server.infra.message
 
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.global.dto.KafkaEvent

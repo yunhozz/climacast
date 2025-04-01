@@ -1,4 +1,4 @@
-package com.climacast.batch_server.common.api
+package com.climacast.batch_server.infra.api
 
 import com.climacast.batch_server.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
@@ -7,11 +7,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.util.UriBuilder
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.net.URI
+import java.time.Duration
 
 @Component
-class WeatherResponseProcessor(
+class WeatherApiProcessor(
     private val openMeteoWebClient: WebClient
 ) {
     @Value("\${open-api.open-meteo.end-point.weather-forecast}")
@@ -19,9 +21,15 @@ class WeatherResponseProcessor(
 
     private val log = logger()
 
-    companion object {
-        const val TIMEZONE = "Asia/Tokyo"
-    }
+    fun sendHourlyWeatherRequest(regions: List<Region>, request: WeatherQueryRequest, hourly: String?): Flux<WeatherResponseDTO> =
+        Flux.fromIterable(regions)
+            .delayElements(Duration.ofMillis(200))
+            .flatMap { retrieveWeatherResponse(it, request, hourly = hourly) }
+
+    fun sendDailyWeatherRequest(regions: List<Region>, request: WeatherQueryRequest, daily: String?): Flux<WeatherResponseDTO> =
+        Flux.fromIterable(regions)
+            .delayElements(Duration.ofMillis(200))
+            .flatMap { retrieveWeatherResponse(it, request, daily = daily) }
 
     fun sendHourlyWeatherRequest(region: Region, request: WeatherQueryRequest, hourly: String?): Mono<WeatherResponseDTO> =
         retrieveWeatherResponse(region, request, hourly = hourly)
@@ -37,7 +45,9 @@ class WeatherResponseProcessor(
     ): Mono<WeatherResponseDTO> {
         val (parentRegion, childRegion, latitude, longitude) = region
         return openMeteoWebClient.get()
-            .uri { createWeatherRequestUri(it, latitude, longitude, request, daily, hourly) }
+            .uri {
+                createWeatherRequestUri(it, latitude, longitude, request, daily, hourly)
+            }
             .retrieve()
             .bodyToMono(WeatherResponseDTO::class.java)
             .map {
@@ -57,16 +67,15 @@ class WeatherResponseProcessor(
         query: WeatherQueryRequest,
         daily: String?,
         hourly: String?
-    ): URI =
-        builder.path(weatherRequestEndPoint)
-            .queryParam("latitude", latitude)
-            .queryParam("longitude", longitude)
-            .queryParam("past_days", query.pastDays)
-            .queryParam("forecast_days", query.forecastDays)
-            .queryParam("timezone", TIMEZONE)
-            .apply {
-                daily?.let { queryParam("daily", it) }
-                hourly?.let { queryParam("hourly", it) }
-            }
-            .build()
+    ): URI = builder.path(weatherRequestEndPoint)
+        .queryParam("latitude", latitude)
+        .queryParam("longitude", longitude)
+        .queryParam("past_days", query.pastDays)
+        .queryParam("forecast_days", query.forecastDays)
+        .queryParam("timezone", "Asia/Tokyo")
+        .apply {
+            daily?.let { queryParam("daily", it) }
+            hourly?.let { queryParam("hourly", it) }
+        }
+        .build()
 }

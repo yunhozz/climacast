@@ -1,4 +1,4 @@
-package com.climacast.batch_server.common.data
+package com.climacast.batch_server.infra.data
 
 import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
 import com.climacast.batch_server.model.entity.DailyWeather
