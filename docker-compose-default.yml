@@ -1,6 +1,6 @@
 services:
   kafka-1:
-    image: bitnami/kafka:latest
+    image: wurstmeister/kafka:latest
     container_name: kafka-1
     environment:
       KAFKA_BROKER_ID: 1
@@ -18,7 +18,7 @@ services:
       - climacast-network
 
   kafka-2:
-    image: bitnami/kafka:latest
+    image: wurstmeister/kafka:latest
     container_name: kafka-2
     environment:
       KAFKA_BROKER_ID: 2
@@ -36,7 +36,7 @@ services:
       - climacast-network
 
   kafka-3:
-    image: bitnami/kafka:latest
+    image: wurstmeister/kafka:latest
     container_name: kafka-3
     environment:
       KAFKA_BROKER_ID: 3
