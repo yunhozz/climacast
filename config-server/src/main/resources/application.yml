@@ -16,8 +16,6 @@ spring:
           clone-on-start: true
           ignore-local-ssh-settings: true
           strict-host-key-checking: false
-          host-key-algorithm: ecdsa-sha2-nistp256
-          host-key: ${config.server.host-key}
           private-key: ${config.server.private-key}
         encrypt:
           enabled: false
