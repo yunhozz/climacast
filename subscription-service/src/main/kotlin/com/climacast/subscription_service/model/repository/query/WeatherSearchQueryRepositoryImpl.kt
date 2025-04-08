@@ -6,16 +6,25 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Operator
 import co.elastic.clients.elasticsearch.core.BulkRequest
 import co.elastic.clients.elasticsearch.core.SearchRequest
 import com.climacast.global.enums.WeatherType
+import com.climacast.global.utils.logger
 import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
+import org.springframework.data.elasticsearch.core.query.Criteria
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Mono
 
 @Repository
 class WeatherSearchQueryRepositoryImpl(
-    private val elasticsearchClient: ElasticsearchClient
+    private val elasticsearchClient: ElasticsearchClient,
+    private val reactiveElasticsearchTemplate: ReactiveElasticsearchTemplate
 ) : WeatherSearchQueryRepository {
+
+    private val log = logger()
 
     override fun upsertWeatherDocuments(documents: List<WeatherDocument>, type: WeatherType) {
         val bulkRequest = BulkRequest.Builder().apply {
@@ -67,6 +76,25 @@ class WeatherSearchQueryRepositoryImpl(
         } catch (e: ElasticsearchException) {
             throw IllegalArgumentException("Fail to search document: ${e.localizedMessage}", e)
         }
+    }
+
+    override fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument>? {
+        val weatherType = query.weatherType
+        val criteria = Criteria("region").`is`(query.region.toString())
+            .and(
+                Criteria("time").between(query.startTime, query.endTime))
+
+        return reactiveElasticsearchTemplate.search(
+            CriteriaQuery(criteria),
+            determineDocumentClass(weatherType),
+            IndexCoordinates.of(createIndex(weatherType))
+        )
+            .map { it.content }
+            .next()
+            .doOnError { ex ->
+                log.error("Fail to search document: ${ex.localizedMessage}", ex)
+            }
+            .onErrorResume { Mono.empty() }
     }
 
     private fun createIndex(type: WeatherType): String =

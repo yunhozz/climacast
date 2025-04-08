@@ -1,5 +1,7 @@
 package com.climacast.global.dto
 
+import com.climacast.global.enums.WeatherType
+
 sealed interface KafkaMessage
 
 data class KafkaEvent(
@@ -16,6 +18,7 @@ data class HistoryWeathersMessage(
 ) : KafkaMessage
 
 data class WeatherQueryRequestMessage(
+    val weatherType: WeatherType,
     val parentRegion: String,
     val childRegion: String,
     val startTime: String,

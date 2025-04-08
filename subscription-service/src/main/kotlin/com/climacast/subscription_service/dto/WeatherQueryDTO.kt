@@ -4,5 +4,7 @@ import com.climacast.global.enums.WeatherType
 
 data class WeatherQueryDTO(
     val weatherType: WeatherType, // FORECAST, HISTORY
-    val region: String?
+    val region: String?,
+    val startTime: String? = "",
+    val endTime: String? = ""
 )
