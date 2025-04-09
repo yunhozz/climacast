@@ -41,9 +41,9 @@ import java.util.concurrent.CompletableFuture
 import kotlin.system.measureTimeMillis
 
 @ExtendWith(MockitoExtension::class)
-class SubscriptionServiceTest {
+class SubscriptionScheduleServiceTest {
     @InjectMocks
-    private lateinit var subscriptionService: SubscriptionService
+    private lateinit var subscriptionScheduleService: SubscriptionScheduleService
     @Mock
     private lateinit var subscriptionRepository: SubscriptionRepository
     @Mock
@@ -103,7 +103,7 @@ class SubscriptionServiceTest {
             .`when`(subscriptionHandler).send(any())
 
         // when
-        subscriptionService.sendEveryThirtyMinute()
+        subscriptionScheduleService.sendEveryThirtyMinute()
 
         // then
         val regionSize = subscription.regions.size
@@ -120,7 +120,7 @@ class SubscriptionServiceTest {
             .willReturn(emptyList())
 
         // when
-        subscriptionService.sendEveryThirtyMinute()
+        subscriptionScheduleService.sendEveryThirtyMinute()
 
         // then
         then(subscriptionHandlerFactory).shouldHaveNoInteractions()
@@ -144,7 +144,7 @@ class SubscriptionServiceTest {
 
         try {
             // when
-            subscriptionService.sendEveryThirtyMinute()
+            subscriptionScheduleService.sendEveryThirtyMinute()
         } catch (e: IllegalArgumentException) {
             // then
             assert(e.message!!.contains("Weather data not found for region"))

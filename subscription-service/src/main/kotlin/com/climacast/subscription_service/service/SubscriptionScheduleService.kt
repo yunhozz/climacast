@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.concurrent.CompletableFuture
 
 @Service
-class SubscriptionService(
+class SubscriptionScheduleService(
     private val subscriptionRepository: SubscriptionRepository,
     private val forecastWeatherSearchRepository: ForecastWeatherSearchRepository,
     private val historyWeatherSearchRepository: HistoryWeatherSearchRepository,
