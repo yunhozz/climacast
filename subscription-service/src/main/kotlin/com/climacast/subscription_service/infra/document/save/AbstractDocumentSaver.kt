@@ -1,10 +1,10 @@
 package com.climacast.subscription_service.infra.document.save
 
-import com.climacast.global.dto.ForecastWeathersMessage
-import com.climacast.global.dto.HistoryWeathersMessage
-import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
+import com.climacast.global.event.KafkaMessage
+import com.climacast.global.event.message.ForecastWeathersMessage
+import com.climacast.global.event.message.HistoryWeathersMessage
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather

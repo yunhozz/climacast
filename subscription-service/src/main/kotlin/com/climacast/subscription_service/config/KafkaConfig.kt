@@ -1,7 +1,7 @@
 package com.climacast.subscription_service.config
 
-import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.enums.KafkaTopic
+import com.climacast.global.event.KafkaMessage
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer

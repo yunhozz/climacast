@@ -1,7 +1,7 @@
 package com.climacast.subscription_service.infra.listener
 
-import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.enums.KafkaTopic
+import com.climacast.global.event.KafkaMessage
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.infra.document.save.DocumentSaver
 import org.springframework.kafka.annotation.KafkaListener
@@ -24,17 +24,6 @@ class WeatherDataListener(
     ) {
         logTopic(headers)
         documentSaver.saveWeathersByMessageType(message)
-        ack.acknowledge()
-    }
-
-    @KafkaListener(topics = [KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC])
-    fun receiveWeatherQueryRequestTopic(
-        @Headers headers: MessageHeaders,
-        @Payload message: KafkaMessage,
-        ack: Acknowledgment
-    ) {
-        logTopic(headers)
-        // TODO
         ack.acknowledge()
     }
 

@@ -1,6 +1,6 @@
 package com.climacast.batch_server.config
 
-import com.climacast.global.dto.KafkaMessage
+import com.climacast.global.event.KafkaMessage
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties

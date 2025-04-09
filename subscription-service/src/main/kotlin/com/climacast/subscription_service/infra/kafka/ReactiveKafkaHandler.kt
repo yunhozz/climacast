@@ -1,9 +1,9 @@
 package com.climacast.subscription_service.infra.kafka
 
-import com.climacast.global.dto.KafkaMessage
-import com.climacast.global.dto.WeatherQueryRequestMessage
-import com.climacast.global.dto.WeatherQueryResponseMessage
 import com.climacast.global.enums.KafkaTopic
+import com.climacast.global.event.KafkaMessage
+import com.climacast.global.event.message.WeatherQueryRequestMessage
+import com.climacast.global.event.message.WeatherQueryResponseMessage
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.dto.WeatherQueryDTO
 import jakarta.annotation.PostConstruct
