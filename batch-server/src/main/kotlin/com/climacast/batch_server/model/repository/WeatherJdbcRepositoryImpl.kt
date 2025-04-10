@@ -1,6 +1,6 @@
 package com.climacast.batch_server.model.repository
 
-import com.climacast.batch_server.dto.HourlyWeatherUpsertRequestDTO
+import com.climacast.batch_server.model.dto.HourlyWeatherUpsertRequestDTO
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp

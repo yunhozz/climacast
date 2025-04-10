@@ -1,4 +1,4 @@
-package com.climacast.batch_server.dto
+package com.climacast.batch_server.model.dto
 
 import java.time.LocalDateTime
 

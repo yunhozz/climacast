@@ -1,6 +1,6 @@
 package com.climacast.batch_server.infra.batch
 
-import com.climacast.batch_server.dto.Region
+import com.climacast.batch_server.model.dto.Region
 import org.springframework.batch.item.file.FlatFileItemReader
 import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
