@@ -7,10 +7,11 @@ import co.elastic.clients.elasticsearch.core.BulkRequest
 import co.elastic.clients.elasticsearch.core.SearchRequest
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.dto.WeatherQueryDTO
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
+import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.Criteria
@@ -46,11 +47,12 @@ class WeatherSearchQueryRepositoryImpl(
         try {
             val bulkResponse = elasticsearchClient.bulk(bulkRequest)
             if (bulkResponse.errors()) {
-                throw IllegalArgumentException("Fail to bulk update documents")
+                throw SubscriptionServiceException.ElasticsearchClientException()
             }
 
         } catch (e: ElasticsearchException) {
-            throw IllegalArgumentException("Fail to bulk update documents: ${e.localizedMessage}", e)
+            log.error("Fail to bulk update documents: ${e.localizedMessage}", e)
+            throw SubscriptionServiceException.ElasticsearchClientException()
         }
     }
 
@@ -74,15 +76,16 @@ class WeatherSearchQueryRepositoryImpl(
                 ?.source()
 
         } catch (e: ElasticsearchException) {
-            throw IllegalArgumentException("Fail to search document: ${e.localizedMessage}", e)
+            log.error("Fail to search document: ${e.localizedMessage}", e)
+            throw SubscriptionServiceException.ElasticsearchClientException()
         }
     }
 
     override fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument>? {
         val weatherType = query.weatherType
         val criteria = Criteria("region").`is`(query.region.toString())
-            .and(
-                Criteria("time").between(query.startTime, query.endTime))
+//            .and(
+//                Criteria("time").between(query.startTime, query.endTime))
 
         return reactiveElasticsearchTemplate.search(
             CriteriaQuery(criteria),

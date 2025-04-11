@@ -1,11 +1,12 @@
 package com.climacast.subscription_service.service
 
 import com.climacast.global.enums.WeatherType
-import com.climacast.subscription_service.dto.WeatherQueryDTO
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.infra.document.save.AbstractDocumentSaver
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
+import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import org.springframework.stereotype.Service
@@ -27,5 +28,5 @@ class WeatherDocumentService(
 
     fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument> =
         forecastWeatherSearchRepository.findWeatherByQuery(query)
-            ?: throw RuntimeException("Not found")
+            ?: throw SubscriptionServiceException.WeatherDocumentNotFoundException()
 }

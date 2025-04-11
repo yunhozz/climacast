@@ -4,12 +4,13 @@ import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.annotation.DistributedLock
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.common.util.WeatherDataBuffer
 import com.climacast.subscription_service.common.util.WeatherDatum
-import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.infra.document.visual.DocumentVisualizerFactory
 import com.climacast.subscription_service.infra.subscription.SubscriberInfo
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandlerFactory
+import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.repository.SubscriptionRepository
@@ -112,10 +113,10 @@ class SubscriptionScheduleService(
         region: String
     ): CompletableFuture<WeatherDatum> {
         val query = WeatherQueryDTO(weatherType, region)
-        val weatherDocument = when (query.weatherType) {
+        val weatherDocument = when (weatherType) {
             WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
             WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)
-        } ?: throw IllegalArgumentException("Weather data not found for region: ${query.region}")
+        } ?: throw SubscriptionServiceException.WeatherDocumentNotFoundException()
 
         val documentVisualizer = documentVisualizerFactory.createDocumentVisualizerByMethod(method)
 
