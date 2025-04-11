@@ -5,7 +5,7 @@ import com.climacast.global.event.KafkaMessage
 import com.climacast.global.event.message.WeatherQueryRequestMessage
 import com.climacast.global.event.message.WeatherQueryResponseMessage
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.dto.WeatherQueryDTO
+import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import jakarta.annotation.PostConstruct
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
@@ -30,7 +30,7 @@ class ReactiveKafkaHandler(
                 val request = record.value() as WeatherQueryRequestMessage
                 val query = WeatherQueryDTO(
                     request.weatherType,
-                    "${request.parentRegion} ${request.childRegion}",
+                    request.region,
                     request.startTime,
                     request.endTime
                 )

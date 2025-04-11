@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.dto
+package com.climacast.subscription_service.model.dto
 
 import com.climacast.global.enums.WeatherType
 

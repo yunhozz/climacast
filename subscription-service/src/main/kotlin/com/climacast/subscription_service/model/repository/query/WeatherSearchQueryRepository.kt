@@ -1,8 +1,8 @@
 package com.climacast.subscription_service.model.repository.query
 
 import com.climacast.global.enums.WeatherType
-import com.climacast.subscription_service.dto.WeatherQueryDTO
 import com.climacast.subscription_service.model.document.WeatherDocument
+import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import reactor.core.publisher.Mono
 
 interface WeatherSearchQueryRepository {
