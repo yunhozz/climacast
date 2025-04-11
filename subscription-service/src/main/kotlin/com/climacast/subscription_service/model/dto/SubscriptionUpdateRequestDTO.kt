@@ -1,11 +1,13 @@
 package com.climacast.subscription_service.model.dto
 
+import com.climacast.subscription_service.common.annotation.CustomValidator
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.model.dto.validator.CustomValidatable
 import jakarta.validation.ConstraintValidatorContext
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
+@CustomValidator
 data class SubscriptionUpdateRequestDTO(
     val email: String?,
     val phoneNumber: String?,
@@ -18,7 +20,7 @@ data class SubscriptionUpdateRequestDTO(
 
     @field:NotBlank(message = "구독 방식을 입력해주세요.")
     val method: String
-) : CustomValidatable {
+) : CustomValidatable() {
 
     override fun validate(ctx: ConstraintValidatorContext): Boolean =
         when (SubscriptionMethod.of(method)) {

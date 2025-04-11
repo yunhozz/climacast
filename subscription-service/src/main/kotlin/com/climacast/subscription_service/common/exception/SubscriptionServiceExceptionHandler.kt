@@ -18,7 +18,12 @@ class SubscriptionServiceExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ApiResponse<ErrorData> {
-        val errorData = ErrorData.of(e.localizedMessage, ErrorData.FieldError.of(e.bindingResult))
+        val bindingResult = e.bindingResult
+        val errorData = ErrorData.of(
+            bindingResult.fieldErrors.map { it.defaultMessage }.toString(),
+            ErrorData.FieldError.of(bindingResult)
+        )
+
         return ApiResponse.fail(ApiResponseCode.ErrorCode.BAD_REQUEST, errorData)
     }
 }

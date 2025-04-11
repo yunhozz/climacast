@@ -29,7 +29,7 @@ data class SubscriptionCreateRequestDTO(
 
     @field:NotBlank(message = "구독 방식을 입력해주세요.")
     val method: String
-) : CustomValidatable {
+) : CustomValidatable() {
 
     fun toEntity() = Subscription(
         SubscriptionInfo(email, phoneNumber),
