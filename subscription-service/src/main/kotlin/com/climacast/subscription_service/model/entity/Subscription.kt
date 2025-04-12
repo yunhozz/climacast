@@ -3,6 +3,7 @@ package com.climacast.subscription_service.model.entity
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import jakarta.persistence.ElementCollection
 import jakarta.persistence.Embeddable
 import jakarta.persistence.Embedded
@@ -44,23 +45,34 @@ class Subscription(
     var status: Boolean = status
         protected set
 
-    fun updateRegions(regions: Set<String>) {
+    fun updateByUserRequest(
+        regions: Set<String>,
+        interval: SubscriptionInterval,
+        method: SubscriptionMethod
+    ) {
+        updateRegions(regions)
+        updateSubscriptionInterval(interval)
+        updateSubscriptionMethod(method)
+    }
+
+    fun cancelByUserRequest() {
+        require(status) {
+            throw SubscriptionServiceException.SubscriptionAlreadyCanceledException()
+        }
+        status = false
+    }
+
+    private fun updateRegions(regions: Set<String>) {
         require(regions.isNotEmpty() && regions.size <= 5) { "Choose at least 1 and no more than 5 regions" }
         this.regions = regions
     }
 
-    fun updateSubscriptionInterval(interval: SubscriptionInterval) {
-        require(weatherType != WeatherType.HISTORY) { "Subscription interval of history weather must be one day" }
+    private fun updateSubscriptionInterval(interval: SubscriptionInterval) {
         this.intervals = interval
     }
 
-    fun updateSubscriptionMethod(method: SubscriptionMethod) {
+    private fun updateSubscriptionMethod(method: SubscriptionMethod) {
         this.method = method
-    }
-
-    fun cancelSubscription() {
-        require(status) { "Already canceled" }
-        status = false
     }
 }
 

@@ -9,6 +9,18 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
+    fun existsBySubscriptionInfoAndStatus(info: SubscriptionInfo, status: Boolean = true): Boolean
+
+    @Query("""
+        select s from Subscription s
+        where (
+            (s.subscriptionInfo.email = :email and s.subscriptionInfo.phoneNumber is null)
+             or (s.subscriptionInfo.phoneNumber = :phoneNumber and s.subscriptionInfo.email is null)
+        )
+        and s.status = true
+    """)
+    fun findByEmailOrPhoneNumber(email: String?, phoneNumber: String?): Subscription?
+
     @Query("""
         select distinct s.regions as regions, s.weatherType as weatherType, s.method as method, s.subscriptionInfo as subscriptionInfo
         from Subscription s
