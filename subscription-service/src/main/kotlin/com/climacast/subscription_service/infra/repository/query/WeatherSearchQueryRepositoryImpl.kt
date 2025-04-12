@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.model.repository.query
+package com.climacast.subscription_service.infra.repository.query
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient
 import co.elastic.clients.elasticsearch._types.ElasticsearchException

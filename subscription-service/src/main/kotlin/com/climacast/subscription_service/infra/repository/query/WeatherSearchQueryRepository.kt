@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.model.repository.query
+package com.climacast.subscription_service.infra.repository.query
 
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.model.document.WeatherDocument

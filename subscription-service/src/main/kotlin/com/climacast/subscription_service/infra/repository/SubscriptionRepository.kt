@@ -1,4 +1,4 @@
-package com.climacast.subscription_service.model.repository
+package com.climacast.subscription_service.infra.repository
 
 import com.climacast.global.enums.WeatherType
 import com.climacast.subscription_service.common.enums.SubscriptionInterval

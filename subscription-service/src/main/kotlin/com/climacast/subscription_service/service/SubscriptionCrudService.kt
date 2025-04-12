@@ -3,11 +3,11 @@ package com.climacast.subscription_service.service
 import com.climacast.subscription_service.common.enums.SubscriptionInterval
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
 import com.climacast.subscription_service.common.exception.SubscriptionServiceException
+import com.climacast.subscription_service.infra.repository.SubscriptionRepository
 import com.climacast.subscription_service.model.dto.SubscriptionCreateRequestDTO
 import com.climacast.subscription_service.model.dto.SubscriptionResponseDTO
 import com.climacast.subscription_service.model.dto.SubscriptionUpdateRequestDTO
 import com.climacast.subscription_service.model.entity.SubscriptionInfo
-import com.climacast.subscription_service.model.repository.SubscriptionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

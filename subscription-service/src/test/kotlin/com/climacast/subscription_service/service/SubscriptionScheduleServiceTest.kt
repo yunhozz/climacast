@@ -7,14 +7,14 @@ import com.climacast.subscription_service.common.util.WeatherDataBuffer
 import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.infra.document.visual.DocumentVisualizer
 import com.climacast.subscription_service.infra.document.visual.DocumentVisualizerFactory
+import com.climacast.subscription_service.infra.repository.ForecastWeatherSearchRepository
+import com.climacast.subscription_service.infra.repository.HistoryWeatherSearchRepository
+import com.climacast.subscription_service.infra.repository.SubscriptionRepository
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandler
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandlerFactory
 import com.climacast.subscription_service.model.document.WeatherDocument
 import com.climacast.subscription_service.model.entity.Subscription
 import com.climacast.subscription_service.model.entity.SubscriptionInfo
-import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
-import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
-import com.climacast.subscription_service.model.repository.SubscriptionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
