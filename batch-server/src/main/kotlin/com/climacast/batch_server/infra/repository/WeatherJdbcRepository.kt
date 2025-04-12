@@ -1,4 +1,4 @@
-package com.climacast.batch_server.model.repository
+package com.climacast.batch_server.infra.repository
 
 import com.climacast.batch_server.model.dto.HourlyWeatherUpsertRequestDTO
 
