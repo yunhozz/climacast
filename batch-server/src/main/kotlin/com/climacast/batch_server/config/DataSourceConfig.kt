@@ -52,7 +52,7 @@ class BatchDataSourceConfig {
 @Configuration
 @EnableJpaAuditing
 @EnableJpaRepositories(
-    basePackages = ["com.climacast.batch_server.model.repository"],
+    basePackages = ["com.climacast.batch_server.infra.repository"],
     entityManagerFactoryRef = "appEntityManagerFactory",
     transactionManagerRef = "appTransactionManager"
 )
