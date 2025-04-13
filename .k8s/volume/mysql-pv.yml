@@ -1,11 +1,23 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: mysql-storage
-  labels:
-    app: mysql
+  name: mysql-source-storage
 provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Delete
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-replica-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-batch-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -15,14 +27,15 @@ metadata:
     app: mysql-source
 spec:
   capacity:
-    storage: 5Gi
+    storage: 1Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
+  storageClassName: mysql-source-storage
   volumeMode: Filesystem
   hostPath:
     path: /mnt/data/mysql/source
+    type: DirectoryOrCreate
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -40,14 +53,15 @@ metadata:
     app: mysql-replica
 spec:
   capacity:
-    storage: 5Gi
+    storage: 1Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
+  storageClassName: mysql-replica-storage
   volumeMode: Filesystem
   hostPath:
     path: /mnt/data/mysql/replica_0
+    type: DirectoryOrCreate
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -65,14 +79,15 @@ metadata:
     app: mysql-replica
 spec:
   capacity:
-    storage: 5Gi
+    storage: 1Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
+  storageClassName: mysql-replica-storage
   volumeMode: Filesystem
   hostPath:
     path: /mnt/data/mysql/replica_1
+    type: DirectoryOrCreate
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -90,14 +105,15 @@ metadata:
     app: mysql-batch
 spec:
   capacity:
-    storage: 5Gi
+    storage: 1Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: mysql-storage
+  storageClassName: mysql-batch-storage
   volumeMode: Filesystem
   hostPath:
     path: /mnt/data/mysql/batch
+    type: DirectoryOrCreate
   nodeAffinity:
     required:
       nodeSelectorTerms:

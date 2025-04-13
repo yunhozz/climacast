@@ -73,15 +73,12 @@ spec:
     - metadata:
         name: mysql-source-data
       spec:
-        selector:
-          matchLabels:
-            app: mysql-source
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-storage
+        storageClassName: mysql-source-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -136,15 +133,12 @@ spec:
     - metadata:
         name: mysql-replica-data
       spec:
-        selector:
-          matchLabels:
-            app: mysql-replica
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-storage
+        storageClassName: mysql-replica-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -191,15 +185,12 @@ spec:
     - metadata:
         name: mysql-batch-data
       spec:
-        selector:
-          matchLabels:
-            app: mysql-batch
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-storage
+        storageClassName: mysql-batch-storage
         resources:
           requests:
-            storage: 5Gi
+            storage: 1Gi
 ---
 apiVersion: v1
 kind: ConfigMap
