@@ -40,7 +40,7 @@ class WeatherDataListener(
                 append("\n[Topic Received]").appendLine()
                 append("Topic: ").appendLine(headers[KafkaHeaders.RECEIVED_TOPIC])
                 append("Partition: ").appendLine(headers[KafkaHeaders.RECEIVED_PARTITION])
-                append("Offset: ").appendLine(headers[KafkaHeaders.ORIGINAL_OFFSET])
+                append("Offset: ").appendLine(headers[KafkaHeaders.OFFSET])
                 append("Key: ").appendLine(headers[KafkaHeaders.RECEIVED_KEY])
             })
         }
