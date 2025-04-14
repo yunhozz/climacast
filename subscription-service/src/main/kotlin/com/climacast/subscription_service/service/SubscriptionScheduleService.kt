@@ -112,7 +112,7 @@ class SubscriptionScheduleService(
         weatherType: WeatherType,
         region: String
     ): CompletableFuture<WeatherDatum> {
-        val query = WeatherQueryDTO(weatherType, region)
+        val query = WeatherQueryDTO(weatherType, region, "", "")
         val weatherDocument = when (weatherType) {
             WeatherType.FORECAST -> forecastWeatherSearchRepository.findWeatherByTypeAndRegion(query)
             WeatherType.HISTORY -> historyWeatherSearchRepository.findWeatherByTypeAndRegion(query)

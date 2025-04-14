@@ -84,15 +84,21 @@ class WeatherSearchQueryRepositoryImpl(
     override fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument>? {
         val weatherType = query.weatherType
         val criteria = Criteria("region").`is`(query.region.toString())
-//            .and(
-//                Criteria("time").between(query.startTime, query.endTime))
 
         return reactiveElasticsearchTemplate.search(
             CriteriaQuery(criteria),
             determineDocumentClass(weatherType),
             IndexCoordinates.of(createIndex(weatherType))
         )
-            .map { it.content }
+            .map { hit ->
+                val weatherDocument = hit.content
+                val startTime = query.startTime
+                val endTime = query.endTime
+
+                if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) {
+                    weatherDocument.sliceByTime(startTime, endTime)
+                } else weatherDocument
+            }
             .next()
             .doOnError { ex ->
                 log.error("Fail to search document: ${ex.localizedMessage}", ex)
@@ -100,15 +106,17 @@ class WeatherSearchQueryRepositoryImpl(
             .onErrorResume { Mono.empty() }
     }
 
-    private fun createIndex(type: WeatherType): String =
-        when (type) {
-            WeatherType.FORECAST -> "forecast_weather"
-            WeatherType.HISTORY -> "history_weather"
-        }
+    companion object {
+        private fun createIndex(type: WeatherType): String =
+            when (type) {
+                WeatherType.FORECAST -> "forecast_weather"
+                WeatherType.HISTORY -> "history_weather"
+            }
 
-    private fun determineDocumentClass(type: WeatherType): Class<out WeatherDocument> =
-        when (type) {
-            WeatherType.FORECAST -> ForecastWeather::class.java
-            WeatherType.HISTORY -> HistoryWeather::class.java
-        }
+        private fun determineDocumentClass(type: WeatherType): Class<out WeatherDocument> =
+            when (type) {
+                WeatherType.FORECAST -> ForecastWeather::class.java
+                WeatherType.HISTORY -> HistoryWeather::class.java
+            }
+    }
 }

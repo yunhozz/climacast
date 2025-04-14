@@ -43,6 +43,42 @@ data class HistoryWeather(
     val windSpeed120m: List<Double>?,
     val windSpeed180m: List<Double>?,
     val humidity2m: List<Int>?
-): WeatherDocument {
+) : WeatherDocument {
+
     override fun getId() = region
+
+    override fun sliceByTime(startTime: String, endTime: String) = this.copy(
+        time = time?.slice(time, startTime, endTime),
+        weatherStatus = weatherStatus?.slice(time, startTime, endTime),
+        maxTemperature2m = maxTemperature2m?.slice(time, startTime, endTime),
+        minTemperature2m = minTemperature2m?.slice(time, startTime, endTime),
+        maxApparentTemperature = maxApparentTemperature?.slice(time, startTime, endTime),
+        minApparentTemperature = minApparentTemperature?.slice(time, startTime, endTime),
+        sunrise = sunrise?.slice(time, startTime, endTime),
+        sunset = sunset?.slice(time, startTime, endTime),
+        daylightDuration = daylightDuration?.slice(time, startTime, endTime),
+        sunshineDuration = sunshineDuration?.slice(time, startTime, endTime),
+        maxUvIndex = maxUvIndex?.slice(time, startTime, endTime),
+        maxUvIndexClearSky = maxUvIndexClearSky?.slice(time, startTime, endTime),
+        precipitationSum = precipitationSum?.slice(time, startTime, endTime),
+        rainSum = rainSum?.slice(time, startTime, endTime),
+        showersSum = showersSum?.slice(time, startTime, endTime),
+        snowfallSum = snowfallSum?.slice(time, startTime, endTime),
+        precipitationHours = precipitationHours?.slice(time, startTime, endTime),
+        maxPrecipitationProbability = maxPrecipitationProbability?.slice(time, startTime, endTime),
+        maxWindSpeed10m = maxWindSpeed10m?.slice(time, startTime, endTime),
+        maxWindGusts10m = maxWindGusts10m?.slice(time, startTime, endTime),
+        windDirection10m = windDirection10m?.slice(time, startTime, endTime),
+        sumOfShortwaveRadiation = sumOfShortwaveRadiation?.slice(time, startTime, endTime),
+        refEvapotranspiration = refEvapotranspiration?.slice(time, startTime, endTime),
+        temperature2m = temperature2m?.slice(time, startTime, endTime),
+        temperature80m = temperature80m?.slice(time, startTime, endTime),
+        temperature120m = temperature120m?.slice(time, startTime, endTime),
+        temperature180m = temperature180m?.slice(time, startTime, endTime),
+        windSpeed10m = windSpeed10m?.slice(time, startTime, endTime),
+        windSpeed80m = windSpeed80m?.slice(time, startTime, endTime),
+        windSpeed120m = windSpeed120m?.slice(time, startTime, endTime),
+        windSpeed180m = windSpeed180m?.slice(time, startTime, endTime),
+        humidity2m = humidity2m?.slice(time, startTime, endTime)
+    )
 }
