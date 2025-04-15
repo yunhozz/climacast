@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
+import kotlin.reflect.full.declaredMemberFunctions
 
 @Component
 class ReactiveKafkaHandler(
@@ -21,10 +22,14 @@ class ReactiveKafkaHandler(
 
     @PostConstruct
     fun initConsumer() {
-        findAndPublishWeatherData()
+        val consumers = this::class.declaredMemberFunctions
+            .filter { it.name != "initConsumer" }
+            .map { it.name }
+        log.info("Initiate Reactive Kafka Consumers! $consumers")
+        queryAndPublishWeatherDataConsumer()
     }
 
-    private fun findAndPublishWeatherData() {
+    private fun queryAndPublishWeatherDataConsumer() {
         kafkaConsumer.receive()
             .flatMap { record ->
                 val request = record.value() as WeatherQueryRequestMessage
@@ -34,6 +39,7 @@ class ReactiveKafkaHandler(
                     request.startTime,
                     request.endTime
                 )
+
                 weatherQueryProvider.find(query)
                     .flatMap { document ->
                         kafkaProducer.send(KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,

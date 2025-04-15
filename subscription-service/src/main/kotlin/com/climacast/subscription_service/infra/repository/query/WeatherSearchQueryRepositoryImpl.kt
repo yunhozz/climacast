@@ -85,25 +85,26 @@ class WeatherSearchQueryRepositoryImpl(
         val weatherType = query.weatherType
         val criteria = Criteria("region").`is`(query.region.toString())
 
-        return reactiveElasticsearchTemplate.search(
+        val searchHit = reactiveElasticsearchTemplate.search(
             CriteriaQuery(criteria),
             determineDocumentClass(weatherType),
             IndexCoordinates.of(createIndex(weatherType))
         )
-            .map { hit ->
-                val weatherDocument = hit.content
-                val startTime = query.startTime
-                val endTime = query.endTime
 
-                if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) {
-                    weatherDocument.sliceByTime(startTime, endTime)
-                } else weatherDocument
-            }
-            .next()
-            .doOnError { ex ->
-                log.error("Fail to search document: ${ex.localizedMessage}", ex)
-            }
-            .onErrorResume { Mono.empty() }
+        return searchHit.map { hit ->
+            val weatherDocument = hit.content
+            val startTime = query.startTime
+            val endTime = query.endTime
+
+            if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) {
+                weatherDocument.sliceByTime(startTime, endTime)
+            } else weatherDocument
+        }
+        .next()
+        .onErrorMap { ex ->
+            log.error("Fail to search document: ${ex.localizedMessage}", ex)
+            throw SubscriptionServiceException.WeatherDocumentNotFoundException()
+        }
     }
 
     companion object {

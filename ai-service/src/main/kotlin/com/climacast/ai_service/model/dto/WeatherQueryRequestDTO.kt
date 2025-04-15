@@ -14,12 +14,10 @@ data class WeatherQueryRequestDTO(
     @field:NotBlank(message = "하위 지역을 입력해주세요.")
     val childRegion: String,
 
-    val isWholeTime: Boolean = false,
-    val startTime: String? = null,
-    val endTime: String? = null,
-
-    @field:NotBlank(message = "요청 사항을 입력해주세요.")
-    val message: String
+    val isWholeTime: Boolean,
+    val startTime: String?,
+    val endTime: String?,
+    val message: String?
 ) {
     @AssertTrue(message = "시작 및 종료 시간대를 입력해주세요.")
     fun isTimeNotNull(): Boolean =

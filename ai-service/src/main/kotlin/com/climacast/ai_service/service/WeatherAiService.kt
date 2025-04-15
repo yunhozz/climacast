@@ -25,8 +25,8 @@ class WeatherAiService(
         val request = WeatherQueryRequestMessage(
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
-            startTime = dto.startTime.toString(),
-            endTime = dto.endTime.toString()
+            startTime = dto.startTime,
+            endTime = dto.endTime
         )
         val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, request)
 
