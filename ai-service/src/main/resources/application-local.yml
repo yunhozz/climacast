@@ -8,14 +8,14 @@ spring:
     config:
       enabled: false
   ai:
+    openai:
+      api-key: ${openai.api-key}
+      chat:
+        options:
+          model: gpt-3.5-turbo
     ollama:
       chat:
         model: llama3.2
-#    openai:
-#      api-key: ${openai.api-key}
-#      chat:
-#        options:
-#          model: gpt-4o
 
 logging:
   level:
