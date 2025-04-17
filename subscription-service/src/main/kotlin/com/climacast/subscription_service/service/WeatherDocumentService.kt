@@ -10,6 +10,7 @@ import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
 import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @Service
@@ -29,4 +30,7 @@ class WeatherDocumentService(
     fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument> =
         forecastWeatherSearchRepository.findWeatherByQuery(query)
             ?: throw SubscriptionServiceException.WeatherDocumentNotFoundException()
+
+    fun findWeatherFluxByQuery(query: WeatherQueryDTO): Flux<WeatherDocument> =
+        forecastWeatherSearchRepository.findWeatherFluxByQuery(query)
 }

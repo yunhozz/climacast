@@ -8,6 +8,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.exception.SubscriptionServiceException
+import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
@@ -17,7 +18,9 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.core.query.Criteria
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery
 import org.springframework.stereotype.Repository
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Duration
 
 @Repository
 class WeatherSearchQueryRepositoryImpl(
@@ -107,6 +110,37 @@ class WeatherSearchQueryRepositoryImpl(
         }
     }
 
+    override fun findWeatherFluxByQuery(query: WeatherQueryDTO): Flux<WeatherDocument> {
+        val weatherType = query.weatherType
+        val criteria = Criteria("region").`is`(query.region.toString())
+
+        val searchHit = reactiveElasticsearchTemplate.search(
+            CriteriaQuery(criteria),
+            determineDocumentClass(weatherType),
+            IndexCoordinates.of(createIndex(weatherType))
+        )
+
+        return searchHit.flatMap { hit ->
+            val weatherDocument = hit.content
+            val startTime = query.startTime
+            val endTime = query.endTime
+
+            when {
+                !startTime.isNullOrBlank() && !endTime.isNullOrBlank() -> {
+                    if (isTimeDiffMoreThanOneDay(startTime, endTime)) {
+                        Flux.fromIterable(weatherDocument.sliceByDay(startTime, endTime))
+                    } else
+                        Flux.just(weatherDocument.sliceByTime(startTime, endTime))
+                }
+                else -> Flux.fromIterable(weatherDocument.sliceByDay())
+            }
+
+        }.onErrorMap { ex ->
+            log.error("Fail to search document: ${ex.localizedMessage}", ex)
+            throw SubscriptionServiceException.WeatherDocumentNotFoundException()
+        }
+    }
+
     companion object {
         private fun createIndex(type: WeatherType): String =
             when (type) {
@@ -119,5 +153,11 @@ class WeatherSearchQueryRepositoryImpl(
                 WeatherType.FORECAST -> ForecastWeather::class.java
                 WeatherType.HISTORY -> HistoryWeather::class.java
             }
+
+        private fun isTimeDiffMoreThanOneDay(startTime: String, endTime: String): Boolean {
+            val st = DateTimeConverter.parseDateTime(startTime)
+            val et = DateTimeConverter.parseDateTime(endTime)
+            return Duration.between(st, et).toDays() > 0
+        }
     }
 }

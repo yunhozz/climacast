@@ -40,14 +40,24 @@ class ReactiveKafkaHandler(
                     request.endTime
                 )
 
-                weatherQueryProvider.find(query)
+                weatherQueryProvider.findFlux(query)
                     .flatMap { document ->
-                        kafkaProducer.send(KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
+                        kafkaProducer.send(
+                            KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
                             WeatherQueryResponseMessage(document.toString())
                         )
                     }
                     .doOnError { ex -> log.error(ex.localizedMessage, ex) }
                     .doFinally { record.receiverOffset().acknowledge() }
+
+//                weatherQueryProvider.findMono(query)
+//                    .flatMap { document ->
+//                        kafkaProducer.send(KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
+//                            WeatherQueryResponseMessage(document.toString())
+//                        )
+//                    }
+//                    .doOnError { ex -> log.error(ex.localizedMessage, ex) }
+//                    .doFinally { record.receiverOffset().acknowledge() }
             }
             .subscribe()
     }

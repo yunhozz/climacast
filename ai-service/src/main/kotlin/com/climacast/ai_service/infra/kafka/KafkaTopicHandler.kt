@@ -8,6 +8,7 @@ import com.climacast.global.utils.logger
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
 
@@ -38,21 +39,36 @@ class KafkaTopicHandler(
             )
     }
 
-    fun consume(): Mono<WeatherQueryResponseMessage> =
-        kafkaConsumer.receive()
-            .doOnNext { record ->
-                log.info("""
-                    [Consumed Message]
-                    ${record.value()}
-                """.trimIndent())
-                record.receiverOffset().acknowledge()
-            }
-            .doOnError { ex -> log.error(ex.localizedMessage, ex) }
-            .map { it.value() as WeatherQueryResponseMessage }
-            .next()
-            .timeout(Duration.ofMinutes(1))
-            .onErrorMap { ex ->
-                log.error(ex.localizedMessage, ex)
-                throw AiServiceException.WeatherDataResponseTimeoutException()
-            }
+    fun consumeV1(): Mono<WeatherQueryResponseMessage> = kafkaConsumer.receive()
+        .doOnNext { record ->
+            log.info("""
+                [Consumed Message]
+                ${record.value()}
+            """.trimIndent())
+            record.receiverOffset().acknowledge()
+        }
+        .doOnError { ex -> log.error(ex.localizedMessage, ex) }
+        .map { it.value() as WeatherQueryResponseMessage }
+        .next()
+        .timeout(Duration.ofMinutes(3))
+        .onErrorMap { ex ->
+            log.error(ex.localizedMessage, ex)
+            throw AiServiceException.WeatherDataResponseTimeoutException()
+        }
+
+    fun consumeV2(): Flux<WeatherQueryResponseMessage> = kafkaConsumer.receive()
+        .doOnNext { record ->
+            log.info("""
+                [Consumed Message]
+                ${record.value()}
+            """.trimIndent())
+            record.receiverOffset().acknowledge()
+        }
+        .doOnError { ex -> log.error(ex.localizedMessage, ex) }
+        .map { it.value() as WeatherQueryResponseMessage }
+        .timeout(Duration.ofMinutes(3))
+        .onErrorMap { ex ->
+            log.error(ex.localizedMessage, ex)
+            throw AiServiceException.WeatherDataResponseTimeoutException()
+        }
 }

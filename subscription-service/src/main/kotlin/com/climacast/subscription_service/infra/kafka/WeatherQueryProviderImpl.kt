@@ -4,6 +4,7 @@ import com.climacast.subscription_service.model.document.WeatherDocument
 import com.climacast.subscription_service.model.dto.WeatherQueryDTO
 import com.climacast.subscription_service.service.WeatherDocumentService
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @Component
@@ -11,6 +12,9 @@ class WeatherQueryProviderImpl(
     private val weatherDocumentService: WeatherDocumentService
 ) : WeatherQueryProvider {
 
-    override fun find(query: WeatherQueryDTO): Mono<WeatherDocument> =
+    override fun findMono(query: WeatherQueryDTO): Mono<WeatherDocument> =
         weatherDocumentService.findWeatherByQuery(query)
+
+    override fun findFlux(query: WeatherQueryDTO): Flux<WeatherDocument> =
+        weatherDocumentService.findWeatherFluxByQuery(query)
 }

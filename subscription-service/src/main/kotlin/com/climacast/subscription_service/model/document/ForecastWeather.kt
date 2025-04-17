@@ -25,6 +25,7 @@ data class ForecastWeather(
 ) : WeatherDocument {
 
     override fun getId() = region
+    override fun getTimeList(): List<String> = time!!
 
     override fun sliceByTime(startTime: String, endTime: String) = this.copy(
         time = time?.slice(time, startTime, endTime),

@@ -5,10 +5,12 @@ import com.climacast.ai_service.service.WeatherAiService
 import com.climacast.global.dto.ApiResponse
 import com.climacast.global.enums.ApiResponseCode
 import jakarta.validation.Valid
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @RestController
@@ -16,9 +18,9 @@ import reactor.core.publisher.Mono
 class WeatherAiController(
     private val weatherAiService: WeatherAiService
 ) {
-    @PostMapping("/query")
-    fun queryWeatherInformation(@Valid @RequestBody dto: WeatherQueryRequestDTO): Mono<ApiResponse<String>> =
-        weatherAiService.processQuery(dto)
+    @PostMapping("/query/v1")
+    fun queryWeatherInformationV1(@Valid @RequestBody dto: WeatherQueryRequestDTO): Mono<ApiResponse<String>> =
+        weatherAiService.processQueryV1(dto)
             .flatMap { response ->
                 val apiResponse = ApiResponse.success(
                     ApiResponseCode.SuccessCode.AI_RESPONSE_SUCCESS,
@@ -26,4 +28,8 @@ class WeatherAiController(
                 )
                 Mono.just(apiResponse)
             }
+
+    @PostMapping("/query/v2", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun queryWeatherInformationV2(@Valid @RequestBody dto: WeatherQueryRequestDTO): Flux<String> =
+        weatherAiService.processQueryV2(dto)
 }

@@ -6,12 +6,12 @@ import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.event.KafkaEvent
 import com.climacast.global.event.message.WeatherQueryRequestMessage
-import com.climacast.global.event.message.WeatherQueryResponseMessage
 import com.climacast.global.utils.logger
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.ollama.OllamaChatModel
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @Service
@@ -21,7 +21,7 @@ class WeatherAiService(
 ) {
     private val log = logger()
 
-    fun processQuery(dto: WeatherQueryRequestDTO): Mono<String> {
+    fun processQueryV1(dto: WeatherQueryRequestDTO): Mono<String> {
         val request = WeatherQueryRequestMessage(
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
@@ -32,14 +32,30 @@ class WeatherAiService(
 
         kafkaTopicHandler.publish(event)
 
-        return kafkaTopicHandler.consume()
+        return kafkaTopicHandler.consumeV1()
             .flatMap { message ->
-                val response = message as WeatherQueryResponseMessage
                 val systemMessage = SystemMessage(TEXT_CONTENT)
-                val userMessage = UserMessage(response.toString())
+                val userMessage = UserMessage(message.toString())
+                Mono.just(chatModel.call(systemMessage, userMessage))
+            }
+    }
 
+    fun processQueryV2(dto: WeatherQueryRequestDTO): Flux<String> {
+        val request = WeatherQueryRequestMessage(
+            weatherType = WeatherType.of(dto.weatherType),
+            region = "${dto.parentRegion} ${dto.childRegion}",
+            startTime = dto.startTime,
+            endTime = dto.endTime
+        )
+        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, request)
+
+        kafkaTopicHandler.publish(event)
+
+        return kafkaTopicHandler.consumeV2()
+            .flatMap { message ->
+                val systemMessage = SystemMessage(TEXT_CONTENT)
+                val userMessage = UserMessage(message.toString())
                 chatModel.stream(systemMessage, userMessage)
-                    .reduce(String::plus)
             }
     }
 
