@@ -20,7 +20,7 @@ data class SubscriptionUpdateRequestDTO(
 
     @field:NotBlank(message = "구독 방식을 입력해주세요.")
     val method: String
-) : CustomValidatable() {
+) : CustomValidatable {
 
     override fun validate(ctx: ConstraintValidatorContext): Boolean =
         when (SubscriptionMethod.of(method)) {
