@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kafka.sender.SenderResult
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberFunctions
 
 @Component
@@ -26,13 +27,13 @@ class ReactiveKafkaHandler(
     @PostConstruct
     fun initConsumer() {
         val consumers = this::class.declaredMemberFunctions
-            .filter { it.name != "initConsumer" }
+            .filter { it.visibility == KVisibility.INTERNAL }
             .map { it.name }
         log.info("Initiate Reactive Kafka Consumers! $consumers")
         queryAndPublishWeatherDataConsumer()
     }
 
-    private fun queryAndPublishWeatherDataConsumer() {
+    internal fun queryAndPublishWeatherDataConsumer() {
         kafkaConsumer.receive()
             .flatMap { record ->
                 val request = record.value() as WeatherQueryRequestMessage
