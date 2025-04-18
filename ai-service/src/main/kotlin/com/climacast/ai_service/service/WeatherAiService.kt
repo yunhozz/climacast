@@ -22,7 +22,7 @@ class WeatherAiService(
 ) {
     private val log = logger()
 
-    fun processQueryV1(dto: WeatherQueryRequestDTO): Mono<String> {
+    fun processQuery(dto: WeatherQueryRequestDTO): Mono<String> {
         val requestId = UUID.randomUUID().toString()
         val request = WeatherQueryRequestMessage(
             requestId,
@@ -50,7 +50,7 @@ class WeatherAiService(
             }
     }
 
-    fun processQueryV2(dto: WeatherQueryRequestDTO): Flux<String> {
+    fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
         val requestId = UUID.randomUUID().toString()
         val request = WeatherQueryRequestMessage(
             requestId,

@@ -18,9 +18,9 @@ import reactor.core.publisher.Mono
 class WeatherAiController(
     private val weatherAiService: WeatherAiService
 ) {
-    @PostMapping("/query/v1")
-    fun queryWeatherInformationV1(@Valid @RequestBody dto: WeatherQueryRequestDTO): Mono<ApiResponse<String>> =
-        weatherAiService.processQueryV1(dto)
+    @PostMapping("/analyze")
+    fun analyzeWeatherSummary(@Valid @RequestBody dto: WeatherQueryRequestDTO): Mono<ApiResponse<String>> =
+        weatherAiService.processQuery(dto)
             .flatMap { response ->
                 val apiResponse = ApiResponse.success(
                     ApiResponseCode.SuccessCode.AI_RESPONSE_SUCCESS,
@@ -29,7 +29,7 @@ class WeatherAiController(
                 Mono.just(apiResponse)
             }
 
-    @PostMapping("/query/v2", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun queryWeatherInformationV2(@Valid @RequestBody dto: WeatherQueryRequestDTO): Flux<String> =
-        weatherAiService.processQueryV2(dto)
+    @PostMapping("/analyze/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun streamWeatherAnalysis(@Valid @RequestBody dto: WeatherQueryRequestDTO): Flux<String> =
+        weatherAiService.processQueryStream(dto)
 }
