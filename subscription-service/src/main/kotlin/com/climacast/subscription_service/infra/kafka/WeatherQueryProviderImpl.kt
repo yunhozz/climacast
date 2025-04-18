@@ -12,8 +12,8 @@ class WeatherQueryProviderImpl(
     private val weatherDocumentService: WeatherDocumentService
 ) : WeatherQueryProvider {
 
-    override fun findMono(query: WeatherQueryDTO): Mono<WeatherDocument> =
-        weatherDocumentService.findWeatherByQuery(query)
+    override fun findMono(query: WeatherQueryDTO): Mono<List<WeatherDocument>> =
+        weatherDocumentService.findWeatherListMonoByQuery(query)
 
     override fun findFlux(query: WeatherQueryDTO): Flux<WeatherDocument> =
         weatherDocumentService.findWeatherFluxByQuery(query)

@@ -84,26 +84,31 @@ class WeatherSearchQueryRepositoryImpl(
         }
     }
 
-    override fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument>? {
+    override fun findWeatherListMonoByQuery(query: WeatherQueryDTO): Mono<List<WeatherDocument>> {
         val weatherType = query.weatherType
         val criteria = Criteria("region").`is`(query.region.toString())
 
-        val searchHit = reactiveElasticsearchTemplate.search(
+        val searchHitMono = reactiveElasticsearchTemplate.search(
             CriteriaQuery(criteria),
             determineDocumentClass(weatherType),
             IndexCoordinates.of(createIndex(weatherType))
-        )
+        ).next()
 
-        return searchHit.map { hit ->
+        return searchHitMono.flatMap { hit ->
             val weatherDocument = hit.content
             val startTime = query.startTime
             val endTime = query.endTime
 
-            if (!startTime.isNullOrBlank() && !endTime.isNullOrBlank()) {
-                weatherDocument.sliceByTime(startTime, endTime)
-            } else weatherDocument
+            when {
+                !startTime.isNullOrBlank() && !endTime.isNullOrBlank() -> {
+                    if (isTimeDiffMoreThanOneDay(startTime, endTime)) {
+                        Mono.just(weatherDocument.sliceByDay(startTime, endTime))
+                    } else
+                        Mono.just(listOf(weatherDocument.sliceByTime(startTime, endTime)))
+                }
+                else -> Mono.just(weatherDocument.sliceByDay())
+            }
         }
-        .next()
         .onErrorMap { ex ->
             log.error("Fail to search document: ${ex.localizedMessage}", ex)
             throw SubscriptionServiceException.WeatherDocumentNotFoundException()
@@ -114,13 +119,13 @@ class WeatherSearchQueryRepositoryImpl(
         val weatherType = query.weatherType
         val criteria = Criteria("region").`is`(query.region.toString())
 
-        val searchHit = reactiveElasticsearchTemplate.search(
+        val searchHitFlux = reactiveElasticsearchTemplate.search(
             CriteriaQuery(criteria),
             determineDocumentClass(weatherType),
             IndexCoordinates.of(createIndex(weatherType))
         )
 
-        return searchHit.flatMap { hit ->
+        return searchHitFlux.flatMap { hit ->
             val weatherDocument = hit.content
             val startTime = query.startTime
             val endTime = query.endTime

@@ -13,6 +13,7 @@ import org.springframework.ai.ollama.OllamaChatModel
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.util.UUID
 
 @Service
 class WeatherAiService(
@@ -22,7 +23,9 @@ class WeatherAiService(
     private val log = logger()
 
     fun processQueryV1(dto: WeatherQueryRequestDTO): Mono<String> {
+        val requestId = UUID.randomUUID().toString()
         val request = WeatherQueryRequestMessage(
+            requestId,
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
             startTime = dto.startTime,
@@ -32,26 +35,35 @@ class WeatherAiService(
 
         kafkaTopicHandler.publish(event)
 
-        return kafkaTopicHandler.consumeV1()
-            .flatMap { message ->
+        return kafkaTopicHandler.consume()
+            .filter { it.originalRequestId == requestId }
+            .takeUntil { it.isLast == true }
+            .concatMap { message ->
                 val systemMessage = SystemMessage(TEXT_CONTENT)
                 val userMessage = UserMessage(message.toString())
-                Mono.just(chatModel.call(systemMessage, userMessage))
+                chatModel.stream(systemMessage, userMessage)
+            }
+            .collectList()
+            .flatMap { responses ->
+                val result = responses.joinToString("")
+                Mono.just(result)
             }
     }
 
     fun processQueryV2(dto: WeatherQueryRequestDTO): Flux<String> {
+        val requestId = UUID.randomUUID().toString()
         val request = WeatherQueryRequestMessage(
+            requestId,
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
             startTime = dto.startTime,
             endTime = dto.endTime
         )
-        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, request)
+        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, request)
 
         kafkaTopicHandler.publish(event)
 
-        return kafkaTopicHandler.consumeV2()
+        return kafkaTopicHandler.consume()
             .flatMap { message ->
                 val systemMessage = SystemMessage(TEXT_CONTENT)
                 val userMessage = UserMessage(message.toString())

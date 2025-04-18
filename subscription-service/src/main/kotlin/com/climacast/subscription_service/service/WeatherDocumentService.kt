@@ -1,7 +1,6 @@
 package com.climacast.subscription_service.service
 
 import com.climacast.global.enums.WeatherType
-import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.infra.document.save.AbstractDocumentSaver
 import com.climacast.subscription_service.infra.repository.ForecastWeatherSearchRepository
 import com.climacast.subscription_service.infra.repository.HistoryWeatherSearchRepository
@@ -27,9 +26,8 @@ class WeatherDocumentService(
         historyWeatherSearchRepository.upsertWeatherDocuments(historyWeathers, WeatherType.HISTORY)
     }
 
-    fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument> =
-        forecastWeatherSearchRepository.findWeatherByQuery(query)
-            ?: throw SubscriptionServiceException.WeatherDocumentNotFoundException()
+    fun findWeatherListMonoByQuery(query: WeatherQueryDTO): Mono<List<WeatherDocument>> =
+        forecastWeatherSearchRepository.findWeatherListMonoByQuery(query)
 
     fun findWeatherFluxByQuery(query: WeatherQueryDTO): Flux<WeatherDocument> =
         forecastWeatherSearchRepository.findWeatherFluxByQuery(query)

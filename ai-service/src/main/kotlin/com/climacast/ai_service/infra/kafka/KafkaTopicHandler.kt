@@ -9,7 +9,6 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import java.time.Duration
 
 @Component
@@ -39,24 +38,7 @@ class KafkaTopicHandler(
             )
     }
 
-    fun consumeV1(): Mono<WeatherQueryResponseMessage> = kafkaConsumer.receive()
-        .doOnNext { record ->
-            log.info("""
-                [Consumed Message]
-                ${record.value()}
-            """.trimIndent())
-            record.receiverOffset().acknowledge()
-        }
-        .doOnError { ex -> log.error(ex.localizedMessage, ex) }
-        .map { it.value() as WeatherQueryResponseMessage }
-        .next()
-        .timeout(Duration.ofMinutes(3))
-        .onErrorMap { ex ->
-            log.error(ex.localizedMessage, ex)
-            throw AiServiceException.WeatherDataResponseTimeoutException()
-        }
-
-    fun consumeV2(): Flux<WeatherQueryResponseMessage> = kafkaConsumer.receive()
+    fun consume(): Flux<WeatherQueryResponseMessage> = kafkaConsumer.receive()
         .doOnNext { record ->
             log.info("""
                 [Consumed Message]

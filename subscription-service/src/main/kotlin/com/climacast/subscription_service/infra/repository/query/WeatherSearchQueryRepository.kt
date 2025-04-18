@@ -9,6 +9,6 @@ import reactor.core.publisher.Mono
 interface WeatherSearchQueryRepository {
     fun upsertWeatherDocuments(documents: List<WeatherDocument>, type: WeatherType)
     fun findWeatherByTypeAndRegion(query: WeatherQueryDTO): WeatherDocument?
-    fun findWeatherByQuery(query: WeatherQueryDTO): Mono<WeatherDocument>?
+    fun findWeatherListMonoByQuery(query: WeatherQueryDTO): Mono<List<WeatherDocument>>
     fun findWeatherFluxByQuery(query: WeatherQueryDTO): Flux<WeatherDocument>
 }

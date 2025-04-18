@@ -58,8 +58,11 @@ class KafkaConfig(
     fun reactiveKafkaConsumerTemplate(): ReactiveKafkaConsumerTemplate<String, KafkaMessage> =
         ReactiveKafkaConsumerTemplate(
             ReceiverOptions.create<String, KafkaMessage>(kafkaConsumerProperties())
-                .subscription(Collections.singletonList(
-                    KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC
+                .subscription(Collections.synchronizedList(
+                    listOf(
+                        KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC,
+                        KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC
+                    )
                 ))
         )
 

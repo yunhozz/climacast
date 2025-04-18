@@ -6,6 +6,6 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 interface WeatherQueryProvider {
-    fun findMono(query: WeatherQueryDTO): Mono<WeatherDocument>
+    fun findMono(query: WeatherQueryDTO): Mono<List<WeatherDocument>>
     fun findFlux(query: WeatherQueryDTO): Flux<WeatherDocument>
 }

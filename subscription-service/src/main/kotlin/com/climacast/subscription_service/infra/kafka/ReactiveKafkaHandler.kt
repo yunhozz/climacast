@@ -10,6 +10,9 @@ import jakarta.annotation.PostConstruct
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.kafka.sender.SenderResult
 import kotlin.reflect.full.declaredMemberFunctions
 
 @Component
@@ -40,25 +43,38 @@ class ReactiveKafkaHandler(
                     request.endTime
                 )
 
-                weatherQueryProvider.findFlux(query)
-                    .flatMap { document ->
-                        kafkaProducer.send(
-                            KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
-                            WeatherQueryResponseMessage(document.toString())
-                        )
+                when (record.topic()) {
+                    KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC -> {
+                        weatherQueryProvider.findMono(query)
+                            .flatMapMany { documentList ->
+                                val lastIndex = documentList.lastIndex
+                                Flux.fromIterable(documentList.withIndex())
+                                    .flatMap { (index, document) ->
+                                        val isLast = index == lastIndex
+                                        sendWeatherQueryResponseTopic(request.requestId, document.toString(), isLast)
+                                    }
+                            }
                     }
-                    .doOnError { ex -> log.error(ex.localizedMessage, ex) }
-                    .doFinally { record.receiverOffset().acknowledge() }
-
-//                weatherQueryProvider.findMono(query)
-//                    .flatMap { document ->
-//                        kafkaProducer.send(KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
-//                            WeatherQueryResponseMessage(document.toString())
-//                        )
-//                    }
-//                    .doOnError { ex -> log.error(ex.localizedMessage, ex) }
-//                    .doFinally { record.receiverOffset().acknowledge() }
+                    KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC -> {
+                        weatherQueryProvider.findFlux(query)
+                            .flatMap { document ->
+                                sendWeatherQueryResponseTopic(request.requestId, document.toString())
+                            }
+                    }
+                    else -> Flux.empty()
+                }
+                .doOnError { ex -> log.error(ex.localizedMessage, ex) }
+                .doFinally { record.receiverOffset().acknowledge() }
             }
             .subscribe()
     }
+
+    private fun sendWeatherQueryResponseTopic(
+        id: String,
+        response: String,
+        isLast: Boolean? = false
+    ): Mono<SenderResult<Void>> = kafkaProducer.send(
+        KafkaTopic.WEATHER_QUERY_RESPONSE_TOPIC,
+        WeatherQueryResponseMessage(id, response, isLast)
+    )
 }
