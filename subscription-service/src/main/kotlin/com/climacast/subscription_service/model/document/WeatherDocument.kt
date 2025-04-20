@@ -1,6 +1,6 @@
 package com.climacast.subscription_service.model.document
 
-import com.climacast.subscription_service.common.util.DateTimeConverter
+import com.climacast.global.utils.DateTimeConverter
 
 interface WeatherDocument {
     fun getId(): String
@@ -15,15 +15,16 @@ interface WeatherDocument {
             } else tl
         }
 
-        val timeIndexListMap = timeList.mapIndexed { index, time ->
-            val localDateTime = DateTimeConverter.parseDateTime(time)
+        return timeList.mapIndexed { index, time ->
+            val localDateTime = DateTimeConverter.convertToLocalDateTime(time)
             localDateTime.toLocalDate() to index
         }
-        .groupBy({ it.first }, { it.second })
-
-        return timeIndexListMap.map { (_, indices) ->
-            sliceByTime(timeList[indices.first()], timeList[indices.last()])
-        }
+            .groupBy({ it.first }, { it.second })
+            .map { (_, indices) ->
+                val st = timeList[indices.first()]
+                val et = timeList[indices.last()]
+                sliceByTime(st, et)
+            }
     }
 
     fun <T> List<T>.slice(timeList: List<String>?, startTime: String, endTime: String): List<T> {

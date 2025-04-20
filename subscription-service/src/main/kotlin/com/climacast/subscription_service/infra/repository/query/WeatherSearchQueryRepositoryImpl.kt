@@ -6,9 +6,9 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Operator
 import co.elastic.clients.elasticsearch.core.BulkRequest
 import co.elastic.clients.elasticsearch.core.SearchRequest
 import com.climacast.global.enums.WeatherType
+import com.climacast.global.utils.DateTimeConverter
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.exception.SubscriptionServiceException
-import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import com.climacast.subscription_service.model.document.WeatherDocument
@@ -146,6 +146,12 @@ class WeatherSearchQueryRepositoryImpl(
         }
     }
 
+    private fun isTimeDiffMoreThanOneDay(startTime: String, endTime: String): Boolean {
+        val st = DateTimeConverter.convertToLocalDateTime(startTime)
+        val et = DateTimeConverter.convertToLocalDateTime(endTime)
+        return Duration.between(st, et).toDays() > 0
+    }
+
     companion object {
         private fun createIndex(type: WeatherType): String =
             when (type) {
@@ -158,11 +164,5 @@ class WeatherSearchQueryRepositoryImpl(
                 WeatherType.FORECAST -> ForecastWeather::class.java
                 WeatherType.HISTORY -> HistoryWeather::class.java
             }
-
-        private fun isTimeDiffMoreThanOneDay(startTime: String, endTime: String): Boolean {
-            val st = DateTimeConverter.parseDateTime(startTime)
-            val et = DateTimeConverter.parseDateTime(endTime)
-            return Duration.between(st, et).toDays() > 0
-        }
     }
 }

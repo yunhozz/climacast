@@ -8,9 +8,9 @@ import com.climacast.batch_server.model.entity.HourlyWeatherData
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.enums.WeatherType
+import com.climacast.global.utils.DateTimeConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
     override fun process(weatherResponseDTOs: List<WeatherResponseDTO>) {
@@ -77,8 +77,8 @@ abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
                                 it.temperature_2m_min?.firstOrNull(),
                                 it.apparent_temperature_max?.firstOrNull(),
                                 it.apparent_temperature_min?.firstOrNull(),
-                                parseLocalDateTime(it.sunrise),
-                                parseLocalDateTime(it.sunset),
+                                DateTimeConverter.parseToLocalDateTime(it.sunrise?.first()),
+                                DateTimeConverter.parseToLocalDateTime(it.sunset?.first()),
                                 it.daylight_duration?.firstOrNull(),
                                 it.sunshine_duration?.firstOrNull(),
                                 it.uv_index_max?.firstOrNull(),
@@ -128,15 +128,4 @@ abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
                 ConvertedWeatherData.WeatherHistoryData(dailyWeathers, hourlyWeathers)
             }
         }
-
-    companion object {
-        private val DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-
-        fun parseLocalDateTime(list: List<String>?): LocalDateTime? =
-            list?.let { l ->
-                l.firstOrNull()?.let {
-                    LocalDateTime.parse(it, DATETIME_FORMATTER)
-                }
-            }
-    }
 }
