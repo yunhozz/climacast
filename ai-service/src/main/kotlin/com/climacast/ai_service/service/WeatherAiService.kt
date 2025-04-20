@@ -6,6 +6,7 @@ import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.event.KafkaEvent
 import com.climacast.global.event.message.WeatherQueryRequestMessage
+import com.climacast.global.utils.DateTimeConverter
 import com.climacast.global.utils.logger
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
@@ -13,6 +14,7 @@ import org.springframework.ai.ollama.OllamaChatModel
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Duration
 import java.util.UUID
 
 @Service
@@ -25,7 +27,7 @@ class WeatherAiService(
     fun processQuery(dto: WeatherQueryRequestDTO): Mono<String> {
         val requestId = UUID.randomUUID().toString()
         val request = WeatherQueryRequestMessage(
-            requestId,
+            requestId = requestId,
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
             startTime = dto.startTime,
@@ -48,28 +50,47 @@ class WeatherAiService(
                 val result = responses.joinToString("")
                 Mono.just(result)
             }
+            .doOnSuccess {
+                log.info("AI response success")
+            }
     }
 
     fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
         val requestId = UUID.randomUUID().toString()
+        val startTime = dto.startTime
+        val endTime = dto.endTime
+
         val request = WeatherQueryRequestMessage(
-            requestId,
+            requestId = requestId,
             weatherType = WeatherType.of(dto.weatherType),
             region = "${dto.parentRegion} ${dto.childRegion}",
-            startTime = dto.startTime,
-            endTime = dto.endTime
+            startTime = startTime,
+            endTime = endTime
         )
         val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, request)
 
         kafkaTopicHandler.publish(event)
 
         return kafkaTopicHandler.consume()
-            .flatMap { message ->
+            .filter { it.originalRequestId == requestId }
+            .take(calculateDaysBetween(startTime, endTime))
+            .concatMap { message ->
                 val systemMessage = SystemMessage(TEXT_CONTENT)
                 val userMessage = UserMessage(message.toString())
                 chatModel.stream(systemMessage, userMessage)
             }
+            .doOnComplete {
+                log.info("AI response stream success")
+            }
     }
+
+    private fun calculateDaysBetween(startTime: String?, endTime: String?) =
+        if (startTime == null && endTime == null) 1
+        else {
+            val st = DateTimeConverter.convertToLocalDateTime(startTime!!)
+            val et = DateTimeConverter.convertToLocalDateTime(endTime!!)
+            Duration.between(st, et).toDays() + 1
+        }
 
     companion object {
         private const val TEXT_CONTENT = """
