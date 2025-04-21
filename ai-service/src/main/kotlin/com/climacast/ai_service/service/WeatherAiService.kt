@@ -2,6 +2,7 @@ package com.climacast.ai_service.service
 
 import com.climacast.ai_service.infra.kafka.KafkaTopicHandler
 import com.climacast.ai_service.model.dto.WeatherQueryRequestDTO
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.event.KafkaEvent
@@ -16,6 +17,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
 class WeatherAiService(
@@ -41,14 +43,16 @@ class WeatherAiService(
             .filter { it.originalRequestId == requestId }
             .takeUntil { it.isLast == true }
             .concatMap { message ->
-                val systemMessage = SystemMessage(TEXT_CONTENT)
-                val userMessage = UserMessage(message.toString())
+                val systemMessage = SystemMessage(ANALYZE_PROMPT)
+                val userMessage = UserMessage(message.weatherData)
                 chatModel.stream(systemMessage, userMessage)
             }
             .collectList()
             .flatMap { responses ->
                 val result = responses.joinToString("")
-                Mono.just(result)
+                val systemMessage = SystemMessage(SUMMARY_PROMPT)
+                val userMessage = UserMessage(result)
+                Mono.just(chatModel.call(systemMessage, userMessage))
             }
             .doOnSuccess {
                 log.info("AI response success")
@@ -74,10 +78,24 @@ class WeatherAiService(
         return kafkaTopicHandler.consume()
             .filter { it.originalRequestId == requestId }
             .take(calculateDaysBetween(startTime, endTime))
-            .concatMap { message ->
-                val systemMessage = SystemMessage(TEXT_CONTENT)
-                val userMessage = UserMessage(message.toString())
-                chatModel.stream(systemMessage, userMessage)
+            .publish { messageFlux ->
+                val responses = CopyOnWriteArrayList<String>()
+                messageFlux.concatMap { message ->
+                    val systemMessage = SystemMessage(ANALYZE_PROMPT)
+                    val userMessage = UserMessage(message.weatherData)
+
+                    chatModel.stream(systemMessage, userMessage)
+                        .collectList()
+                        .map { it.joinToString("") }
+                        .doOnNext { responses.add(it) }
+                }.thenMany(
+                    Flux.defer {
+                        val result = responses.joinToString("")
+                        val systemMessage = SystemMessage(SUMMARY_PROMPT)
+                        val userMessage = UserMessage(result)
+                        chatModel.stream(systemMessage, userMessage)
+                    }
+                )
             }
             .doOnComplete {
                 log.info("AI response stream success")
@@ -87,25 +105,34 @@ class WeatherAiService(
     private fun calculateDaysBetween(startTime: String?, endTime: String?) =
         if (startTime == null && endTime == null) 1
         else {
-            val st = DateTimeConverter.convertToLocalDateTime(startTime!!)
-            val et = DateTimeConverter.convertToLocalDateTime(endTime!!)
+            val dateTimePattern = DateTimePattern.ELASTICSEARCH_PATTERN
+            val st = DateTimeConverter.convertToLocalDateTime(startTime, dateTimePattern)
+            val et = DateTimeConverter.convertToLocalDateTime(endTime, dateTimePattern)
             Duration.between(st, et).toDays() + 1
         }
 
     companion object {
-        private const val TEXT_CONTENT = """
-            You will be given structured weather data for a specific region in text format.
+        private const val ANALYZE_PROMPT = """
+            You will receive structured weather data for a specific region in plain text format.
+            Your task is to analyze and describe the weather trends in natural, human-readable language.
             
-            DO NOT write or return any code. 
-            Do NOT return Python, JavaScript, or any programming language.
+            Focus on patterns such as:
+            - temperature trends over time
+            - changes in wind speed
+            - significant weather patterns (e.g., rain, clear skies, cloudy periods)
             
-            Your only task is to describe the weather trend in human-friendly natural language.
-            Focus on overall trends like: 
-            - temperature changes over time
-            - wind speed changes
-            - noticeable weather patterns (like rain, clear, or cloudy days)
+            Specify the date in the analysis result.
+            Keep the summary clear and concise, as if explaining it to someone without a technical background.
+        """
+
+        private const val SUMMARY_PROMPT = """
+            You will now be given several weather analysis results previously generated.
+
+            Your task is to read through all of them and create a single cohesive summary.  
+            Identify common patterns, highlight notable weather events, and present the overall trend.
             
-            Make the summary concise and readable as if you're explaining to a non-technical person.
+            Write your summary in clear, natural language that anyone can understand.  
+            Avoid repeating information — instead, synthesize the key insights into a compact report.
         """
     }
 }
