@@ -6,6 +6,7 @@ import com.climacast.batch_server.model.entity.DailyWeatherData
 import com.climacast.batch_server.model.entity.HourlyWeather
 import com.climacast.batch_server.model.entity.HourlyWeatherData
 import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.utils.DateTimeConverter
@@ -56,7 +57,6 @@ abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
                 }
                 ConvertedWeatherData.WeatherForecastData(hourlyWeatherUpsertDTOs)
             }
-
             WeatherType.HISTORY -> {
                 val dailyWeathers = linkedSetOf<DailyWeather>()
                 val hourlyWeathers = linkedSetOf<HourlyWeather>()
@@ -77,8 +77,10 @@ abstract class AbstractWeatherDataProcessor : WeatherDataProcessor {
                                 it.temperature_2m_min?.firstOrNull(),
                                 it.apparent_temperature_max?.firstOrNull(),
                                 it.apparent_temperature_min?.firstOrNull(),
-                                DateTimeConverter.parseToLocalDateTime(it.sunrise?.first()),
-                                DateTimeConverter.parseToLocalDateTime(it.sunset?.first()),
+                                DateTimeConverter.convertToLocalDateTime(it.sunrise?.first(),
+                                    DateTimePattern.MYSQL_PATTERN),
+                                DateTimeConverter.convertToLocalDateTime(it.sunset?.first(),
+                                    DateTimePattern.MYSQL_PATTERN),
                                 it.daylight_duration?.firstOrNull(),
                                 it.sunshine_duration?.firstOrNull(),
                                 it.uv_index_max?.firstOrNull(),

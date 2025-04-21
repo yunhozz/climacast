@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator
 import co.elastic.clients.elasticsearch.core.BulkRequest
 import co.elastic.clients.elasticsearch.core.SearchRequest
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.enums.WeatherType
 import com.climacast.global.utils.DateTimeConverter
 import com.climacast.global.utils.logger
@@ -147,8 +148,9 @@ class WeatherSearchQueryRepositoryImpl(
     }
 
     private fun isTimeDiffMoreThanOneDay(startTime: String, endTime: String): Boolean {
-        val st = DateTimeConverter.convertToLocalDateTime(startTime)
-        val et = DateTimeConverter.convertToLocalDateTime(endTime)
+        val dateTimePattern = DateTimePattern.ELASTICSEARCH_PATTERN
+        val st = DateTimeConverter.convertToLocalDateTime(startTime, dateTimePattern)
+        val et = DateTimeConverter.convertToLocalDateTime(endTime, dateTimePattern)
         return Duration.between(st, et).toDays() > 0
     }
 

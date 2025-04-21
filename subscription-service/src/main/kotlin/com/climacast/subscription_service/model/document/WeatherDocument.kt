@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.model.document
 
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.utils.DateTimeConverter
 
 interface WeatherDocument {
@@ -16,7 +17,8 @@ interface WeatherDocument {
         }
 
         return timeList.mapIndexed { index, time ->
-            val localDateTime = DateTimeConverter.convertToLocalDateTime(time)
+            val localDateTime = DateTimeConverter.convertToLocalDateTime(time,
+                DateTimePattern.ELASTICSEARCH_PATTERN)
             localDateTime.toLocalDate() to index
         }
             .groupBy({ it.first }, { it.second })

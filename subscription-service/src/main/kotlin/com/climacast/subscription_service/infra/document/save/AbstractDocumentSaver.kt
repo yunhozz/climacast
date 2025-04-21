@@ -1,6 +1,7 @@
 package com.climacast.subscription_service.infra.document.save
 
 import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.enums.WeatherStatus
 import com.climacast.global.event.KafkaMessage
 import com.climacast.global.event.message.ForecastWeathersMessage
@@ -106,7 +107,7 @@ abstract class AbstractDocumentSaver : DocumentSaver {
         private inline fun <reified T> mapDatetimeList(timeList: List<T>?): List<String>? =
             timeList?.let { tl ->
                 tl.map { time ->
-                    DateTimeConverter.parseToLocalDateTime(time).toString()
+                    DateTimeConverter.convertToString(time, DateTimePattern.ELASTICSEARCH_PATTERN)
                 }
             }
     }
