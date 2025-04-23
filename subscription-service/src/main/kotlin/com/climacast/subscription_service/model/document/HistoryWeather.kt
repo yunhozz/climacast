@@ -1,5 +1,6 @@
 package com.climacast.subscription_service.model.document
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.Document
@@ -46,6 +47,8 @@ data class HistoryWeather(
 ) : WeatherDocument {
 
     override fun getId() = region
+
+    @JsonIgnore
     override fun getTimeList(): List<String> = time!!
 
     override fun sliceByTime(startTime: String, endTime: String) = this.copy(
