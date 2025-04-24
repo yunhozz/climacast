@@ -12,6 +12,9 @@ dependencies {
 	implementation("org.springframework.cloud:spring-cloud-starter-config")
 	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("io.projectreactor.addons:reactor-extra:3.3.8.RELEASE")
+	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
 	testImplementation("io.projectreactor:reactor-test")
 	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
