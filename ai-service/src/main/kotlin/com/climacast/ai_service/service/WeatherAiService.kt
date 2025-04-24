@@ -27,24 +27,22 @@ class WeatherAiService(
     private val log = logger()
 
     fun processQuery(dto: WeatherQueryRequestDTO): Mono<String> {
-        val requestId = UUID.randomUUID().toString()
-        val request = WeatherQueryRequestMessage(
-            requestId = requestId,
-            weatherType = WeatherType.of(dto.weatherType),
-            region = "${dto.parentRegion} ${dto.childRegion}",
-            startTime = dto.startTime,
-            endTime = dto.endTime
+        val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
+        val message = createQueryMessage(
+            weatherType = WeatherType.of(weatherType),
+            region = "$parentRegion $childRegion",
+            startTime,
+            endTime
         )
-        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, request)
-
+        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, message)
         kafkaTopicHandler.publish(event)
 
         return kafkaTopicHandler.consume()
-            .filter { it.originalRequestId == requestId }
+            .filter { it.originalRequestId == message.requestId }
             .takeUntil { it.isLast == true }
-            .concatMap { message ->
+            .flatMapSequential { response ->
                 val systemMessage = SystemMessage(ANALYZE_PROMPT)
-                val userMessage = UserMessage(message.weatherData)
+                val userMessage = UserMessage(response.weatherData)
                 chatModel.stream(systemMessage, userMessage)
             }
             .collectList()
@@ -55,35 +53,32 @@ class WeatherAiService(
                 Mono.just(chatModel.call(systemMessage, userMessage))
             }
             .doOnSuccess {
-                log.info("AI response success")
+                log.info("AI response success. Bytes=${it.toByteArray().size}")
+            }
+            .doOnError { ex ->
+                log.error(ex.localizedMessage, ex)
             }
     }
 
     fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
-        val requestId = UUID.randomUUID().toString()
-        val startTime = dto.startTime
-        val endTime = dto.endTime
-
-        val request = WeatherQueryRequestMessage(
-            requestId = requestId,
-            weatherType = WeatherType.of(dto.weatherType),
-            region = "${dto.parentRegion} ${dto.childRegion}",
-            startTime = startTime,
-            endTime = endTime
+        val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
+        val message = createQueryMessage(
+            weatherType = WeatherType.of(weatherType),
+            region = "$parentRegion $childRegion",
+            startTime,
+            endTime
         )
-        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, request)
-
+        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, message)
         kafkaTopicHandler.publish(event)
 
         return kafkaTopicHandler.consume()
-            .filter { it.originalRequestId == requestId }
+            .filter { it.originalRequestId == message.requestId }
             .take(calculateDaysBetween(startTime, endTime))
             .publish { messageFlux ->
                 val responses = CopyOnWriteArrayList<String>()
                 messageFlux.concatMap { message ->
                     val systemMessage = SystemMessage(ANALYZE_PROMPT)
                     val userMessage = UserMessage(message.weatherData)
-
                     chatModel.stream(systemMessage, userMessage)
                         .collectList()
                         .map { it.joinToString("") }
@@ -98,9 +93,25 @@ class WeatherAiService(
                 )
             }
             .doOnComplete {
-                log.info("AI response stream success")
+                log.info("AI response stream success.")
+            }
+            .doOnError { ex ->
+                log.error(ex.localizedMessage, ex)
             }
     }
+
+    private fun createQueryMessage(
+        weatherType: WeatherType,
+        region: String,
+        startTime: String?,
+        endTime: String?
+    ) = WeatherQueryRequestMessage(
+        requestId = UUID.randomUUID().toString(),
+        weatherType = weatherType,
+        region = region,
+        startTime = startTime,
+        endTime = endTime
+    )
 
     private fun calculateDaysBetween(startTime: String?, endTime: String?) =
         if (startTime == null && endTime == null) 1
