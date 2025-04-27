@@ -1,5 +1,8 @@
 package com.climacast.ai_service.service
 
+import com.climacast.ai_service.common.enums.CacheNames
+import com.climacast.ai_service.common.enums.CacheType
+import com.climacast.ai_service.config.CacheBeanNames
 import com.climacast.ai_service.infra.kafka.KafkaTopicHandler
 import com.climacast.ai_service.model.dto.WeatherQueryRequestDTO
 import com.climacast.global.enums.DateTimePattern
@@ -12,6 +15,8 @@ import com.climacast.global.utils.logger
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.ollama.OllamaChatModel
+import org.springframework.cache.annotation.CacheConfig
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -20,13 +25,18 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
+@CacheConfig(
+    cacheManager = CacheBeanNames.WEATHER_AI_QUERY_CACHE_MANAGER_BEAN,
+    cacheNames = [CacheNames.WEATHER_AI_QUERY_CACHE_NAME]
+)
 class WeatherAiService(
     private val chatModel: OllamaChatModel,
     private val kafkaTopicHandler: KafkaTopicHandler
 ) {
     private val log = logger()
 
-    fun processQuery(dto: WeatherQueryRequestDTO): Mono<String> {
+    @Cacheable
+    fun processQuery(dto: WeatherQueryRequestDTO, sessionId: String): Mono<String> {
         val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
         val message = createQueryMessage(
             weatherType = WeatherType.of(weatherType),
@@ -52,6 +62,7 @@ class WeatherAiService(
                 val userMessage = UserMessage(result)
                 Mono.just(chatModel.call(systemMessage, userMessage))
             }
+            .cache(Duration.ofMinutes(CacheType.WEATHER_AI_QUERY_CACHE.expirationTime))
             .doOnSuccess {
                 log.info("AI response success. Bytes=${it.toByteArray().size}")
             }
@@ -60,6 +71,7 @@ class WeatherAiService(
             }
     }
 
+    @Cacheable
     fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
         val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
         val message = createQueryMessage(
@@ -92,6 +104,7 @@ class WeatherAiService(
                     }
                 )
             }
+            .cache(Duration.ofMinutes(CacheType.WEATHER_AI_QUERY_CACHE.expirationTime))
             .doOnComplete {
                 log.info("AI response stream success.")
             }
