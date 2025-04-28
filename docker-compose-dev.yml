@@ -22,30 +22,8 @@ services:
       context: .
       dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:${IMAGE_TAG}
-
-  batch-server-blue:
-    image: climacast/batch-server:${IMAGE_TAG}
     ports:
-      - 18997-18999:8999
-    scale: 3
-    environment:
-      APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
-  batch-server-green:
-    image: climacast/batch-server:${IMAGE_TAG}
-    ports:
-      - 28997-28999:8999
-    scale: 3
+      - 8999:8999
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -64,12 +42,8 @@ services:
       context: .
       dockerfile: subscription-service/Dockerfile
     image: climacast/subscription-service:${IMAGE_TAG}
-
-  subscription-service-blue:
-    image: climacast/subscription-service:${IMAGE_TAG}
     ports:
-      - 18090-18092:8090
-    scale: 3
+      - 8090:8090
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -83,16 +57,17 @@ services:
     networks:
       - climacast-network
 
-  subscription-service-green:
-    image: climacast/subscription-service:${IMAGE_TAG}
+  ai-service:
+    build:
+      dockerfile: ai-service/Dockerfile
+      context: .
+    image: climacast/ai-service:${IMAGE_TAG}
     ports:
-      - 28090-28092:8090
-    scale: 3
+      - 8070:8070
     environment:
       APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8070/actuator/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 3
