@@ -37,18 +37,11 @@ class WeatherAiService(
 
     @Cacheable
     fun processQuery(dto: WeatherQueryRequestDTO, sessionId: String): Mono<String> {
-        val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
-        val message = createQueryMessage(
-            weatherType = WeatherType.of(weatherType),
-            region = "$parentRegion $childRegion",
-            startTime,
-            endTime
-        )
-        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, message)
-        kafkaTopicHandler.publish(event)
+        val requestId = UUID.randomUUID().toString()
+        publishWeatherQueryEvent(dto, KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, requestId)
 
         return kafkaTopicHandler.consume()
-            .filter { it.originalRequestId == message.requestId }
+            .filter { it.originalRequestId == requestId }
             .takeUntil { it.isLast == true }
             .flatMapSequential { response ->
                 val systemMessage = SystemMessage(ANALYZE_PROMPT)
@@ -73,19 +66,12 @@ class WeatherAiService(
 
     @Cacheable
     fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
-        val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
-        val message = createQueryMessage(
-            weatherType = WeatherType.of(weatherType),
-            region = "$parentRegion $childRegion",
-            startTime,
-            endTime
-        )
-        val event = KafkaEvent(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, message)
-        kafkaTopicHandler.publish(event)
+        val requestId = UUID.randomUUID().toString()
+        publishWeatherQueryEvent(dto, KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, requestId)
 
         return kafkaTopicHandler.consume()
-            .filter { it.originalRequestId == message.requestId }
-            .take(calculateDaysBetween(startTime, endTime))
+            .filter { it.originalRequestId == requestId }
+            .take(calculateDaysBetween(dto.startTime, dto.endTime))
             .publish { messageFlux ->
                 val responses = CopyOnWriteArrayList<String>()
                 messageFlux.concatMap { message ->
@@ -113,18 +99,19 @@ class WeatherAiService(
             }
     }
 
-    private fun createQueryMessage(
-        weatherType: WeatherType,
-        region: String,
-        startTime: String?,
-        endTime: String?
-    ) = WeatherQueryRequestMessage(
-        requestId = UUID.randomUUID().toString(),
-        weatherType = weatherType,
-        region = region,
-        startTime = startTime,
-        endTime = endTime
-    )
+    private fun publishWeatherQueryEvent(dto: WeatherQueryRequestDTO, topic: String, requestId: String) {
+        val (weatherType, parentRegion, childRegion, _, startTime, endTime) = dto
+        val message = WeatherQueryRequestMessage(
+            requestId,
+            weatherType = WeatherType.of(weatherType),
+            region = "$parentRegion $childRegion",
+            startTime,
+            endTime
+        )
+        val event = KafkaEvent(topic, message)
+
+        kafkaTopicHandler.publish(event)
+    }
 
     private fun calculateDaysBetween(startTime: String?, endTime: String?) =
         if (startTime == null && endTime == null) 1
