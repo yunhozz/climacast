@@ -2,6 +2,7 @@ package com.climacast.subscription_service.infra.subscription.method
 
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.infra.subscription.SubscriberInfo
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandler
 import com.slack.api.Slack
@@ -57,9 +58,10 @@ class SlackHandler : SubscriptionHandler {
             } ?: run { log.error("Fail to send data on Slack: code=${response.code}, message=${response.body}") }
 
         } catch (e: Exception) {
+            log.error(e.localizedMessage, e)
             when (e) {
                 is SlackApiException, is IOException ->
-                    throw IllegalArgumentException("Fail to send message on Slack: ${e.localizedMessage}", e)
+                    throw SubscriptionServiceException.WeatherDataSendFailException()
                 else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
         }

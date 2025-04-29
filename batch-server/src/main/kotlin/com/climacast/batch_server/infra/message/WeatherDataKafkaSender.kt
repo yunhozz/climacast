@@ -1,10 +1,12 @@
 package com.climacast.batch_server.infra.message
 
 import com.climacast.batch_server.common.enums.WeatherParameters
-import com.climacast.global.dto.KafkaEvent
-import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.KafkaTopic
+import com.climacast.global.event.KafkaEvent
+import com.climacast.global.event.KafkaMessage
+import com.climacast.global.event.message.ForecastWeathersMessage
+import com.climacast.global.event.message.HistoryWeathersMessage
 import com.climacast.global.utils.logger
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.kafka.core.KafkaTemplate
@@ -57,12 +59,12 @@ class WeatherDataKafkaSender(
             WeatherParameters.WEATHER_FORECAST ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_FORECAST_TOPIC,
-                    message = KafkaMessage.ForecastWeathersMessage(weathers)
+                    message = ForecastWeathersMessage(weathers)
                 )
             WeatherParameters.WEATHER_HISTORY ->
                 KafkaEvent(
                     topic = KafkaTopic.WEATHER_HISTORY_TOPIC,
-                    message = KafkaMessage.HistoryWeathersMessage(weathers)
+                    message = HistoryWeathersMessage(weathers)
                 )
         }
 }

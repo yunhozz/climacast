@@ -1,0 +1,8 @@
+package com.climacast.subscription_service.infra.repository
+
+import com.climacast.subscription_service.infra.repository.query.WeatherSearchQueryRepository
+import com.climacast.subscription_service.model.document.ForecastWeather
+import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository
+
+interface ForecastWeatherSearchRepository: ReactiveElasticsearchRepository<ForecastWeather, String>,
+    WeatherSearchQueryRepository

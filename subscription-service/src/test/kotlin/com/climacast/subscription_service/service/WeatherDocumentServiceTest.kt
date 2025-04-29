@@ -1,10 +1,10 @@
 package com.climacast.subscription_service.service
 
 import com.climacast.global.enums.WeatherType
+import com.climacast.subscription_service.infra.repository.ForecastWeatherSearchRepository
+import com.climacast.subscription_service.infra.repository.HistoryWeatherSearchRepository
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
-import com.climacast.subscription_service.model.repository.ForecastWeatherSearchRepository
-import com.climacast.subscription_service.model.repository.HistoryWeatherSearchRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.anyList

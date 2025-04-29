@@ -1,12 +1,12 @@
 package com.climacast.batch_server.config
 
 import com.climacast.batch_server.common.util.WeatherDataBuffer
-import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.infra.batch.BatchConstants
 import com.climacast.batch_server.infra.batch.RegionCsvReader
 import com.climacast.batch_server.infra.batch.WeatherForecastApiWriter
 import com.climacast.batch_server.infra.batch.WeatherHistoryApiWriter
 import com.climacast.batch_server.infra.data.WeatherDataProcessor
+import com.climacast.batch_server.model.dto.Region
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobExecution
 import org.springframework.batch.core.JobExecutionListener

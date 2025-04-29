@@ -13,7 +13,7 @@ class SchedulerLoggingAspect {
 
     private val log = logger()
 
-    @Around("execution(* com.climacast.subscription_service.service.SubscriptionService.*(..))")
+    @Around("execution(* com.climacast.subscription_service.service.SubscriptionScheduleService.*(..))")
     fun logSubscriptionScheduler(joinPoint: ProceedingJoinPoint): Any? {
         val signature = joinPoint.signature as MethodSignature
         val schedulerName = signature.name

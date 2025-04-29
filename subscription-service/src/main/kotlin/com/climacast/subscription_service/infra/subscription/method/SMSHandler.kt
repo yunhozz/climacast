@@ -2,6 +2,7 @@ package com.climacast.subscription_service.infra.subscription.method
 
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.infra.subscription.SubscriberInfo
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandler
 import com.twilio.Twilio
@@ -48,12 +49,16 @@ class SMSHandler : SubscriptionHandler {
                 .setSendAsMms(true)
                 .setMediaUrl(weatherImageFile.toURI())
                 .create()
+
             if (message.status == Message.Status.FAILED) {
                 log.error("Fail to send SMS: code=${message.errorCode}, message=${message.errorMessage}")
             }
+
             log.info("Success to send SMS: SID=${message.sid}, created=${message.dateCreated}, sent=${message.dateSent}")
+
         } catch (e: ApiException) {
-            throw IllegalArgumentException("Fail to send message on SMS: ${e.localizedMessage}", e)
+            log.error(e.localizedMessage, e)
+            throw SubscriptionServiceException.WeatherDataSendFailException()
         }
     }
 

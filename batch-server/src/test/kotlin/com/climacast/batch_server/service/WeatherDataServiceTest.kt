@@ -1,10 +1,10 @@
 package com.climacast.batch_server.service
 
 import com.climacast.batch_server.infra.data.ConvertedWeatherData
+import com.climacast.batch_server.infra.repository.DailyWeatherRepository
+import com.climacast.batch_server.infra.repository.HourlyWeatherRepository
 import com.climacast.batch_server.model.entity.DailyWeather
 import com.climacast.batch_server.model.entity.HourlyWeather
-import com.climacast.batch_server.model.repository.DailyWeatherRepository
-import com.climacast.batch_server.model.repository.HourlyWeatherRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.anySet

@@ -1,7 +1,9 @@
 package com.climacast.subscription_service.infra.document.visual
 
 import com.climacast.global.enums.WeatherType
+import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.common.util.WeatherDatum
 import com.climacast.subscription_service.model.document.WeatherDocument
 import org.openqa.selenium.OutputType
@@ -11,11 +13,12 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.thymeleaf.TemplateEngine
 import java.io.File
-import java.io.IOException
 import java.util.concurrent.CompletableFuture
 
 @Component
 class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualizer(templateEngine) {
+
+    private val log = logger()
 
     @Value("\${image.weather.url}")
     private lateinit var weatherImageRemoteUrl: String
@@ -47,9 +50,9 @@ class ImageVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
             chromeDriver.getScreenshotAs(OutputType.FILE).copyTo(outputFile)
 
         } catch (e: Exception) {
+            log.error(e.localizedMessage, e)
             when (e) {
-                is IOException -> throw IllegalArgumentException("Fail to write file: ${e.localizedMessage}", e)
-                is WebDriverException -> throw IllegalArgumentException("Fail to upload images to Chrome: ${e.localizedMessage}", e)
+                is WebDriverException -> throw SubscriptionServiceException.ChromeWebDriverException()
                 else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
 

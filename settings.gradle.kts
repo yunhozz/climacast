@@ -3,5 +3,6 @@ include(
     ":global",
     ":config-server",
     ":batch-server",
-    ":subscription-service"
+    ":subscription-service",
+    ":ai-service"
 )

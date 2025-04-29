@@ -1,6 +1,6 @@
 package com.climacast.batch_server.infra.api
 
-import com.climacast.batch_server.dto.Region
+import com.climacast.batch_server.model.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.utils.logger
 import org.springframework.beans.factory.annotation.Value

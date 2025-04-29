@@ -107,7 +107,7 @@ services:
       - climacast-network
 
   elasticsearch:
-    image: elasticsearch:8.16.1
+    image: elasticsearch:8.17.3
     container_name: elasticsearch
     ports:
       - 19200:9200
