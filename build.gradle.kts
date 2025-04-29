@@ -5,9 +5,10 @@ plugins {
 	kotlin("jvm") version "2.0.0"
 	kotlin("plugin.jpa") version "2.0.0"
 	kotlin("plugin.spring") version "2.0.0"
-	kotlin("kapt") version "1.8.22"
-	id("org.springframework.boot") version "3.4.0"
-	id("io.spring.dependency-management") version "1.1.6"
+	kotlin("kapt") version "2.0.0"
+
+	id("org.springframework.boot") version "3.4.5"
+	id("io.spring.dependency-management") version "1.0.11.RELEASE"
 }
 
 java {
@@ -50,7 +51,7 @@ subprojects {
 
 	dependencyManagement {
 		imports {
-			mavenBom("org.springframework.boot:spring-boot-dependencies:3.3.5")
+			mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.0")
 			mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.3")
 		}
 	}
