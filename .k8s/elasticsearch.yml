@@ -2,10 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: elasticsearch
+  namespace: climacast
+  labels:
+    app: elasticsearch
 spec:
   selector:
     app: elasticsearch
-  clusterIP: None
   ports:
     - name: http
       port: 9200
@@ -16,6 +18,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: elasticsearch
+  namespace: climacast
   labels:
     app: elasticsearch
 spec:
@@ -66,11 +69,11 @@ spec:
             - name: bootstrap.memory_lock
               value: "true"
           volumeMounts:
-            - name: es-data
+            - name: es-volume
               mountPath: /var/data/elasticsearch
   volumeClaimTemplates:
     - metadata:
-        name: es-data
+        name: es-volume
       spec:
         selector:
           matchLabels:
@@ -80,3 +83,12 @@ spec:
         resources:
           requests:
             storage: 1Gi
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: es-storage
+  labels:
+    app: elasticsearch
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain

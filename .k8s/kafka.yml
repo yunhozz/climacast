@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka
+  labels:
+    app: kafka
 spec:
   selector:
     app: kafka
@@ -10,10 +12,22 @@ spec:
     - port: 9092
       name: kafka
 ---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kafka-pdb
+spec:
+  selector:
+    matchLabels:
+      app: kafka
+  maxUnavailable: 1
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
+  labels:
+    app: kafka
 spec:
   selector:
     matchLabels:
@@ -58,11 +72,11 @@ spec:
               export KAFKA_BROKER_ID
               /usr/bin/start-kafka.sh
           volumeMounts:
-            - name: kafkadir
+            - name: kafka-volume
               mountPath: /var/lib/kafka
   volumeClaimTemplates:
     - metadata:
-        name: kafkadir
+        name: kafka-volume
       spec:
         accessModes:
           - ReadWriteOnce
@@ -71,12 +85,11 @@ spec:
           requests:
             storage: 1Gi
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: kafka-pdb
-spec:
-  selector:
-    matchLabels:
-      app: kafka
-  maxUnavailable: 1
+  name: kafka-storage
+  labels:
+    app: kafka
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete

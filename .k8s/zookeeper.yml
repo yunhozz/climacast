@@ -5,14 +5,14 @@ metadata:
   labels:
     app: zk
 spec:
+  selector:
+    app: zk
+  clusterIP: None
   ports:
     - port: 2888
       name: server
     - port: 3888
       name: leader-election
-  clusterIP: None
-  selector:
-    app: zk
 ---
 apiVersion: v1
 kind: Service
@@ -21,16 +21,28 @@ metadata:
   labels:
     app: zk
 spec:
+  selector:
+    app: zk
   ports:
     - port: 2181
       name: client
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
   selector:
-    app: zk
+    matchLabels:
+      app: zk
+  maxUnavailable: 1
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: zk
+  labels:
+    app: zk
 spec:
   selector:
     matchLabels:
@@ -45,6 +57,19 @@ spec:
       labels:
         app: zk
     spec:
+      initContainers:
+        - name: set-myid
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              myid=$(echo $HOSTNAME | sed 's/[^0-9]*//g')
+              mkdir -p /var/lib/zookeeper/data
+              echo $((myid + 1)) > /var/lib/zookeeper/data/myid
+          volumeMounts:
+            - name: zk-volume
+              mountPath: /var/lib/zookeeper
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -55,18 +80,6 @@ spec:
                     values:
                       - zk
               topologyKey: kubernetes.io/hostname
-      initContainers:
-        - name: set-myid
-          image: busybox
-          command:
-            - sh
-            - -c
-            - |
-              myid=$(echo $HOSTNAME | sed 's/[^0-9]*//g')
-              echo $((myid + 1)) > /var/lib/zookeeper/data/myid
-          volumeMounts:
-            - name: zkdir
-              mountPath: /var/lib/zookeeper
       containers:
         - name: kubernetes-zookeeper
           imagePullPolicy: Always
@@ -120,14 +133,14 @@ spec:
             initialDelaySeconds: 10
             timeoutSeconds: 5
           volumeMounts:
-            - name: zkdir
+            - name: zk-volume
               mountPath: /var/lib/zookeeper
       securityContext:
         runAsUser: 0
         fsGroup: 0
   volumeClaimTemplates:
     - metadata:
-        name: zkdir
+        name: zk-volume
       spec:
         accessModes:
           - ReadWriteOnce
@@ -136,12 +149,11 @@ spec:
           requests:
             storage: 1Gi
 ---
-apiVersion: policy/v1
-kind: PodDisruptionBudget
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: zk-pdb
-spec:
-  selector:
-    matchLabels:
-      app: zk
-  maxUnavailable: 1
+  name: zk-storage
+  labels:
+    app: zk
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Delete
