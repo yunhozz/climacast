@@ -1,0 +1,381 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-weather-source
+  namespace: climacast
+  labels:
+    app: mysql-weather-source
+spec:
+  selector:
+    app: mysql-weather-source
+  ports:
+    - port: 3307
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-weather-replica
+  namespace: climacast
+  labels:
+    app: mysql-weather-replica
+spec:
+  selector:
+    app: mysql-weather-replica
+  ports:
+    - port: 3308
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-subscription-source
+  namespace: climacast
+  labels:
+    app: mysql-subscription-source
+spec:
+  selector:
+    app: mysql-subscription-source
+  ports:
+    - port: 3309
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-subscription-replica
+  namespace: climacast
+  labels:
+    app: mysql-subscription-replica
+spec:
+  selector:
+    app: mysql-subscription-replica
+  ports:
+    - port: 3310
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-weather-source
+  namespace: climacast
+  labels:
+    app: mysql-weather-source
+spec:
+  serviceName: mysql-weather-source
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-weather-source
+  template:
+    metadata:
+      labels:
+        app: mysql-weather-source
+    spec:
+      containers:
+        - name: mysql-weather-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-weather-source-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-weather-source-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-weather-source-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-weather-source-storage
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-weather-replica
+  namespace: climacast
+  labels:
+    app: mysql-weather-replica
+spec:
+  serviceName: mysql-weather-replica
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mysql-weather-replica
+  template:
+    metadata:
+      labels:
+        app: mysql-weather-replica
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-weather-source
+                      - mysql-weather-replica
+      containers:
+        - name: mysql-weather-replica
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-weather-replica-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-weather-replica-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-weather-replica-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-weather-replica-storage
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-subscription-source
+  namespace: climacast
+  labels:
+    app: mysql-subscription-source
+spec:
+  serviceName: mysql-subscription-source
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-subscription-source
+  template:
+    metadata:
+      labels:
+        app: mysql-subscription-source
+    spec:
+      containers:
+        - name: mysql-subscription-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-subscription-source-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-subscription-source-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-subscription-source-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-subscription-source-storage
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-subscription-replica
+  namespace: climacast
+  labels:
+    app: mysql-subscription-replica
+spec:
+  serviceName: mysql-subscription-replica
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mysql-subscription-replica
+  template:
+    metadata:
+      labels:
+        app: mysql-subscription-replica
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - mysql-subscription-source
+                      - mysql-subscription-replica
+      containers:
+        - name: mysql-subscription-replica
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-subscription-replica-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-subscription-replica-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-subscription-replica-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: mysql-subscription-replica-storage
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-weather-source-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-weather-replica-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-subscription-source-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-subscription-replica-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-weather-source-configmap
+  namespace: climacast
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=101
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-weather-replica-configmap
+  namespace: climacast
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=102
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-subscription-source-configmap
+  namespace: climacast
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=201
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-subscription-replica-configmap
+  namespace: climacast
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=202
+    log-bin=mysql-bin
+    binlog-format=ROW
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
