@@ -2,14 +2,17 @@ package com.climacast.ai_service.config
 
 import com.climacast.global.enums.KafkaTopic
 import com.climacast.global.event.KafkaMessage
+import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
+import org.springframework.kafka.core.KafkaAdmin.NewTopics
 import org.springframework.kafka.core.reactive.ReactiveKafkaConsumerTemplate
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate
 import org.springframework.kafka.support.serializer.JsonDeserializer
@@ -28,6 +31,12 @@ class KafkaConfig(
         const val AUTO_OFFSET_RESET = "earliest"
         const val JSON_DESERIALIZER_TRUST_PACKAGE = "com.climacast.global.*"
     }
+
+    @Value("\${app.kafka.num-partitions}")
+    private lateinit var numPartitions: String
+
+    @Value("\${app.kafka.replication-factor}")
+    private lateinit var replicationFactor: String
 
     @Bean
     fun reactiveKafkaProducerTemplate(): ReactiveKafkaProducerTemplate<String, KafkaMessage> =
@@ -59,4 +68,14 @@ class KafkaConfig(
         ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to false,
         JsonDeserializer.TRUSTED_PACKAGES to JSON_DESERIALIZER_TRUST_PACKAGE
     )
+
+    @Bean
+    fun kafkaTopics(): NewTopics {
+        val np = numPartitions.toInt()
+        val rf = replicationFactor.toShort()
+        return NewTopics(
+            NewTopic(KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, np, rf),
+            NewTopic(KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, np, rf)
+        )
+    }
 }

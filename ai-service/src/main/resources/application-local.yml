@@ -28,3 +28,8 @@ logging:
     org:
       springframework:
         scheduling: debug
+
+app:
+  kafka:
+    num-partitions: 1
+    replication-factor: 1

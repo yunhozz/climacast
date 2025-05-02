@@ -62,3 +62,8 @@ logging:
     org:
       springframework:
         jdbc: debug
+
+app:
+  kafka:
+    num-partitions: 1
+    replication-factor: 1

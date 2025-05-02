@@ -60,7 +60,11 @@ logging:
       springframework:
         scheduling: debug
 
-image:
-  weather:
-    url: http://localhost:4444
-    dir: /Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/
+app:
+  kafka:
+    num-partitions: 1
+    replication-factor: 1
+  image:
+    weather:
+      url: http://localhost:4444
+      dir: /Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image/
