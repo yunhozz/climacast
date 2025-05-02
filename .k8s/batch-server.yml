@@ -35,8 +35,8 @@ spec:
     spec:
       containers:
         - name: batch-server
-          image: climacast/batch-server:${IMAGE_TAG}
-          imagePullPolicy: Never
+          image: ghcr.io/yunhozz/climacast-batch-server:${IMAGE_TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8999
           env:
@@ -44,3 +44,5 @@ spec:
               value: prod
             - name: TZ
               value: Asia/Seoul
+      imagePullSecrets:
+        - name: ghcr-secret

@@ -35,10 +35,12 @@ spec:
     spec:
       containers:
         - name: ai-service
-          image: climacast/ai-service:${IMAGE_TAG}
-          imagePullPolicy: Never
+          image: ghcr.io/yunhozz/climacast-ai-service:${IMAGE_TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8070
           env:
             - name: APPLICATION_PROFILE
               value: prod
+      imagePullSecrets:
+        - name: ghcr-secret

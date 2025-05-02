@@ -46,8 +46,8 @@ spec:
     spec:
       containers:
         - name: subscription-service
-          image: climacast/subscription-service:${IMAGE_TAG}
-          imagePullPolicy: Never
+          image: ghcr.io/yunhozz/climacast-subscription-service:${IMAGE_TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8090
           env:
@@ -58,6 +58,8 @@ spec:
           volumeMounts:
             - name: weather-image-volume
               mountPath: /mnt/weather
+      imagePullSecrets:
+        - name: ghcr-secret
       volumes:
         - name: weather-image-volume
           persistentVolumeClaim:
@@ -81,6 +83,7 @@ spec:
       containers:
         - name: selenium-chrome
           image: seleniarm/standalone-chromium:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 4444
           env:

@@ -26,7 +26,9 @@ spec:
     spec:
       containers:
         - name: config-server
-          image: climacast/config-server:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/yunhozz/config-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8888
+      imagePullSecrets:
+        - name: ghcr-secret
