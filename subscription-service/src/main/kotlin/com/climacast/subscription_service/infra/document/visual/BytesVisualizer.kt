@@ -21,7 +21,7 @@ class BytesVisualizer(templateEngine: TemplateEngine) : AbstractDocumentVisualiz
 
     private val log = logger()
 
-    @Value("\${image.weather.url}")
+    @Value("\${app.image.weather.url}")
     private lateinit var weatherImageRemoteUrl: String
 
     @Async
