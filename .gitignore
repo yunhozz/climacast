@@ -7,10 +7,9 @@ build/
 application.yml
 !**/src/main/resources/application.yml
 .env
-mysql
-nginx
 .k8s/secret/**
 scripts/**
+conf/**
 
 ### STS ###
 .apt_generated

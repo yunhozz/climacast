@@ -1,29 +1,12 @@
 services:
-  config-server:
-    build:
-      context: .
-      dockerfile: config-server/Dockerfile
-    image: climacast/config-server:latest
-    container_name: config-server
-    ports:
-      - 8888:8888
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: always
-    networks:
-      - climacast-network
-
   batch-server:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
     image: climacast/batch-server:latest
+    scale: 3
     ports:
-      - 8999:8999
+      - 8999
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -42,8 +25,9 @@ services:
       context: .
       dockerfile: subscription-service/Dockerfile
     image: climacast/subscription-service:latest
+    scale: 3
     ports:
-      - 8090:8090
+      - 8090
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -62,8 +46,9 @@ services:
       dockerfile: ai-service/Dockerfile
       context: .
     image: climacast/ai-service:latest
+    scale: 3
     ports:
-      - 8070:8070
+      - 8070
     environment:
       APPLICATION_PROFILE: dev
     healthcheck:
@@ -194,7 +179,8 @@ services:
     ports:
       - 3307:3306
     volumes:
-      - ./mysql/my-source.cnf:/etc/mysql/my.cnf
+      - ./conf/mysql/my-source.cnf:/etc/mysql/my.cnf
+      - mysql-source-volume:/var/lib/mysql
     networks:
       - climacast-network
 
@@ -207,7 +193,8 @@ services:
     ports:
       - 3308:3306
     volumes:
-      - ./mysql/my-replica.cnf:/etc/mysql/my.cnf
+      - ./conf/mysql/my-replica.cnf:/etc/mysql/my.cnf
+      - mysql-replica-volume:/var/lib/mysql
     depends_on:
       - mysql-source
     networks:
@@ -216,11 +203,13 @@ services:
   mysql-batch:
     image: mysql:latest
     container_name: mysql-batch
+    ports:
+      - 3309:3306
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Seoul
-    ports:
-      - 3309:3306
+    volumes:
+      - mysql-batch-volume:/var/lib/mysql
     networks:
       - climacast-network
 
@@ -249,13 +238,28 @@ services:
     networks:
       - climacast-network
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./conf/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - subscription-service
+      - ai-service
+    restart: always
+    networks:
+      - climacast-network
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
     ports:
       - 19090:9090
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - climacast-network
 
@@ -266,6 +270,11 @@ services:
       - 13000:3000
     networks:
       - climacast-network
+
+volumes:
+  mysql-source-volume:
+  mysql-replica-volume:
+  mysql-batch-volume:
 
 networks:
   climacast-network:
