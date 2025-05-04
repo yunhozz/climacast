@@ -1,7 +1,86 @@
+server:
+  port: 8090
+
 spring:
+  application:
+    name: subscription-service
   cloud:
     config:
-      name: subscription-service
-      profile: dev
-  config:
-    import: configserver:http://config-server:8888/
+      enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        show_sql: true
+        format_sql: true
+  datasource:
+    source:
+      hikari:
+        jdbcUrl: ${mysql.subscription-source.dev}
+        username: ${mysql.username}
+        password: ${mysql.password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: subscription-source-db-pool
+        maximum-pool-size: 10
+        minimum-idle: 5
+        initialization-fail-timeout: 0
+        connection-test-query: SELECT 1
+        auto-commit: true
+    replica:
+      hikari:
+        jdbcUrl: ${mysql.subscription-replica.dev}
+        username: ${mysql.username}
+        password: ${mysql.password}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: subscription-replica-db-pool
+        maximum-pool-size: 20
+        minimum-idle: 10
+  mail:
+    host: ${gmail.host}
+    port: ${gmail.port}
+    username: ${gmail.username}
+    password: ${gmail.password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  data:
+    redis:
+      host: redis
+      port: 6379
+      connect-timeout: 3000
+      timeout: 3000
+  kafka:
+    bootstrap-servers: kafka-1:9092,kafka-2:9093,kafka-3:9094
+  elasticsearch:
+    uris: elasticsearch:9200
+
+logging:
+  level:
+    org:
+      springframework:
+        scheduling: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      access: unrestricted
+
+app:
+  kafka:
+    num-partitions: 3
+    replication-factor: 3
+  image:
+    weather:
+      url: http://localhost:4444
+      dir: /Users/yunho/Desktop/project/climacast/subscription-service/src/main/resources/image

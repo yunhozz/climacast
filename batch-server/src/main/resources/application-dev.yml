@@ -1,7 +1,81 @@
+server:
+  port: 8999
+
 spring:
+  application:
+    name: batch-server
   cloud:
     config:
-      name: batch-server
-      profile: dev
-  config:
-    import: configserver:http://config-server:8888/
+      enabled: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: never
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        show_sql: true
+        format_sql: true
+  datasource:
+    batch:
+      jdbcUrl: ${mysql.batch.dev}
+      username: ${mysql.username}
+      password: ${mysql.password}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      pool-name: batch-db-pool
+      maximum-pool-size: 10
+    weather:
+      source:
+        hikari:
+          jdbcUrl: ${mysql.weather-source.dev}
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          pool-name: weather-source-db-pool
+          maximum-pool-size: 10
+          minimum-idle: 5
+          initialization-fail-timeout: 0
+          connection-test-query: SELECT 1
+          auto-commit: true
+      replica:
+        hikari:
+          jdbcUrl: ${mysql.weather-replica.dev}
+          username: ${mysql.username}
+          password: ${mysql.password}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          pool-name: weather-replica-db-pool
+          maximum-pool-size: 20
+          minimum-idle: 10
+  data:
+    redis:
+      host: redis
+      port: 6379
+      connect-timeout: 3000
+      timeout: 3000
+  kafka:
+    bootstrap-servers: kafka-1:9092,kafka-2:9093,kafka-3:9094
+
+logging:
+  level:
+    org:
+      springframework:
+        jdbc: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      access: unrestricted
+
+app:
+  kafka:
+    num-partitions: 3
+    replication-factor: 3
