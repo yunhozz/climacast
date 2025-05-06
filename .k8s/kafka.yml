@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka
+  namespace: messaging
   labels:
     app: kafka
 spec:
@@ -26,6 +27,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
+  namespace: messaging
   labels:
     app: kafka
 spec:
@@ -58,9 +60,9 @@ spec:
             - name: KAFKA_LISTENERS
               value: PLAINTEXT://:9092
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: PLAINTEXT://$(MY_POD_NAME).kafka.default.svc.cluster.local:9092
+              value: PLAINTEXT://$(MY_POD_NAME).kafka.messaging.svc.cluster.local:9092
             - name: KAFKA_ZOOKEEPER_CONNECT
-              value: zk-0.zk-hs.default.svc.cluster.local:2181,zk-1.zk-hs.default.svc.cluster.local:2181,zk-2.zk-hs.default.svc.cluster.local:2181
+              value: zk-0.zk-hs.messaging.svc.cluster.local:2181,zk-1.zk-hs.messaging.svc.cluster.local:2181,zk-2.zk-hs.messaging.svc.cluster.local:2181
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "3"
           command:
@@ -89,6 +91,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: kafka-storage
+  namespace: messaging
   labels:
     app: kafka
 provisioner: k8s.io/minikube-hostpath
