@@ -22,9 +22,9 @@ metadata:
 spec:
   selector:
     app: mysql-weather-replica
+  clusterIP: None
   ports:
-    - port: 3308
-      targetPort: 3306
+    - port: 3306
 ---
 apiVersion: v1
 kind: Service
@@ -50,9 +50,9 @@ metadata:
 spec:
   selector:
     app: mysql-subscription-replica
+  clusterIP: None
   ports:
-    - port: 3310
-      targetPort: 3306
+    - port: 3306
 ---
 apiVersion: apps/v1
 kind: StatefulSet
