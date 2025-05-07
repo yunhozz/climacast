@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
         - name: subscription-service
-          image: ghcr.io/yunhozz/climacast-subscription-service:${IMAGE_TAG}
+          image: ghcr.io/yunhozz/climacast-subscription-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8090

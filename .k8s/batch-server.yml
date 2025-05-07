@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: batch-server
-          image: ghcr.io/yunhozz/climacast-batch-server:${IMAGE_TAG}
+          image: ghcr.io/yunhozz/climacast-batch-server:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8999
