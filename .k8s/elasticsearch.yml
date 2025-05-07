@@ -8,11 +8,12 @@ metadata:
 spec:
   selector:
     app: elasticsearch
+  clusterIP: None
   ports:
-    - name: http
-      port: 9200
-    - name: transport
-      port: 9300
+    - port: 9200
+      name: http
+    - port: 9300
+      name: transport
 ---
 apiVersion: apps/v1
 kind: StatefulSet

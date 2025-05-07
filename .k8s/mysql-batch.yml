@@ -8,9 +8,9 @@ metadata:
 spec:
   selector:
     app: mysql-batch
+  clusterIP: None
   ports:
-    - port: 3305
-      targetPort: 3306
+    - port: 3306
 ---
 apiVersion: apps/v1
 kind: StatefulSet

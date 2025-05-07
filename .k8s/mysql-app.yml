@@ -8,9 +8,9 @@ metadata:
 spec:
   selector:
     app: mysql-weather-source
+  clusterIP: None
   ports:
-    - port: 3307
-      targetPort: 3306
+    - port: 3306
 ---
 apiVersion: v1
 kind: Service
@@ -36,9 +36,9 @@ metadata:
 spec:
   selector:
     app: mysql-subscription-source
+  clusterIP: None
   ports:
-    - port: 3309
-      targetPort: 3306
+    - port: 3306
 ---
 apiVersion: v1
 kind: Service
