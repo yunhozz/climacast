@@ -53,8 +53,11 @@ spring:
           minimum-idle: 10
   data:
     redis:
-      host: redis
-      port: 6379
+      cluster:
+        nodes:
+          - redis-1:6379
+          - redis-2:6380
+          - redis-3:6381
       connect-timeout: 3000
       timeout: 3000
   kafka:

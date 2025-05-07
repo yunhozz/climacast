@@ -229,11 +229,44 @@ services:
     networks:
       - climacast-network
 
-  redis:
+  redis-1:
     image: redis:latest
-    container_name: redis
+    container_name: redis-1
     ports:
-      - 16379:6379
+      - 6379:6379
+      - 16379:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-1.conf:/etc/redis.conf
+      - redis-1-volume:/data
+    restart: always
+    networks:
+      - climacast-network
+
+  redis-2:
+    image: redis:latest
+    container_name: redis-2
+    ports:
+      - 6380:6379
+      - 16380:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-2.conf:/etc/redis.conf
+      - redis-2-volume:/data
+    restart: always
+    networks:
+      - climacast-network
+
+  redis-3:
+    image: redis:latest
+    container_name: redis-3
+    ports:
+      - 6381:6379
+      - 16381:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-3.conf:/etc/redis.conf
+      - redis-3-volume:/data
     restart: always
     networks:
       - climacast-network
@@ -275,6 +308,9 @@ volumes:
   mysql-source-volume:
   mysql-replica-volume:
   mysql-batch-volume:
+  redis-1-volume:
+  redis-2-volume:
+  redis-3-volume:
 
 networks:
   climacast-network:
