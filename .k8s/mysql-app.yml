@@ -284,34 +284,6 @@ spec:
           requests:
             storage: 1Gi
 ---
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: mysql-weather-source-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: mysql-weather-replica-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: mysql-subscription-source-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: mysql-subscription-replica-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
