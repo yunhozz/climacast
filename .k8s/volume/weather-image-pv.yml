@@ -16,5 +16,8 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
   storageClassName: weather-image-storage
+  claimRef:
+    name: weather-image-pvc
+    namespace: climacast
   hostPath:
     path: /mnt/weather-image

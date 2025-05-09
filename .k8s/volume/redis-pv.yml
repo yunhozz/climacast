@@ -15,6 +15,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: redis-storage
+  claimRef:
+    name: redis-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/redis/redis-0
@@ -29,6 +32,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: redis-storage
+  claimRef:
+    name: redis-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/redis/redis-1
@@ -43,6 +49,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: redis-storage
+  claimRef:
+    name: redis-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/redis/redis-2

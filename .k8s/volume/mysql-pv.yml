@@ -43,6 +43,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-weather-source-storage
+  claimRef:
+    name: mysql-weather-source-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-weather-source
@@ -57,6 +60,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-weather-replica-storage
+  claimRef:
+    name: mysql-weather-replica-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-weather-replica-0
@@ -71,6 +77,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-weather-replica-storage
+  claimRef:
+    name: mysql-weather-replica-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-weather-replica-1
@@ -85,6 +94,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-subscription-source-storage
+  claimRef:
+    name: mysql-subscription-source-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-subscription-source
@@ -99,6 +111,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-subscription-replica-storage
+  claimRef:
+    name: mysql-subscription-replica-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-subscription-replica-0
@@ -113,6 +128,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-subscription-replica-storage
+  claimRef:
+    name: mysql-subscription-replica-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-subscription-replica-1
@@ -127,6 +145,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: mysql-batch-storage
+  claimRef:
+    name: mysql-batch-volume
+    namespace: database
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/mysql/mysql-batch
