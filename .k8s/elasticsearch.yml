@@ -81,6 +81,7 @@ spec:
             app: elasticsearch
         accessModes:
           - ReadWriteOnce
+        storageClassName: es-storage
         resources:
           requests:
             storage: 1Gi

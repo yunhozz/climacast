@@ -75,7 +75,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: redis-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi

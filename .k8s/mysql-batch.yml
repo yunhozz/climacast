@@ -52,7 +52,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-batch-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi

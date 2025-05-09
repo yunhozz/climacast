@@ -101,7 +101,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-weather-source-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
@@ -164,7 +164,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-weather-replica-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
@@ -216,7 +216,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-subscription-source-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
@@ -279,7 +279,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: mysql-subscription-replica-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
