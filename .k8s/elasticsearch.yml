@@ -76,21 +76,9 @@ spec:
     - metadata:
         name: es-volume
       spec:
-        selector:
-          matchLabels:
-            app: elasticsearch
         accessModes:
           - ReadWriteOnce
-        storageClassName: es-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: es-storage
-  labels:
-    app: elasticsearch
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain
