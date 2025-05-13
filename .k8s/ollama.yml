@@ -39,25 +39,12 @@ spec:
               memory: 4Gi
               cpu: "1"
             limits:
-              memory: 4Gi
+              memory: 6Gi
               cpu: "2"
           volumeMounts:
             - name: ollama-volume
-              mountPath: /mnt/data/llama32
+              mountPath: /root/.ollama
       volumes:
         - name: ollama-volume
           persistentVolumeClaim:
             claimName: ollama-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: ollama-pvc
-  namespace: ai
-spec:
-  storageClassName: local-path
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 3Gi

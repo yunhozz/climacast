@@ -32,7 +32,7 @@ spec:
             - -c
             - chown -R 472:472 /var/lib/grafana
           volumeMounts:
-            - name: grafana-storage
+            - name: grafana-volume
               mountPath: /var/lib/grafana
       containers:
         - name: grafana
@@ -40,25 +40,13 @@ spec:
           ports:
             - containerPort: 3000
           volumeMounts:
-            - name: grafana-storage
+            - name: grafana-volume
               mountPath: /var/lib/grafana
           securityContext:
             runAsUser: 472
             runAsGroup: 472
             allowPrivilegeEscalation: false
       volumes:
-        - name: grafana-storage
+        - name: grafana-volume
           persistentVolumeClaim:
             claimName: grafana-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: grafana-pvc
-  namespace: monitoring
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
