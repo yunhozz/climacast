@@ -33,6 +33,16 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8999"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - batch-server
       containers:
         - name: batch-server
           image: ghcr.io/yunhozz/climacast-batch-server:latest

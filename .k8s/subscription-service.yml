@@ -43,6 +43,16 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8090"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - subscription-service
       containers:
         - name: subscription-service
           image: ghcr.io/yunhozz/climacast-subscription-service:latest

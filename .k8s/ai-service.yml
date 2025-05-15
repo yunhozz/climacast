@@ -32,6 +32,16 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8070"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - ai-service
       containers:
         - name: ai-service
           image: ghcr.io/yunhozz/climacast-ai-service:latest
