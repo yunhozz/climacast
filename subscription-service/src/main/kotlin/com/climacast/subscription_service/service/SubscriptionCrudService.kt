@@ -51,8 +51,12 @@ class SubscriptionCrudService(
             ?: throw SubscriptionServiceException.SubscriptionNotFoundException()
 
     private fun validateSubscriptionExist(info: SubscriptionInfo) {
-        if (subscriptionRepository.existsBySubscriptionInfoAndStatus(info)) {
-            throw SubscriptionServiceException.SubscriptionAlreadyExistException()
-        }
+        if (
+            when {
+                info.email != null -> subscriptionRepository.existsBySubscriptionInfoEmailAndStatus(info.email!!)
+                info.phoneNumber != null -> subscriptionRepository.existsBySubscriptionInfoPhoneNumberAndStatus(info.phoneNumber!!)
+                else -> false
+            }
+        ) throw SubscriptionServiceException.SubscriptionAlreadyExistException()
     }
 }

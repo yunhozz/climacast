@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
-    fun existsBySubscriptionInfoAndStatus(info: SubscriptionInfo, status: Boolean = true): Boolean
+    fun existsBySubscriptionInfoEmailAndStatus(email: String, status: Boolean = true): Boolean
+    fun existsBySubscriptionInfoPhoneNumberAndStatus(phoneNumber: String, status: Boolean = true): Boolean
 
     @Query("""
         select s from Subscription s
