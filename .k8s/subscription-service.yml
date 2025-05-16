@@ -98,23 +98,3 @@ spec:
           env:
             - name: SE_NODE_MAX_SESSIONS
               value: "3"
-          volumeMounts:
-            - name: weather-image-volume
-              mountPath: /app/weather-image
-      volumes:
-        - name: weather-image-volume
-          persistentVolumeClaim:
-            claimName: weather-image-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: weather-image-pvc
-  namespace: climacast
-spec:
-  storageClassName: local-path
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
