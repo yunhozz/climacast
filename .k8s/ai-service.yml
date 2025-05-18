@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: ai-service
   namespace: climacast
+  labels:
+    app: ai-service
 spec:
   selector:
     app: ai-service
@@ -14,6 +16,8 @@ kind: Deployment
 metadata:
   name: ai-service
   namespace: climacast
+  labels:
+    app: ai-service
 spec:
   selector:
     matchLabels:

@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: batch-server
   namespace: climacast
+  labels:
+    app: batch-server
 spec:
   selector:
     app: batch-server
@@ -15,6 +17,8 @@ kind: Deployment
 metadata:
   name: batch-server
   namespace: climacast
+  labels:
+    app: batch-server
 spec:
   selector:
     matchLabels:

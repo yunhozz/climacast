@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: subscription-service
   namespace: climacast
+  labels:
+    app: subscription-service
 spec:
   selector:
     app: subscription-service
@@ -25,6 +27,8 @@ kind: Deployment
 metadata:
   name: subscription-service
   namespace: climacast
+  labels:
+    app: subscription-service
 spec:
   selector:
     matchLabels:
