@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: localhost
+    - host: climacast.com
       http:
         paths:
           - path: /api/subscription
