@@ -85,8 +85,8 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: kubernetes-zookeeper
-          imagePullPolicy: Always
           image: registry.k8s.io/kubernetes-zookeeper:1.0-3.4.10
+          imagePullPolicy: Always
           resources:
             requests:
               memory: 1Gi
@@ -147,17 +147,7 @@ spec:
       spec:
         accessModes:
           - ReadWriteOnce
-        storageClassName: zk-storage
+        storageClassName: local-path
         resources:
           requests:
             storage: 1Gi
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: zk-storage
-  namespace: messaging
-  labels:
-    app: zk
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Delete
