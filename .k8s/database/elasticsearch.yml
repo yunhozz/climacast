@@ -41,7 +41,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - minikube
+                      - climacast-cluster-control-plane
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
