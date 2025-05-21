@@ -18,7 +18,7 @@ spec:
   persistentVolumeReclaimPolicy: Delete
   nfs:
     path: /tmp/nfs
-    server: "192.168.49.2"
+    server: "172.18.0.4"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
