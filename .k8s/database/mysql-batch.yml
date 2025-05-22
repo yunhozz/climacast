@@ -56,3 +56,144 @@ spec:
         resources:
           requests:
             storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-batch-init-job
+  namespace: database
+spec:
+  template:
+    spec:
+      containers:
+        - name: init-batch-tables
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+          command:
+            - sh
+            - -c
+          args:
+            - mysql -h mysql-batch-0.mysql-batch.database.svc.cluster.local -u root -p$MYSQL_ROOT_PASSWORD < /sql/batch-tables.sql
+          volumeMounts:
+            - name: mysql-batch-volume
+              mountPath: /sql
+      volumes:
+        - name: mysql-batch-volume
+          configMap:
+            name: mysql-batch-configmap
+      restartPolicy: OnFailure
+  backoffLimit: 3
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-batch-configmap
+  namespace: database
+data:
+  batch-tables.sql: |
+    create database if not exists climacast_batch;
+    use climacast_batch;
+    
+    create table if not exists BATCH_JOB_EXECUTION_SEQ
+    (
+        ID         bigint not null,
+        UNIQUE_KEY char   not null,
+        constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+    );
+
+    create table if not exists BATCH_JOB_INSTANCE
+    (
+        JOB_INSTANCE_ID bigint       not null primary key,
+        VERSION         bigint null,
+        JOB_NAME        varchar(100) not null,
+        JOB_KEY         varchar(32)  not null,
+        constraint JOB_INST_UN unique (JOB_NAME, JOB_KEY)
+    );
+
+    create table if not exists BATCH_JOB_EXECUTION
+    (
+        JOB_EXECUTION_ID bigint not null primary key,
+        VERSION          bigint null,
+        JOB_INSTANCE_ID  bigint not null,
+        CREATE_TIME      datetime(6)   not null,
+        START_TIME       datetime(6)   null,
+        END_TIME         datetime(6)   null,
+        STATUS           varchar(10) null,
+        EXIT_CODE        varchar(2500) null,
+        EXIT_MESSAGE     varchar(2500) null,
+        LAST_UPDATED     datetime(6)   null,
+        constraint JOB_INST_EXEC_FK foreign key (JOB_INSTANCE_ID) references BATCH_JOB_INSTANCE (JOB_INSTANCE_ID)
+    );
+
+    create table if not exists BATCH_JOB_EXECUTION_CONTEXT
+    (
+        JOB_EXECUTION_ID   bigint        not null primary key,
+        SHORT_CONTEXT      varchar(2500) not null,
+        SERIALIZED_CONTEXT text null,
+        constraint JOB_EXEC_CTX_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION (JOB_EXECUTION_ID)
+    );
+
+    create table if not exists BATCH_JOB_EXECUTION_PARAMS
+    (
+        JOB_EXECUTION_ID bigint       not null,
+        PARAMETER_NAME   varchar(100) not null,
+        PARAMETER_TYPE   varchar(100) not null,
+        PARAMETER_VALUE  varchar(2500) null,
+        IDENTIFYING      char         not null,
+        constraint JOB_EXEC_PARAMS_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION (JOB_EXECUTION_ID)
+    );
+
+    create table if not exists BATCH_JOB_SEQ
+    (
+        ID         bigint not null,
+        UNIQUE_KEY char   not null,
+        constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+    );
+
+    create table if not exists BATCH_STEP_EXECUTION
+    (
+        STEP_EXECUTION_ID  bigint       not null primary key,
+        VERSION            bigint       not null,
+        STEP_NAME          varchar(100) not null,
+        JOB_EXECUTION_ID   bigint       not null,
+        CREATE_TIME        datetime(6)   not null,
+        START_TIME         datetime(6)   null,
+        END_TIME           datetime(6)   null,
+        STATUS             varchar(10) null,
+        COMMIT_COUNT       bigint null,
+        READ_COUNT         bigint null,
+        FILTER_COUNT       bigint null,
+        WRITE_COUNT        bigint null,
+        READ_SKIP_COUNT    bigint null,
+        WRITE_SKIP_COUNT   bigint null,
+        PROCESS_SKIP_COUNT bigint null,
+        ROLLBACK_COUNT     bigint null,
+        EXIT_CODE          varchar(2500) null,
+        EXIT_MESSAGE       varchar(2500) null,
+        LAST_UPDATED       datetime(6)   null,
+        constraint JOB_EXEC_STEP_FK foreign key (JOB_EXECUTION_ID) references BATCH_JOB_EXECUTION (JOB_EXECUTION_ID)
+    );
+
+    create table if not exists BATCH_STEP_EXECUTION_CONTEXT
+    (
+        STEP_EXECUTION_ID  bigint        not null primary key,
+        SHORT_CONTEXT      varchar(2500) not null,
+        SERIALIZED_CONTEXT text null,
+        constraint STEP_EXEC_CTX_FK foreign key (STEP_EXECUTION_ID) references BATCH_STEP_EXECUTION (STEP_EXECUTION_ID)
+    );
+
+    create table if not exists BATCH_STEP_EXECUTION_SEQ
+    (
+        ID         bigint not null,
+        UNIQUE_KEY char   not null,
+        constraint UNIQUE_KEY_UN unique (UNIQUE_KEY)
+    );
+
+    insert ignore into BATCH_STEP_EXECUTION_SEQ values (0, '0');
+    insert ignore into BATCH_JOB_EXECUTION_SEQ values (0, '0');
+    insert ignore into BATCH_JOB_SEQ values (0, '0');
