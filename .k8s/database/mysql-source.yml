@@ -1,0 +1,217 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-weather-source
+  namespace: database
+  labels:
+    app: mysql-weather-source
+spec:
+  selector:
+    app: mysql-weather-source
+  clusterIP: None
+  ports:
+    - port: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-subscription-source
+  namespace: database
+  labels:
+    app: mysql-subscription-source
+spec:
+  selector:
+    app: mysql-subscription-source
+  clusterIP: None
+  ports:
+    - port: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-weather-source
+  namespace: database
+  labels:
+    app: mysql-weather-source
+spec:
+  serviceName: mysql-weather-source
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-weather-source
+  template:
+    metadata:
+      labels:
+        app: mysql-weather-source
+    spec:
+      containers:
+        - name: mysql-weather-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-weather-source-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-weather-source-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-weather-source-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-subscription-source
+  namespace: database
+  labels:
+    app: mysql-subscription-source
+spec:
+  serviceName: mysql-subscription-source
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-subscription-source
+  template:
+    metadata:
+      labels:
+        app: mysql-subscription-source
+    spec:
+      containers:
+        - name: mysql-subscription-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: TZ
+              value: Asia/Seoul
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d
+              readOnly: true
+            - name: mysql-subscription-source-volume
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-config
+          configMap:
+            name: mysql-subscription-source-configmap
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-subscription-source-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-repl-user-job
+  namespace: database
+spec:
+  template:
+    spec:
+      containers:
+        - name: setup-mysql-weather-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+          command:
+            - sh
+            - -c
+          args:
+            - mysql -h mysql-weather-source-0.mysql-weather-source.database.svc.cluster.local -u root -p$MYSQL_ROOT_PASSWORD < /sql/mysql-source.sql
+          volumeMounts:
+            - name: mysql-repl-user-volume
+              mountPath: /sql
+        - name: setup-mysql-subscription-source
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mysql-password
+                  name: mysql-secret
+          command:
+            - sh
+            - -c
+          args:
+            - mysql -h mysql-subscription-source-0.mysql-subscription-source.database.svc.cluster.local -u root -p$MYSQL_ROOT_PASSWORD < /sql/mysql-source.sql
+          volumeMounts:
+            - name: mysql-repl-user-volume
+              mountPath: /sql
+      volumes:
+        - name: mysql-repl-user-volume
+          configMap:
+            name: mysql-repl-user-configmap
+      restartPolicy: OnFailure
+  backoffLimit: 3
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-weather-source-configmap
+  namespace: database
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=101
+    log-bin=mysql-bin
+    binlog-format=ROW
+    gtid_mode=ON
+    enforce-gtid-consistency=ON
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-subscription-source-configmap
+  namespace: database
+data:
+  my.cnf: |
+    [mysqld]
+    server-id=201
+    log-bin=mysql-bin
+    binlog-format=ROW
+    gtid_mode=ON
+    enforce-gtid-consistency=ON
+    relay-log=mysql-relay-bin
+    skip-name-resolve
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
