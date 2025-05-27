@@ -96,7 +96,7 @@ spec:
       containers:
         - name: selenium-chrome
           image: seleniarm/standalone-chromium:latest
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           ports:
             - containerPort: 4444
           env:
