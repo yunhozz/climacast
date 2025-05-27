@@ -1,6 +1,6 @@
 package com.climacast.subscription_service.infra.document.save
 
-import com.climacast.global.dto.KafkaMessage
+import com.climacast.global.event.KafkaMessage
 
 interface DocumentSaver {
     fun saveWeathersByMessageType(message: KafkaMessage)

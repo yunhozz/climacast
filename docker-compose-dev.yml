@@ -1,51 +1,12 @@
 services:
-  config-server:
-    build:
-      context: .
-      dockerfile: config-server/Dockerfile
-    image: climacast/config-server:latest
-    container_name: config-server
-    ports:
-      - 8888:8888
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8888/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: always
-    networks:
-      - climacast-network
-
   batch-server:
     build:
       context: .
       dockerfile: batch-server/Dockerfile
-    image: climacast/batch-server:${IMAGE_TAG}
-
-  batch-server-blue:
-    image: climacast/batch-server:${IMAGE_TAG}
-    ports:
-      - 18997-18999:8999
+    image: climacast/batch-server:latest
     scale: 3
-    environment:
-      APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8999/actuator/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    restart: on-failure
-    networks:
-      - climacast-network
-
-  batch-server-green:
-    image: climacast/batch-server:${IMAGE_TAG}
     ports:
-      - 28997-28999:8999
-    scale: 3
+      - 8999
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -63,13 +24,10 @@ services:
     build:
       context: .
       dockerfile: subscription-service/Dockerfile
-    image: climacast/subscription-service:${IMAGE_TAG}
-
-  subscription-service-blue:
-    image: climacast/subscription-service:${IMAGE_TAG}
-    ports:
-      - 18090-18092:8090
+    image: climacast/subscription-service:latest
     scale: 3
+    ports:
+      - 8090
     environment:
       APPLICATION_PROFILE: dev
       TZ: Asia/Seoul
@@ -83,16 +41,18 @@ services:
     networks:
       - climacast-network
 
-  subscription-service-green:
-    image: climacast/subscription-service:${IMAGE_TAG}
-    ports:
-      - 28090-28092:8090
+  ai-service:
+    build:
+      dockerfile: ai-service/Dockerfile
+      context: .
+    image: climacast/ai-service:latest
     scale: 3
+    ports:
+      - 8070
     environment:
       APPLICATION_PROFILE: dev
-      TZ: Asia/Seoul
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8090/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8070/actuator/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -100,6 +60,257 @@ services:
     restart: on-failure
     networks:
       - climacast-network
+
+  kafka-1:
+    image: wurstmeister/kafka:latest
+    container_name: kafka-1
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:19092,EXTERNAL://kafka-1:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+    ports:
+      - 9092:9092
+      - 19092:19092
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - climacast-network
+
+  kafka-2:
+    image: wurstmeister/kafka:latest
+    container_name: kafka-2
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:19093,EXTERNAL://kafka-2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+    ports:
+      - 9093:9093
+      - 19093:19093
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - climacast-network
+
+  kafka-3:
+    image: wurstmeister/kafka:latest
+    container_name: kafka-3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2182,zookeeper-3:2183
+      KAFKA_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:19094,EXTERNAL://kafka-3:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+    ports:
+      - 9094:9094
+      - 19094:19094
+    depends_on:
+      - zookeeper-1
+      - zookeeper-2
+      - zookeeper-3
+    networks:
+      - climacast-network
+
+  zookeeper-1:
+    image: zookeeper:latest
+    container_name: zookeeper-1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+    networks:
+      - climacast-network
+
+  zookeeper-2:
+    image: zookeeper:latest
+    container_name: zookeeper-2
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+    networks:
+      - climacast-network
+
+  zookeeper-3:
+    image: zookeeper:latest
+    container_name: zookeeper-3
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zookeeper-1:2888:3888;2181 server.2=zookeeper-2:2888:3888;2181 server.3=zookeeper-3:2888:3888;2181
+    networks:
+      - climacast-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - 10000:8080
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka-1:9092,kafka-2:9093,kafka-3:9094
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    restart: always
+    networks:
+      - climacast-network
+
+  mysql-source:
+    image: mysql:latest
+    container_name: mysql-source
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3307:3306
+    volumes:
+      - ./conf/mysql/my-source.cnf:/etc/mysql/my.cnf
+      - mysql-source-volume:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  mysql-replica:
+    image: mysql:latest
+    container_name: mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - 3308:3306
+    volumes:
+      - ./conf/mysql/my-replica.cnf:/etc/mysql/my.cnf
+      - mysql-replica-volume:/var/lib/mysql
+    depends_on:
+      - mysql-source
+    networks:
+      - climacast-network
+
+  mysql-batch:
+    image: mysql:latest
+    container_name: mysql-batch
+    ports:
+      - 3309:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      - mysql-batch-volume:/var/lib/mysql
+    networks:
+      - climacast-network
+
+  elasticsearch:
+    image: elasticsearch:8.17.3
+    container_name: elasticsearch
+    ports:
+      - 19200:9200
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.enrollment.enabled: false
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    networks:
+      - climacast-network
+
+  redis-1:
+    image: redis:latest
+    container_name: redis-1
+    ports:
+      - 6379:6379
+      - 16379:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-1.conf:/etc/redis.conf
+      - redis-1-volume:/data
+    restart: always
+    networks:
+      - climacast-network
+
+  redis-2:
+    image: redis:latest
+    container_name: redis-2
+    ports:
+      - 6380:6379
+      - 16380:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-2.conf:/etc/redis.conf
+      - redis-2-volume:/data
+    restart: always
+    networks:
+      - climacast-network
+
+  redis-3:
+    image: redis:latest
+    container_name: redis-3
+    ports:
+      - 6381:6379
+      - 16381:16379
+    command: redis-server /etc/redis.conf
+    volumes:
+      - ./conf/redis/redis-3.conf:/etc/redis.conf
+      - redis-3-volume:/data
+    restart: always
+    networks:
+      - climacast-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./conf/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - subscription-service
+      - ai-service
+    restart: always
+    networks:
+      - climacast-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - 19090:9090
+    volumes:
+      - ./conf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - climacast-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 13000:3000
+    networks:
+      - climacast-network
+
+volumes:
+  mysql-source-volume:
+  mysql-replica-volume:
+  mysql-batch-volume:
+  redis-1-volume:
+  redis-2-volume:
+  redis-3-volume:
 
 networks:
   climacast-network:

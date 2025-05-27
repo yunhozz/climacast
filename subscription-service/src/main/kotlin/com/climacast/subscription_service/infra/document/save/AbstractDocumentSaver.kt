@@ -1,10 +1,13 @@
 package com.climacast.subscription_service.infra.document.save
 
-import com.climacast.global.dto.KafkaMessage
 import com.climacast.global.dto.WeatherResponseDTO
+import com.climacast.global.enums.DateTimePattern
 import com.climacast.global.enums.WeatherStatus
+import com.climacast.global.event.KafkaMessage
+import com.climacast.global.event.message.ForecastWeathersMessage
+import com.climacast.global.event.message.HistoryWeathersMessage
+import com.climacast.global.utils.DateTimeConverter
 import com.climacast.global.utils.logger
-import com.climacast.subscription_service.common.util.DateTimeConverter
 import com.climacast.subscription_service.model.document.ForecastWeather
 import com.climacast.subscription_service.model.document.HistoryWeather
 import reactor.core.publisher.Flux
@@ -14,13 +17,16 @@ abstract class AbstractDocumentSaver : DocumentSaver {
 
     protected val log = logger()
 
+    abstract fun saveForecastWeathers(forecastWeathers: List<ForecastWeather>)
+    abstract fun saveHistoryWeathers(historyWeathers: List<HistoryWeather>)
+
     override fun saveWeathersByMessageType(message: KafkaMessage) {
         when (message) {
-            is KafkaMessage.ForecastWeathersMessage -> {
+            is ForecastWeathersMessage -> {
                 makeForecastWeathers(message.data)
                     .subscribe { saveForecastWeathers(it) }
             }
-            is KafkaMessage.HistoryWeathersMessage -> {
+            is HistoryWeathersMessage -> {
                 makeHistoryWeathers(message.data)
                     .subscribe { saveHistoryWeathers(it) }
             }
@@ -30,10 +36,6 @@ abstract class AbstractDocumentSaver : DocumentSaver {
         }
     }
 
-    abstract fun saveForecastWeathers(forecastWeathers: List<ForecastWeather>)
-
-    abstract fun saveHistoryWeathers(historyWeathers: List<HistoryWeather>)
-
     private fun makeForecastWeathers(data: List<WeatherResponseDTO>): Mono<List<ForecastWeather>> =
         Flux.fromIterable(data)
             .map { weather ->
@@ -41,7 +43,7 @@ abstract class AbstractDocumentSaver : DocumentSaver {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
+                    time = mapDatetimeList(weather.hourly?.time),
                     weatherStatus = weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
                     temperature2m = weather.hourly?.temperature_2m,
                     temperature80m = weather.hourly?.temperature_80m,
@@ -63,7 +65,7 @@ abstract class AbstractDocumentSaver : DocumentSaver {
                     lat = weather.latitude,
                     lon = weather.longitude,
                     region = "${weather.parentRegion} ${weather.childRegion}",
-                    time = weather.hourly?.time?.map { DateTimeConverter.convertTimeFormat(it) },
+                    time = mapDatetimeList(weather.hourly?.time),
                     weatherStatus = weather.daily?.let {
                         it.weather_code?.map { code -> WeatherStatus.of(code).name }
                     } ?: weather.hourly?.weather_code?.map { code -> WeatherStatus.of(code).name },
@@ -71,8 +73,8 @@ abstract class AbstractDocumentSaver : DocumentSaver {
                     minTemperature2m = weather.daily?.temperature_2m_min,
                     maxApparentTemperature = weather.daily?.apparent_temperature_max,
                     minApparentTemperature = weather.daily?.apparent_temperature_min,
-                    sunrise = weather.daily?.sunrise?.map { DateTimeConverter.convertTimeFormat(it) },
-                    sunset = weather.daily?.sunset?.map { DateTimeConverter.convertTimeFormat(it) },
+                    sunrise = mapDatetimeList(weather.daily?.sunrise),
+                    sunset = mapDatetimeList(weather.daily?.sunset),
                     daylightDuration = weather.daily?.daylight_duration,
                     sunshineDuration = weather.daily?.sunshine_duration,
                     maxUvIndex = weather.daily?.uv_index_max,
@@ -100,4 +102,13 @@ abstract class AbstractDocumentSaver : DocumentSaver {
                 )
             }
             .collectList()
+
+    companion object {
+        private inline fun <reified T> mapDatetimeList(timeList: List<T>?): List<String>? =
+            timeList?.let { tl ->
+                tl.map { time ->
+                    DateTimeConverter.convertToString(time, DateTimePattern.ELASTICSEARCH_PATTERN)
+                }
+            }
+    }
 }

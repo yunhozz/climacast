@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: batch-server
+  namespace: climacast
+  labels:
+    app: batch-server
+spec:
+  selector:
+    app: batch-server
+  clusterIP: None
+  ports:
+    - port: 8999
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: batch-server
+  namespace: climacast
+  labels:
+    app: batch-server
+spec:
+  selector:
+    matchLabels:
+      app: batch-server
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: batch-server
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8999"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - batch-server
+      containers:
+        - name: batch-server
+          image: ghcr.io/yunhozz/climacast-batch-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8999
+          env:
+            - name: APPLICATION_PROFILE
+              value: prod
+            - name: TZ
+              value: Asia/Seoul
+      imagePullSecrets:
+        - name: ghcr-secret

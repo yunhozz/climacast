@@ -1,7 +1,7 @@
 package com.climacast.batch_server.infra.api
 
-import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
-import com.climacast.batch_server.dto.Region
+import com.climacast.batch_server.model.dto.OpenApiQueryRequestDTO
+import com.climacast.batch_server.model.dto.Region
 import com.climacast.global.dto.WeatherResponseDTO
 import com.climacast.global.enums.WeatherType
 import org.springframework.batch.item.Chunk

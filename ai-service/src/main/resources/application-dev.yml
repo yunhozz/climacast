@@ -1,0 +1,49 @@
+server:
+  port: 8070
+
+spring:
+  application:
+    name: ai-service
+  cloud:
+    config:
+      enabled: false
+  ai:
+    openai:
+      api-key: ${openai.api-key}
+      chat:
+        options:
+          model: gpt-3.5-turbo
+    ollama:
+      chat:
+        model: llama3.2
+  data:
+    redis:
+      cluster:
+        nodes:
+          - redis-1:6379
+          - redis-2:6380
+          - redis-3:6381
+      connect-timeout: 3000
+      timeout: 3000
+  kafka:
+    bootstrap-servers: kafka-1:9092,kafka-2:9093,kafka-3:9094
+
+logging:
+  level:
+    org:
+      springframework:
+        scheduling: debug
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      access: unrestricted
+
+app:
+  kafka:
+    num-partitions: 3
+    replication-factor: 3

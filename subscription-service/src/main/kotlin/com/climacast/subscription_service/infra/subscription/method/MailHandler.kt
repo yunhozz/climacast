@@ -2,6 +2,7 @@ package com.climacast.subscription_service.infra.subscription.method
 
 import com.climacast.global.utils.logger
 import com.climacast.subscription_service.common.enums.SubscriptionMethod
+import com.climacast.subscription_service.common.exception.SubscriptionServiceException
 import com.climacast.subscription_service.infra.subscription.SubscriberInfo
 import com.climacast.subscription_service.infra.subscription.SubscriptionHandler
 import jakarta.mail.MessagingException
@@ -41,9 +42,10 @@ class MailHandler(
             log.info("Success to send data on Email: id=${message.messageID}, sent=${message.sentDate}")
 
         } catch (e: Exception) {
+            log.error(e.localizedMessage, e)
             when (e) {
                 is MailException, is MessagingException ->
-                    throw IllegalArgumentException("Fail to send data on Email: ${e.localizedMessage}", e)
+                    throw SubscriptionServiceException.WeatherDataSendFailException()
                 else -> throw IllegalArgumentException(e.localizedMessage, e)
             }
         }

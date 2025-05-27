@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: subscription-service
+  namespace: climacast
+  labels:
+    app: subscription-service
+spec:
+  selector:
+    app: subscription-service
+  ports:
+    - port: 8090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: selenium-chrome
+  namespace: climacast
+spec:
+  selector:
+    app: selenium-chrome
+  ports:
+    - port: 4444
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscription-service
+  namespace: climacast
+  labels:
+    app: subscription-service
+spec:
+  selector:
+    matchLabels:
+      app: subscription-service
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: subscription-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8090"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - subscription-service
+      containers:
+        - name: subscription-service
+          image: ghcr.io/yunhozz/climacast-subscription-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8090
+          env:
+            - name: APPLICATION_PROFILE
+              value: prod
+            - name: TZ
+              value: Asia/Seoul
+          volumeMounts:
+            - name: weather-image-volume
+              mountPath: /app/weather-image
+      imagePullSecrets:
+        - name: ghcr-secret
+      volumes:
+        - name: weather-image-volume
+          persistentVolumeClaim:
+            claimName: weather-image-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium-chrome
+  namespace: climacast
+spec:
+  selector:
+    matchLabels:
+      app: selenium-chrome
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: selenium-chrome
+    spec:
+      containers:
+        - name: selenium-chrome
+          image: seleniarm/standalone-chromium:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4444
+          env:
+            - name: SE_NODE_MAX_SESSIONS
+              value: "3"

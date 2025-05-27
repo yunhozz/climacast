@@ -1,0 +1,35 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: weather-image-storage
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: weather-image-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: weather-image-storage
+  persistentVolumeReclaimPolicy: Delete
+  nfs:
+    path: /data/nfs
+    server: "192.168.49.2"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weather-image-pvc
+  namespace: climacast
+spec:
+  storageClassName: weather-image-storage
+  volumeName: weather-image-pv
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

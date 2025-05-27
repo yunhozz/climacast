@@ -4,10 +4,10 @@ import com.climacast.batch_server.common.enums.DailyConstants
 import com.climacast.batch_server.common.enums.HourlyConstants
 import com.climacast.batch_server.common.enums.WeatherParameters
 import com.climacast.batch_server.common.util.WeatherDataBuffer
-import com.climacast.batch_server.dto.OpenApiQueryRequestDTO
-import com.climacast.batch_server.dto.Region
 import com.climacast.batch_server.infra.api.HistoryWeatherOpenApiHandler
 import com.climacast.batch_server.infra.message.WeatherDataKafkaSender
+import com.climacast.batch_server.model.dto.OpenApiQueryRequestDTO
+import com.climacast.batch_server.model.dto.Region
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component

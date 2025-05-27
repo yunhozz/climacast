@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nginx
+  namespace: climacast
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: climacast.com
+      http:
+        paths:
+          - path: /api/subscription
+            pathType: Prefix
+            backend:
+              service:
+                name: subscription-service
+                port:
+                  number: 8090
+          - path: /api/ai/weather
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-service
+                port:
+                  number: 8070
