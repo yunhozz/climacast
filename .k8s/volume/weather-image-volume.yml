@@ -17,7 +17,7 @@ spec:
   storageClassName: weather-image-storage
   persistentVolumeReclaimPolicy: Delete
   nfs:
-    path: /tmp/nfs
+    path: /data/nfs
     server: "192.168.49.2"
 ---
 apiVersion: v1
