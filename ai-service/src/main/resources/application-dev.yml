@@ -9,10 +9,11 @@ spring:
       enabled: false
   ai:
     openai:
-      api-key: ${openai.api-key}
+      base-url: ${groq.base-url}
+      api-key: ${groq.api-key}
       chat:
         options:
-          model: gpt-3.5-turbo
+          model: ${groq.model}
     ollama:
       chat:
         model: llama3.2
