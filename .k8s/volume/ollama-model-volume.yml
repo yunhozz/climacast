@@ -1,0 +1,33 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ollama-model-storage
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ollama-model-pv
+spec:
+  storageClassName: ollama-model-storage
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 6Gi
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/data/llama32
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-model-pvc
+  namespace: ai
+spec:
+  storageClassName: ollama-model-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 6Gi
