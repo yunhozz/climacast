@@ -14,7 +14,7 @@ import com.climacast.global.utils.DateTimeConverter
 import com.climacast.global.utils.logger
 import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
-import org.springframework.ai.ollama.OllamaChatModel
+import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -30,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList
     cacheNames = [CacheNames.WEATHER_AI_QUERY_CACHE_NAME]
 )
 class WeatherAiService(
-    private val chatModel: OllamaChatModel,
+    private val chatModel: OpenAiChatModel,
     private val kafkaTopicHandler: KafkaTopicHandler
 ) {
     private val log = logger()
