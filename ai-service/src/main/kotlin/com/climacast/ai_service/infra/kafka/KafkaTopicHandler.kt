@@ -38,7 +38,7 @@ class KafkaTopicHandler(
             )
     }
 
-    fun consume(): Flux<WeatherQueryResponseMessage> = kafkaConsumer.receive()
+    fun consumeWeatherQueryResponse(): Flux<WeatherQueryResponseMessage> = kafkaConsumer.receive()
         .doOnNext { record ->
             log.info("""
                 [Consumed Message]
