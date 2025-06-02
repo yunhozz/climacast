@@ -17,6 +17,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+	implementation("org.springframework.session:spring-session-data-redis")
 	implementation("org.redisson:redisson-spring-boot-starter:3.27.0")
 
 	implementation("org.springframework.boot:spring-boot-starter-cache")

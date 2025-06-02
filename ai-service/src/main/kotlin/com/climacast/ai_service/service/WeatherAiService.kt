@@ -16,10 +16,11 @@ import org.springframework.ai.chat.messages.SystemMessage
 import org.springframework.ai.chat.messages.UserMessage
 import org.springframework.ai.openai.OpenAiChatModel
 import org.springframework.cache.annotation.CacheConfig
-import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.switchIfEmpty
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -31,45 +32,51 @@ import java.util.concurrent.CopyOnWriteArrayList
 )
 class WeatherAiService(
     private val chatModel: OpenAiChatModel,
-    private val kafkaTopicHandler: KafkaTopicHandler
+    private val kafkaTopicHandler: KafkaTopicHandler,
+    reactiveRedisTemplate: ReactiveRedisTemplate<String, String>
 ) {
     private val log = logger()
+    private val ops = reactiveRedisTemplate.opsForValue()
 
-    @Cacheable
-    fun processQuery(dto: WeatherQueryRequestDTO, sessionId: String): Mono<String> {
-        val requestId = UUID.randomUUID().toString()
-        publishWeatherQueryEvent(dto, KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, requestId)
+    fun processAiSummary(dto: WeatherQueryRequestDTO, sessionId: String): Mono<String> {
+        val cacheKey = "$sessionId::$dto"
 
-        return kafkaTopicHandler.consume()
-            .filter { it.originalRequestId == requestId }
-            .takeUntil { it.isLast == true }
-            .flatMapSequential { response ->
-                val systemMessage = SystemMessage(ANALYZE_PROMPT)
-                val userMessage = UserMessage(response.weatherData)
-                chatModel.stream(systemMessage, userMessage)
-            }
-            .collectList()
-            .flatMap { responses ->
-                val result = responses.joinToString("")
-                val systemMessage = SystemMessage(SUMMARY_PROMPT)
-                val userMessage = UserMessage(result)
-                Mono.just(chatModel.call(systemMessage, userMessage))
-            }
-            .cache(Duration.ofMinutes(CacheType.WEATHER_AI_QUERY_CACHE.expirationTime))
-            .doOnSuccess {
-                log.info("AI response success. Bytes=${it.toByteArray().size}")
-            }
-            .doOnError { ex ->
-                log.error(ex.localizedMessage, ex)
+        return ops.get(cacheKey)
+            .flatMap { cachedAnswer -> Mono.just(cachedAnswer) }
+            .switchIfEmpty {
+                val requestId = UUID.randomUUID().toString()
+                publishWeatherQueryEvent(dto, KafkaTopic.WEATHER_QUERY_REQUEST_TOPIC, requestId)
+
+                kafkaTopicHandler.consumeWeatherQueryResponse()
+                    .filter { it.originalRequestId == requestId }
+                    .takeUntil { it.isLast == true }
+                    .flatMapSequential { response ->
+                        val systemMessage = SystemMessage(ANALYZE_PROMPT)
+                        val userMessage = UserMessage(response.weatherData)
+                        chatModel.stream(systemMessage, userMessage)
+                    }
+                    .collectList()
+                    .flatMap { responses ->
+                        val result = responses.joinToString("")
+                        val systemMessage = SystemMessage(SUMMARY_PROMPT)
+                        val userMessage = UserMessage(result)
+                        createAnswerWithCache(cacheKey, chatModel.call(systemMessage, userMessage))
+                    }
+                    .cache(Duration.ofMinutes(CacheType.WEATHER_AI_QUERY_CACHE.expirationTime))
+                    .doOnSuccess { answer ->
+                        log.info("AI response success. Bytes=${answer.toByteArray().size}")
+                    }
+                    .doOnError { ex ->
+                        log.error(ex.localizedMessage, ex)
+                    }
             }
     }
 
-    @Cacheable
-    fun processQueryStream(dto: WeatherQueryRequestDTO): Flux<String> {
+    fun processAiSummaryStream(dto: WeatherQueryRequestDTO): Flux<String> {
         val requestId = UUID.randomUUID().toString()
         publishWeatherQueryEvent(dto, KafkaTopic.WEATHER_QUERY_REQUEST_STREAM_TOPIC, requestId)
 
-        return kafkaTopicHandler.consume()
+        return kafkaTopicHandler.consumeWeatherQueryResponse()
             .filter { it.originalRequestId == requestId }
             .take(calculateDaysBetween(dto.startTime, dto.endTime))
             .publish { messageFlux ->
@@ -90,7 +97,6 @@ class WeatherAiService(
                     }
                 )
             }
-            .cache(Duration.ofMinutes(CacheType.WEATHER_AI_QUERY_CACHE.expirationTime))
             .doOnComplete {
                 log.info("AI response stream success.")
             }
@@ -113,6 +119,10 @@ class WeatherAiService(
         kafkaTopicHandler.publish(event)
     }
 
+    private fun createAnswerWithCache(key: String, answer: String): Mono<String> = ops
+        .setIfAbsent(key, answer, Duration.ofMinutes(3))
+        .thenReturn(answer)
+
     private fun calculateDaysBetween(startTime: String?, endTime: String?) =
         if (startTime == null && endTime == null) 1
         else {
@@ -124,26 +134,22 @@ class WeatherAiService(
 
     companion object {
         private const val ANALYZE_PROMPT = """
-            You will receive structured weather data for a specific region in plain text format.
-            Your task is to analyze and describe the weather trends in natural, human-readable language.
-            
-            Focus on patterns such as:
-            - temperature trends over time
-            - changes in wind speed
-            - significant weather patterns (e.g., rain, clear skies, cloudy periods)
-            
-            Specify the date in the analysis result.
-            Keep the summary clear and concise, as if explaining it to someone without a technical background.
+            Given plain-text structured weather data for a region, summarize the weather trends in natural language.
+
+            Focus on:
+            - temperature changes
+            - wind speed shifts
+            - key weather patterns (e.g., rain, clouds, clear skies)
+
+            Include the date. Keep it simple and clear for non-experts.
         """
 
         private const val SUMMARY_PROMPT = """
-            You will now be given several weather analysis results previously generated.
+            Given multiple weather analyses, create a single summary.
 
-            Your task is to read through all of them and create a single cohesive summary.  
-            Identify common patterns, highlight notable weather events, and present the overall trend.
-            
-            Write your summary in clear, natural language that anyone can understand.  
-            Avoid repeating information — instead, synthesize the key insights into a compact report.
+            Combine key trends, highlight notable events, and avoid repetition.  
+            Write clearly for a general audience.  
+            Then, translate the summary into Korean.
         """
     }
 }

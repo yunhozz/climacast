@@ -9,10 +9,10 @@ object SessionManager {
     fun createSession(webSession: Mono<WebSession>, sessionType: SessionType): Mono<String> =
         webSession.flatMap { session ->
             val sessionName = sessionType.sessionName
-            session.maxIdleTime = Duration.ofMinutes(sessionType.ttl)
             val sessionId = session.getAttributeOrDefault(sessionName, session.id)
-            session.attributes[sessionName] = sessionId
 
+            session.maxIdleTime = Duration.ofMinutes(sessionType.ttl)
+            session.attributes[sessionName] = sessionId
             Mono.just(sessionId)
         }
 }

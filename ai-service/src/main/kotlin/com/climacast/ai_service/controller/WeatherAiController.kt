@@ -8,8 +8,7 @@ import com.climacast.global.dto.ApiResponse
 import com.climacast.global.enums.ApiResponseCode
 import jakarta.validation.Valid
 import org.springframework.http.MediaType
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ServerWebExchange
@@ -21,11 +20,11 @@ import reactor.core.publisher.Mono
 class WeatherAiController(
     private val weatherAiService: WeatherAiService
 ) {
-    @PostMapping("/analyze")
-    fun analyzeWeatherSummary(@Valid @RequestBody dto: WeatherQueryRequestDTO, exchange: ServerWebExchange): Mono<ApiResponse<String>> =
+    @GetMapping("/analyze")
+    fun analyzeWeatherSummary(@Valid dto: WeatherQueryRequestDTO, exchange: ServerWebExchange): Mono<ApiResponse<String>> =
         SessionManager.createSession(exchange.session, SessionType.WEATHER_AI_QUERY_SESSION)
             .flatMap { sessionId ->
-                weatherAiService.processQuery(dto, sessionId)
+                weatherAiService.processAiSummary(dto, sessionId)
                     .map { response ->
                         ApiResponse.success(
                             ApiResponseCode.SuccessCode.AI_RESPONSE_SUCCESS,
@@ -34,7 +33,7 @@ class WeatherAiController(
                     }
             }
 
-    @PostMapping("/analyze/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    fun streamWeatherAnalysis(@Valid @RequestBody dto: WeatherQueryRequestDTO): Flux<String> =
-        weatherAiService.processQueryStream(dto)
+    @GetMapping("/analyze/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun streamWeatherAnalysis(@Valid dto: WeatherQueryRequestDTO): Flux<String> =
+        weatherAiService.processAiSummaryStream(dto)
 }
