@@ -238,7 +238,6 @@ services:
     command: redis-server /etc/redis.conf
     volumes:
       - ./conf/redis/redis-1.conf:/etc/redis.conf
-      - redis-1-volume:/data
     restart: always
     networks:
       - climacast-network
@@ -252,7 +251,6 @@ services:
     command: redis-server /etc/redis.conf
     volumes:
       - ./conf/redis/redis-2.conf:/etc/redis.conf
-      - redis-2-volume:/data
     restart: always
     networks:
       - climacast-network
@@ -266,7 +264,6 @@ services:
     command: redis-server /etc/redis.conf
     volumes:
       - ./conf/redis/redis-3.conf:/etc/redis.conf
-      - redis-3-volume:/data
     restart: always
     networks:
       - climacast-network
@@ -308,9 +305,6 @@ volumes:
   mysql-source-volume:
   mysql-replica-volume:
   mysql-batch-volume:
-  redis-1-volume:
-  redis-2-volume:
-  redis-3-volume:
 
 networks:
   climacast-network:
