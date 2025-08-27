@@ -148,12 +148,13 @@ Open-Meteo의 Open API(https://open-meteo.com/en/docs)를 활용하여 대한민
         <img width="1516" height="289" alt="lens-2" src="https://github.com/user-attachments/assets/54a5719a-437d-4c0e-88cb-db1ea7311d4d" />
 
         
-
+---
 # 🛠️ Skills & Libraries
 
 <img width="718" height="586" alt="skills" src="https://github.com/user-attachments/assets/b707641e-d7d6-4ec9-8466-aca55adcb561" />
 
 
+---
 # 📊 Project Architecture
 
 - System Architecture
@@ -172,6 +173,403 @@ Open-Meteo의 Open API(https://open-meteo.com/en/docs)를 활용하여 대한민
 <img width="1892" height="1050" alt="msa" src="https://github.com/user-attachments/assets/0132e3ff-36b7-486d-ae4f-9b19a4fa8f8c" />
 
 
+---
 # 📱API Document
 
-[Climacast API 문서](https://www.notion.so/Climacast-API-224434f9d510809d994ac873b008f863?pvs=21)
+**Base URL**: `/api`
+
+## 주요 기능
+
+- AI 기반 날씨 분석 및 요약
+- 실시간 스트리밍 날씨 분석
+- 날씨 알림 구독 관리
+
+
+## 🤖 AI 날씨 분석 API (`/api/ai/weather`)
+
+### 1. 날씨 분석 요약
+
+AI를 통해 날씨 데이터를 분석하고 요약 정보를 제공합니다.
+
+**`GET /api/ai/weather/analyze`**
+
+**Query Parameters**:
+
+```
+location: 분석할 지역명
+date: 분석 날짜 (옵션)
+type: 분석 유형 (옵션)
+
+```
+
+**Session Management**:
+
+- 요청 시 세션이 자동으로 생성됩니다 (`WEATHER_AI_QUERY_SESSION`)
+
+**Response** `201 Created`:
+
+```json
+{
+  "header": {
+    "code": 201,
+    "success": true
+  },
+  "message": "AI 응답 성공",
+  "data": "오늘 서울의 날씨는 맑고 기온이 25도로 쾌적합니다. 외출하기 좋은 날씨이며, 자외선 지수가 높으니 선크림을 발라주세요."
+}
+
+```
+
+
+### 2. 실시간 스트리밍 날씨 분석
+
+AI 날씨 분석 결과를 실시간으로 스트리밍합니다.
+
+**`GET /api/ai/weather/analyze/stream`**
+
+**Content-Type**: `text/event-stream`
+
+**Query Parameters**:
+
+```
+location: 분석할 지역명
+date: 분석 날짜 (옵션)
+type: 분석 유형 (옵션)
+
+```
+
+**Response** `200 OK`:
+
+```
+data: 오늘 서울의
+data: 날씨는
+data: 맑고 기온이
+data: 25도로 쾌적합니다.
+data: 외출하기 좋은 날씨이며,
+data: 자외선 지수가 높으니
+data: 선크림을 발라주세요.
+
+```
+
+**사용 예시 (JavaScript)**:
+
+```jsx
+const eventSource = new EventSource('/api/ai/weather/analyze/stream?location=서울');
+eventSource.onmessage = function(event) {
+  console.log('실시간 분석:', event.data);
+};
+
+```
+
+
+## 📧 구독 관리 API (`/api/subscription`)
+
+### 1. 구독 정보 조회
+
+이메일 또는 전화번호로 구독 정보를 조회합니다.
+
+**`GET /api/subscription`**
+
+**Query Parameters** (둘 중 하나 이상 필수):
+
+- `email` (optional): 구독자 이메일
+- `phoneNumber` (optional): 구독자 전화번호
+
+**Examples**:
+
+```
+GET /api/subscription?email=user@example.com
+GET /api/subscription?phoneNumber=010-1234-5678
+GET /api/subscription?email=user@example.com&phoneNumber=010-1234-5678
+
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "header": {
+    "code": 200,
+    "success": true
+  },
+  "message": "구독 정보 조회 성공",
+  "data": {
+    "id": 12345,
+    "email": "user@example.com",
+    "phoneNumber": "010-1234-5678",
+    "location": "서울특별시",
+    "notificationTime": "08:00",
+    "isActive": true,
+    "subscriptionType": "DAILY",
+    "createdAt": "2024-07-01T10:00:00",
+    "updatedAt": "2024-07-01T10:00:00"
+  }
+}
+
+```
+
+
+### 2. 구독 등록
+
+새로운 날씨 알림 구독을 등록합니다.
+
+**`POST /api/subscription`**
+
+**Request Body**:
+
+```json
+{
+  "email": "user@example.com",
+  "phoneNumber": "010-1234-5678",
+  "location": "서울특별시",
+  "notificationTime": "08:00",
+  "subscriptionType": "DAILY"
+}
+
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "header": {
+    "code": 201,
+    "success": true
+  },
+  "message": "구독 성공",
+  "data": 12345
+}
+
+```
+
+**에러 응답 예시** `409 Conflict`:
+
+```json
+{
+  "header": {
+    "code": 409,
+    "success": false
+  },
+  "message": "구독 정보가 이미 존재합니다.",
+  "data": {
+    "timestamp": "2024-07-02T10:30:00",
+    "exception": "SubscriptionAlreadyExistException",
+    "fieldErrors": null
+  }
+}
+
+```
+
+
+### 3. 구독 정보 수정
+
+기존 구독 정보를 수정합니다.
+
+**`PATCH /api/subscription`**
+
+**Request Body**:
+
+```json
+{
+  "id": 12345,
+  "location": "부산광역시",
+  "notificationTime": "07:30",
+  "subscriptionType": "WEEKLY",
+  "isActive": true
+}
+
+```
+
+**Response** `201 Created`:
+
+```json
+{
+  "header": {
+    "code": 201,
+    "success": true
+  },
+  "message": "구독 정보 수정 성공",
+  "data": 12345
+}
+
+```
+
+
+### 4. 구독 취소
+
+이메일 또는 전화번호로 구독을 취소합니다.
+
+**`DELETE /api/subscription`**
+
+**Query Parameters** (둘 중 하나 이상 필수):
+
+- `email` (optional): 구독자 이메일
+- `phoneNumber` (optional): 구독자 전화번호
+
+**Examples**:
+
+```
+DELETE /api/subscription?email=user@example.com
+DELETE /api/subscription?phoneNumber=010-1234-5678
+
+```
+
+**Response** `204 No Content`:
+
+```json
+{
+  "header": {
+    "code": 204,
+    "success": true
+  },
+  "message": "구독 취소 성공",
+  "data": null
+}
+
+```
+
+**에러 응답 예시** `409 Conflict`:
+
+```json
+{
+  "header": {
+    "code": 409,
+    "success": false
+  },
+  "message": "이미 취소된 구독입니다.",
+  "data": {
+    "timestamp": "2024-07-02T10:30:00",
+    "exception": "SubscriptionAlreadyCanceledException",
+    "fieldErrors": null
+  }
+}
+
+```
+
+
+## 📋 공통 응답 형식
+
+모든 API 응답은 다음과 같은 공통 구조를 따릅니다:
+
+### 성공 응답
+
+```json
+{
+  "header": {
+    "code": 200,
+    "success": true
+  },
+  "message": "성공 메시지",
+  "data": { /* 응답 데이터 (옵션) */ }
+}
+
+```
+
+### 에러 응답
+
+```json
+{
+  "header": {
+    "code": 400,
+    "success": false
+  },
+  "message": "에러 메시지",
+  "data": {
+    "timestamp": "2024-07-02T10:30:00",
+    "exception": "ExceptionClassName",
+    "fieldErrors": [ /* 유효성 검사 에러 시에만 포함 */ ]
+  }
+}
+
+```
+
+### 유효성 검사 에러 형식
+
+```json
+{
+  "fieldErrors": [
+    {
+      "field": "필드명",
+      "value": "입력된 값",
+      "reason": "에러 메시지"
+    }
+  ]
+}
+
+```
+
+
+## 🔧 상태 코드 및 메시지
+
+### 성공 코드
+
+| HTTP Status Code | Message |
+| --- | --- |
+| 200 | 구독 정보 조회 성공 |
+| 201 | 구독 성공 |
+| 201 | 구독 정보 수정 성공 |
+| 201 | AI 응답 성공 |
+| 204 | 구독 취소 성공 |
+
+### 에러 코드
+
+| HTTP Status Code | Message |
+| --- | --- |
+| 400 | 잘못된 요청입니다. |
+| 401 | 인증되지 않은 사용자입니다. |
+| 403 | 권한이 없습니다. |
+| 404 | 해당 지역에 대한 날씨 document 를 찾을 수 없습니다. |
+| 404 | 구독 정보를 찾을 수 없습니다. |
+| 405 | 허용되지 않은 메소드입니다. |
+| 409 | 구독 정보가 이미 존재합니다. |
+| 409 | 이미 취소된 구독입니다. |
+| 500 | 서버에 오류가 발생하였습니다. |
+
+
+
+## 📝 중요 참고사항
+
+### 1. AI 날씨 분석 서비스
+
+- **세션 관리**: AI 분석 요청 시 자동으로 세션이 생성됩니다
+- **스트리밍**: 실시간 분석 결과를 Server-Sent Events(SSE)로 제공
+- **비동기 처리**: Reactive Programming (Mono, Flux) 기반으로 구현
+
+### 2. 구독 서비스
+
+- **식별자**: 이메일 또는 전화번호로 구독자 식별
+- **유연한 조회**: 이메일, 전화번호, 또는 둘 다로 조회 가능
+- **상태 관리**: 구독 활성/비활성 상태 관리
+
+### 3. 데이터 형식
+
+- **날짜/시간**: ISO 8601 형식 사용 (`2024-07-02T10:30:00`)
+- **전화번호**: `010-1234-5678` 형식 권장
+- **알림 시간**: `HH:mm` 형식 (24시간제)
+
+### 4. 에러 처리
+
+- **상세한 에러 정보**: 타임스탬프, 예외 클래스명, 필드 에러 포함
+- **일관된 에러 구조**: 모든 에러 응답이 동일한 구조 사용
+- **비즈니스 로직 에러**: 409 Conflict로 중복/상태 에러 처리
+
+### 5. 스트리밍 API 사용법
+
+```jsx
+// Server-Sent Events 연결
+const eventSource = new EventSource('/api/ai/weather/analyze/stream?location=서울');
+
+eventSource.onmessage = function(event) {
+  // 실시간 데이터 처리
+  console.log(event.data);
+};
+
+eventSource.onerror = function(error) {
+  // 에러 처리
+  console.error('스트림 에러:', error);
+};
+
+// 연결 종료
+eventSource.close();
+
+```
